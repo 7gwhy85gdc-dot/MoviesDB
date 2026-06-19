@@ -380,6 +380,171 @@
   .genre-clear.show { display: inline-block; }
   .genre-clear:hover { color: var(--danger); border-color: var(--danger); }
 
+  /* ---------- Year range filter ---------- */
+  .year-filter {
+    max-width: 480px;
+    margin: 18px auto 0;
+    padding: 14px 18px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+  }
+  .year-filter-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-muted);
+  }
+  .year-filter-header .range-values {
+    color: var(--gold);
+    font-family: 'Cairo', sans-serif;
+  }
+  .year-slider-track {
+    position: relative;
+    height: 32px;
+  }
+  .year-slider-track input[type="range"] {
+    position: absolute;
+    width: 100%;
+    top: 8px;
+    height: 4px;
+    background: transparent;
+    appearance: none;
+    -webkit-appearance: none;
+    pointer-events: none;
+    margin: 0;
+  }
+  .year-slider-track input[type="range"]::-webkit-slider-thumb {
+    pointer-events: auto;
+    appearance: none;
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--gold);
+    border: 2px solid var(--bg);
+    cursor: pointer;
+    box-shadow: 0 2px 6px var(--shadow);
+  }
+  .year-slider-track input[type="range"]::-moz-range-thumb {
+    pointer-events: auto;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--gold);
+    border: 2px solid var(--bg);
+    cursor: pointer;
+  }
+  .year-slider-bg {
+    position: absolute;
+    top: 14px;
+    right: 0; left: 0;
+    height: 4px;
+    background: var(--border);
+    border-radius: 4px;
+  }
+  .year-slider-fill {
+    position: absolute;
+    top: 14px;
+    height: 4px;
+    background: var(--gold);
+    border-radius: 4px;
+  }
+  .year-filter-apply {
+    margin-top: 12px;
+    width: 100%;
+    padding: 9px;
+    border-radius: 10px;
+    background: var(--gold);
+    color: #0B0E14;
+    font-family: 'Cairo', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    border: none;
+    cursor: pointer;
+  }
+  .year-filter-apply:hover { opacity: 0.9; }
+
+  /* ---------- Asian sub-filters ---------- */
+  .country-bar {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 14px;
+  }
+  .country-chip {
+    padding: 7px 16px;
+    border-radius: 18px;
+    font-size: 13px;
+    font-weight: 600;
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .country-chip.active {
+    background: var(--gold);
+    color: #0B0E14;
+    border-color: var(--gold);
+  }
+  .country-chip:hover:not(.active) { background: var(--card-hover); color: var(--text); }
+
+  /* ---------- Watch history ---------- */
+  .watched-btn {
+    position: absolute;
+    top: 8px;
+    right: 46px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: rgba(11,14,20,0.75);
+    border: none;
+    color: #fff;
+    font-size: 13px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.15s, background 0.2s;
+  }
+  .watched-btn:hover { transform: scale(1.15); }
+  .watched-btn.active { background: #4ADE80; color: #0B0E14; }
+
+  .modal-watched-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: transparent;
+    color: var(--text);
+    border: 1.5px solid var(--border);
+    font-family: 'Cairo', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    padding: 10px 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    margin-right: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .modal-watched-btn.active {
+    background: #4ADE80;
+    color: #0B0E14;
+    border-color: #4ADE80;
+  }
+  .modal-watched-btn:hover { border-color: var(--gold); }
+
+  .watched-date {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
   /* ---------- Empty / Loading states ---------- */
   .state-msg {
     text-align: center;
@@ -551,7 +716,16 @@
     <button class="nav-tab active" data-tab="home" role="tab">الرئيسية</button>
     <button class="nav-tab" data-tab="movies" role="tab">أفلام رائجة</button>
     <button class="nav-tab" data-tab="tv" role="tab">مسلسلات رائجة</button>
+    <button class="nav-tab" data-tab="asian" role="tab">🌏 آسيوي</button>
     <button class="nav-tab" data-tab="favorites" role="tab">⭐ المفضلة</button>
+    <button class="nav-tab" data-tab="history" role="tab">📜 السجل</button>
+  </div>
+
+  <div class="country-bar" id="countryBar" style="display:none;">
+    <button class="country-chip active" data-country="">الكل</button>
+    <button class="country-chip" data-country="KR">🇰🇷 كوري</button>
+    <button class="country-chip" data-country="JP">🇯🇵 ياباني</button>
+    <button class="country-chip" data-country="CN">🇨🇳 صيني</button>
   </div>
 
   <div class="genre-bar">
@@ -566,6 +740,20 @@
       </select>
     </div>
     <button class="genre-clear" id="genreClearBtn">✕ إزالة الفلتر</button>
+  </div>
+
+  <div class="year-filter" id="yearFilter">
+    <div class="year-filter-header">
+      <span>تحديد نطاق السنوات</span>
+      <span class="range-values" id="yearRangeLabel">1980 - 2026</span>
+    </div>
+    <div class="year-slider-track">
+      <div class="year-slider-bg"></div>
+      <div class="year-slider-fill" id="yearSliderFill"></div>
+      <input type="range" id="yearMin" min="1950" max="2026" value="1980" step="1">
+      <input type="range" id="yearMax" min="1950" max="2026" value="2026" step="1">
+    </div>
+    <button class="year-filter-apply" id="yearApplyBtn">تطبيق نطاق السنوات</button>
   </div>
 </header>
 
@@ -622,6 +810,40 @@ function toggleFavorite(item, type) {
   saveFavorites();
 }
 
+// ---------- Watch history ----------
+let watchHistory = [];
+try {
+  watchHistory = JSON.parse(localStorage.getItem("cinematek_history") || "[]");
+} catch(e) { watchHistory = []; }
+
+function saveWatchHistory() {
+  localStorage.setItem("cinematek_history", JSON.stringify(watchHistory));
+}
+
+function isWatched(id, type) {
+  return watchHistory.some(w => w.id === id && w.type === type);
+}
+
+function toggleWatched(item, type) {
+  const idx = watchHistory.findIndex(w => w.id === item.id && w.type === type);
+  if (idx >= 0) {
+    watchHistory.splice(idx, 1);
+  } else {
+    watchHistory.unshift({
+      id: item.id,
+      type: type,
+      title: item.title || item.name,
+      original_title: item.original_title,
+      original_name: item.original_name,
+      poster_path: item.poster_path,
+      vote_average: item.vote_average,
+      release_date: item.release_date || item.first_air_date,
+      watched_at: new Date().toISOString()
+    });
+  }
+  saveWatchHistory();
+}
+
 async function tmdbFetch(path) {
   const res = await fetch(`${API_BASE}${path}`, {
     headers: {
@@ -645,10 +867,20 @@ let searchDebounce = null;
 let movieGenres = {};
 let tvGenres = {};
 let activeGenreFilter = null; // { id, type }
+let activeYearFilter = null; // { min, max }
+let activeCountryFilter = ""; // "" | "KR" | "JP" | "CN"
 
 const movieGenreSelect = document.getElementById("movieGenreSelect");
 const tvGenreSelect = document.getElementById("tvGenreSelect");
 const genreClearBtn = document.getElementById("genreClearBtn");
+const countryBar = document.getElementById("countryBar");
+const yearFilter = document.getElementById("yearFilter");
+const yearMinInput = document.getElementById("yearMin");
+const yearMaxInput = document.getElementById("yearMax");
+const yearRangeLabel = document.getElementById("yearRangeLabel");
+const yearSliderFill = document.getElementById("yearSliderFill");
+const yearApplyBtn = document.getElementById("yearApplyBtn");
+const ASIAN_COUNTRIES = ["KR", "JP", "CN"];
 
 // ---------- Theme ----------
 function initTheme() {
@@ -701,6 +933,7 @@ function cardHtml(item, type) {
   const showArabic = arabicTitle && arabicTitle.trim() !== "" && arabicTitle.trim() !== originalTitle.trim();
   const rating = item.vote_average ? item.vote_average.toFixed(1) : "—";
   const fav = isFavorite(item.id, type);
+  const watched = isWatched(item.id, type);
   const posterPath = item.poster_path || "";
   const dateVal = item.release_date || item.first_air_date || "";
   return `
@@ -717,6 +950,14 @@ function cardHtml(item, type) {
           data-fav-date="${dateVal}"
           aria-label="إضافة للمفضلة">${fav ? '♥' : '♡'}</button>
         ${type === 'tv' ? `<div class="status-badge" data-status-for="${item.id}"></div>` : ''}
+        <button class="watched-btn ${watched ? 'active' : ''}"
+          data-watched-id="${item.id}" data-watched-type="${type}"
+          data-watched-title="${escapeHtml(arabicTitle || originalTitle)}"
+          data-watched-original-title="${escapeHtml(originalTitle)}"
+          data-watched-poster="${posterPath}"
+          data-watched-rating="${item.vote_average || 0}"
+          data-watched-date="${dateVal}"
+          aria-label="تمت المشاهدة" title="تمت المشاهدة">${watched ? '✔' : '👁'}</button>
       </div>
       <div class="card-info">
         <div class="card-title">${escapeHtml(originalTitle)}</div>
@@ -804,6 +1045,29 @@ main.addEventListener("click", (e) => {
     if (currentTab === "favorites") renderTab("favorites");
     return;
   }
+  const watchedBtn = e.target.closest(".watched-btn");
+  if (watchedBtn) {
+    e.stopPropagation();
+    const id = parseInt(watchedBtn.dataset.watchedId);
+    const type = watchedBtn.dataset.watchedType;
+    const origTitle = watchedBtn.dataset.watchedOriginalTitle;
+    const fakeItem = {
+      id,
+      title: watchedBtn.dataset.watchedTitle,
+      name: watchedBtn.dataset.watchedTitle,
+      original_title: type === "movie" ? origTitle : undefined,
+      original_name: type === "tv" ? origTitle : undefined,
+      poster_path: watchedBtn.dataset.watchedPoster || null,
+      vote_average: parseFloat(watchedBtn.dataset.watchedRating) || 0,
+      release_date: type === "movie" ? watchedBtn.dataset.watchedDate : undefined,
+      first_air_date: type === "tv" ? watchedBtn.dataset.watchedDate : undefined
+    };
+    toggleWatched(fakeItem, type);
+    watchedBtn.classList.toggle("active");
+    watchedBtn.textContent = watchedBtn.classList.contains("active") ? "✔" : "👁";
+    if (currentTab === "history") renderHistory();
+    return;
+  }
   const card = e.target.closest(".card");
   if (card) {
     openModal(parseInt(card.dataset.id), card.dataset.type);
@@ -838,9 +1102,45 @@ async function loadGenres() {
   }
 }
 
+// ---------- Year range slider ----------
+function updateYearSliderUI() {
+  let minV = parseInt(yearMinInput.value);
+  let maxV = parseInt(yearMaxInput.value);
+  yearRangeLabel.textContent = `${minV} - ${maxV}`;
+  const range = 2026 - 1950;
+  const leftPct = ((minV - 1950) / range) * 100;
+  const rightPct = ((maxV - 1950) / range) * 100;
+  yearSliderFill.style.right = `${leftPct}%`;
+  yearSliderFill.style.left = `${100 - rightPct}%`;
+}
+yearMinInput.addEventListener("input", () => {
+  if (parseInt(yearMinInput.value) > parseInt(yearMaxInput.value)) {
+    yearMinInput.value = yearMaxInput.value;
+  }
+  updateYearSliderUI();
+});
+yearMaxInput.addEventListener("input", () => {
+  if (parseInt(yearMaxInput.value) < parseInt(yearMinInput.value)) {
+    yearMaxInput.value = yearMinInput.value;
+  }
+  updateYearSliderUI();
+});
+updateYearSliderUI();
+
+yearApplyBtn.addEventListener("click", () => {
+  activeYearFilter = { min: parseInt(yearMinInput.value), max: parseInt(yearMaxInput.value) };
+  genreClearBtn.classList.add("show");
+  applyCurrentFilters();
+});
+
 movieGenreSelect.addEventListener("change", () => {
   const id = movieGenreSelect.value;
-  if (!id) { activeGenreFilter = null; genreClearBtn.classList.remove("show"); renderTab(currentTab); return; }
+  if (!id) {
+    activeGenreFilter = null;
+    if (!activeYearFilter) genreClearBtn.classList.remove("show");
+    applyCurrentFilters();
+    return;
+  }
   tvGenreSelect.value = "";
   activeGenreFilter = { id, type: "movie" };
   genreClearBtn.classList.add("show");
@@ -850,7 +1150,12 @@ movieGenreSelect.addEventListener("change", () => {
 
 tvGenreSelect.addEventListener("change", () => {
   const id = tvGenreSelect.value;
-  if (!id) { activeGenreFilter = null; genreClearBtn.classList.remove("show"); renderTab(currentTab); return; }
+  if (!id) {
+    activeGenreFilter = null;
+    if (!activeYearFilter) genreClearBtn.classList.remove("show");
+    applyCurrentFilters();
+    return;
+  }
   movieGenreSelect.value = "";
   activeGenreFilter = { id, type: "tv" };
   genreClearBtn.classList.add("show");
@@ -860,20 +1165,80 @@ tvGenreSelect.addEventListener("change", () => {
 
 genreClearBtn.addEventListener("click", () => {
   activeGenreFilter = null;
+  activeYearFilter = null;
   movieGenreSelect.value = "";
   tvGenreSelect.value = "";
+  yearMinInput.value = 1980;
+  yearMaxInput.value = 2026;
+  updateYearSliderUI();
   genreClearBtn.classList.remove("show");
   renderTab(currentTab);
 });
+
+// ---------- Country sub-filter (Asian tab) ----------
+countryBar.addEventListener("click", (e) => {
+  const chip = e.target.closest(".country-chip");
+  if (!chip) return;
+  document.querySelectorAll(".country-chip").forEach(c => c.classList.remove("active"));
+  chip.classList.add("active");
+  activeCountryFilter = chip.dataset.country;
+  renderTab(currentTab);
+});
+
+function buildDiscoverQuery(type) {
+  const params = [`language=ar`, `sort_by=popularity.desc`];
+  if (activeGenreFilter && activeGenreFilter.type === type) {
+    params.push(`with_genres=${activeGenreFilter.id}`);
+  }
+  if (activeYearFilter) {
+    if (type === "movie") {
+      params.push(`primary_release_date.gte=${activeYearFilter.min}-01-01`);
+      params.push(`primary_release_date.lte=${activeYearFilter.max}-12-31`);
+    } else {
+      params.push(`first_air_date.gte=${activeYearFilter.min}-01-01`);
+      params.push(`first_air_date.lte=${activeYearFilter.max}-12-31`);
+    }
+  }
+  if (currentTab === "asian") {
+    const countries = activeCountryFilter ? activeCountryFilter : ASIAN_COUNTRIES.join("|");
+    params.push(`with_origin_country=${countries}`);
+  }
+  return params.join("&");
+}
+
+function hasActiveFilters() {
+  return !!activeGenreFilter || !!activeYearFilter;
+}
+
+async function applyCurrentFilters() {
+  if (currentTab === "favorites" || currentTab === "history") {
+    renderTab(currentTab);
+    return;
+  }
+  if (currentTab === "asian") {
+    renderAsianTab();
+    return;
+  }
+  if (activeGenreFilter) {
+    renderByGenre();
+    return;
+  }
+  if (activeYearFilter) {
+    renderByYearOnly();
+    return;
+  }
+  renderTab(currentTab);
+}
 
 async function renderByGenre() {
   if (!activeGenreFilter) return;
   main.innerHTML = loadingState();
   const { id, type } = activeGenreFilter;
   const genreName = type === "movie" ? movieGenres[id] : tvGenres[id];
+  const yearSuffix = activeYearFilter ? ` (${activeYearFilter.min}–${activeYearFilter.max})` : "";
   try {
-    const data = await tmdbFetch(`/discover/${type}?language=ar&with_genres=${id}&sort_by=popularity.desc`);
-    main.innerHTML = `<h2 class="section-title">تصنيف: ${escapeHtml(genreName || "")} <span class="count">(${data.results.length})</span></h2>` +
+    const data = await tmdbFetch(`/discover/${type}?${buildDiscoverQuery(type)}`);
+    main.innerHTML = `<h2 class="section-title">تصنيف: ${escapeHtml(genreName || "")}${yearSuffix} <span class="count">(${data.results.length})</span></h2>` +
       gridHtml(data.results, type);
     loadVisibleTvStatuses();
   } catch(e) {
@@ -881,6 +1246,43 @@ async function renderByGenre() {
   }
 }
 
+async function renderByYearOnly() {
+  if (!activeYearFilter) return;
+  main.innerHTML = loadingState();
+  try {
+    const [movies, tv] = await Promise.all([
+      tmdbFetch(`/discover/movie?${buildDiscoverQuery("movie")}`),
+      tmdbFetch(`/discover/tv?${buildDiscoverQuery("tv")}`)
+    ]);
+    main.innerHTML =
+      `<h2 class="section-title">أفلام (${activeYearFilter.min}–${activeYearFilter.max}) <span class="count">(${movies.results.length})</span></h2>` +
+      gridHtml(movies.results.slice(0,20), "movie") +
+      `<h2 class="section-title">مسلسلات (${activeYearFilter.min}–${activeYearFilter.max}) <span class="count">(${tv.results.length})</span></h2>` +
+      gridHtml(tv.results.slice(0,20), "tv");
+    loadVisibleTvStatuses();
+  } catch(e) {
+    main.innerHTML = errorState();
+  }
+}
+
+async function renderAsianTab() {
+  main.innerHTML = loadingState();
+  const countryLabel = { "": "آسيوي (الكل)", "KR": "كوري", "JP": "ياباني", "CN": "صيني" }[activeCountryFilter];
+  try {
+    const [movies, tv] = await Promise.all([
+      tmdbFetch(`/discover/movie?${buildDiscoverQuery("movie")}`),
+      tmdbFetch(`/discover/tv?${buildDiscoverQuery("tv")}`)
+    ]);
+    main.innerHTML =
+      `<h2 class="section-title">🎬 أفلام ${countryLabel} <span class="count">(${movies.results.length})</span></h2>` +
+      gridHtml(movies.results.slice(0,20), "movie") +
+      `<h2 class="section-title">📺 مسلسلات ${countryLabel} <span class="count">(${tv.results.length})</span></h2>` +
+      gridHtml(tv.results.slice(0,20), "tv");
+    loadVisibleTvStatuses();
+  } catch(e) {
+    main.innerHTML = errorState();
+  }
+}
 
 navTabs.addEventListener("click", (e) => {
   const tab = e.target.closest(".nav-tab");
@@ -893,6 +1295,15 @@ navTabs.addEventListener("click", (e) => {
   movieGenreSelect.value = "";
   tvGenreSelect.value = "";
   genreClearBtn.classList.remove("show");
+
+  // toggle country bar visibility for the Asian tab
+  countryBar.style.display = currentTab === "asian" ? "flex" : "none";
+  if (currentTab !== "asian") {
+    activeCountryFilter = "";
+    document.querySelectorAll(".country-chip").forEach(c => c.classList.remove("active"));
+    document.querySelector('.country-chip[data-country=""]')?.classList.add("active");
+  }
+
   renderTab(currentTab);
 });
 
@@ -901,19 +1312,31 @@ async function renderTab(tab) {
     renderFavorites();
     return;
   }
+  if (tab === "history") {
+    renderHistory();
+    return;
+  }
+  if (tab === "asian") {
+    renderAsianTab();
+    return;
+  }
   if (tab === "movies") {
     main.innerHTML = loadingState();
     try {
-      const data = await tmdbFetch("/trending/movie/week?language=ar");
-      main.innerHTML = `<h2 class="section-title">أفلام رائجة هذا الأسبوع <span class="count">(${data.results.length})</span></h2>` + gridHtml(data.results, "movie");
+      const endpoint = activeYearFilter ? `/discover/movie?${buildDiscoverQuery("movie")}` : "/trending/movie/week?language=ar";
+      const data = await tmdbFetch(endpoint);
+      const yearSuffix = activeYearFilter ? ` (${activeYearFilter.min}–${activeYearFilter.max})` : "";
+      main.innerHTML = `<h2 class="section-title">أفلام رائجة${yearSuffix} <span class="count">(${data.results.length})</span></h2>` + gridHtml(data.results, "movie");
     } catch(e) { main.innerHTML = errorState(); }
     return;
   }
   if (tab === "tv") {
     main.innerHTML = loadingState();
     try {
-      const data = await tmdbFetch("/trending/tv/week?language=ar");
-      main.innerHTML = `<h2 class="section-title">مسلسلات رائجة هذا الأسبوع <span class="count">(${data.results.length})</span></h2>` + gridHtml(data.results, "tv");
+      const endpoint = activeYearFilter ? `/discover/tv?${buildDiscoverQuery("tv")}` : "/trending/tv/week?language=ar";
+      const data = await tmdbFetch(endpoint);
+      const yearSuffix = activeYearFilter ? ` (${activeYearFilter.min}–${activeYearFilter.max})` : "";
+      main.innerHTML = `<h2 class="section-title">مسلسلات رائجة${yearSuffix} <span class="count">(${data.results.length})</span></h2>` + gridHtml(data.results, "tv");
       loadVisibleTvStatuses();
     } catch(e) { main.innerHTML = errorState(); }
     return;
@@ -946,6 +1369,16 @@ function renderFavorites() {
   loadVisibleTvStatuses();
 }
 
+function renderHistory() {
+  if (watchHistory.length === 0) {
+    main.innerHTML = `<h2 class="section-title">📜 سجل المشاهدة</h2>` + emptyState("لم تشاهد أي عمل بعد. اضغط على 👁 في أي بطاقة لتسجيلها كمُشاهَدة.");
+    return;
+  }
+  main.innerHTML = `<h2 class="section-title">📜 سجل المشاهدة <span class="count">(${watchHistory.length})</span></h2>` +
+    `<div class="grid">${watchHistory.map(w => cardHtml(w, w.type)).join("")}</div>`;
+  loadVisibleTvStatuses();
+}
+
 // ---------- Search ----------
 searchInput.addEventListener("input", () => {
   clearTimeout(searchDebounce);
@@ -954,7 +1387,6 @@ searchInput.addEventListener("input", () => {
     activeGenreFilter = null;
     movieGenreSelect.value = "";
     tvGenreSelect.value = "";
-    genreClearBtn.classList.remove("show");
   }
   if (q === "") {
     renderTab(currentTab);
@@ -967,12 +1399,20 @@ async function doSearch(query) {
   main.innerHTML = loadingState();
   try {
     const data = await tmdbFetch(`/search/multi?language=ar&query=${encodeURIComponent(query)}`);
-    const results = data.results.filter(r => r.media_type === "movie" || r.media_type === "tv");
+    let results = data.results.filter(r => r.media_type === "movie" || r.media_type === "tv");
+    let yearSuffix = "";
+    if (activeYearFilter) {
+      results = results.filter(r => {
+        const y = parseInt((r.release_date || r.first_air_date || "").slice(0,4));
+        return y && y >= activeYearFilter.min && y <= activeYearFilter.max;
+      });
+      yearSuffix = ` · ${activeYearFilter.min}–${activeYearFilter.max}`;
+    }
     if (results.length === 0) {
-      main.innerHTML = `<h2 class="section-title">نتائج البحث عن "${escapeHtml(query)}"</h2>` + emptyState("لا توجد نتائج مطابقة. جرّب كلمة أخرى.");
+      main.innerHTML = `<h2 class="section-title">نتائج البحث عن "${escapeHtml(query)}"${yearSuffix}</h2>` + emptyState("لا توجد نتائج مطابقة. جرّب كلمة أخرى أو وسّع نطاق السنوات.");
       return;
     }
-    main.innerHTML = `<h2 class="section-title">نتائج البحث عن "${escapeHtml(query)}" <span class="count">(${results.length})</span></h2>` +
+    main.innerHTML = `<h2 class="section-title">نتائج البحث عن "${escapeHtml(query)}"${yearSuffix} <span class="count">(${results.length})</span></h2>` +
       `<div class="grid">${results.map(r => cardHtml(r, r.media_type)).join("")}</div>`;
     loadVisibleTvStatuses();
   } catch(e) {
@@ -1016,11 +1456,14 @@ function renderModal(d, credits, type, videos) {
   const year = (d.release_date || d.first_air_date || "").slice(0,4);
   const runtime = d.runtime ? `${d.runtime} دقيقة` : (d.episode_run_time && d.episode_run_time[0] ? `${d.episode_run_time[0]} دقيقة/حلقة` : "");
   const fav = isFavorite(d.id, type);
+  const watched = isWatched(d.id, type);
+  const watchedEntry = watchHistory.find(w => w.id === d.id && w.type === type);
   const genres = (d.genres || []).map(g => `<span class="genre-pill">${escapeHtml(g.name)}</span>`).join("");
   const cast = (credits.cast || []).slice(0, 10);
   const overview = d.overview && d.overview.trim() !== "" ? d.overview : "لا يوجد وصف متاح بالعربية لهذا العمل.";
   const tagline = d.tagline ? `<div class="modal-tagline">"${escapeHtml(d.tagline)}"</div>` : "";
   const trailerUrl = findTrailerUrl(videos);
+  const watchedDateText = watched && watchedEntry ? `<div class="watched-date">شوهد بتاريخ ${new Date(watchedEntry.watched_at).toLocaleDateString('ar-EG')}</div>` : "";
 
   modalContent.innerHTML = `
     <div class="modal-backdrop-img" style="${d.backdrop_path ? `background-image:url('${BACKDROP_BASE}${d.backdrop_path}')` : ''}">
@@ -1038,7 +1481,11 @@ function renderModal(d, credits, type, videos) {
         ${type === 'tv' && d.status ? `<span>${d.status === 'Returning Series' || d.in_production ? '🟢 مستمر' : '⚪ منتهي'}</span>` : ''}
       </div>
       ${tagline}
-      ${trailerUrl ? `<a href="${trailerUrl}" target="_blank" rel="noopener" class="trailer-btn">▶ شاهد الإعلان على يوتيوب</a>` : ''}
+      <div style="display:flex; flex-wrap:wrap; align-items:center;">
+        ${trailerUrl ? `<a href="${trailerUrl}" target="_blank" rel="noopener" class="trailer-btn" style="margin-left:10px;">▶ شاهد الإعلان على يوتيوب</a>` : ''}
+        <button class="modal-watched-btn ${watched ? 'active' : ''}" id="modalWatchedBtn">${watched ? '✔ تمت المشاهدة' : '👁 وضع كمُشاهَد'}</button>
+      </div>
+      ${watchedDateText}
       <div class="genre-pills">${genres}</div>
       <p class="modal-overview">${escapeHtml(overview)}</p>
       ${cast.length ? `
@@ -1071,6 +1518,17 @@ function renderModal(d, credits, type, videos) {
         cardBtn.classList.toggle("active");
         cardBtn.textContent = cardBtn.classList.contains("active") ? "♥" : "♡";
       }
+    }
+  });
+  document.getElementById("modalWatchedBtn").addEventListener("click", (e) => {
+    toggleWatched(d, type);
+    const nowActive = e.target.classList.toggle("active");
+    e.target.textContent = nowActive ? "✔ تمت المشاهدة" : "👁 وضع كمُشاهَد";
+    if (currentTab === "history") renderHistory();
+    const cardBtn = document.querySelector(`.watched-btn[data-watched-id="${d.id}"][data-watched-type="${type}"]`);
+    if (cardBtn) {
+      cardBtn.classList.toggle("active");
+      cardBtn.textContent = cardBtn.classList.contains("active") ? "✔" : "👁";
     }
   });
 }
