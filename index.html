@@ -973,7 +973,7 @@ function cardHtml(item, type) {
 
 function filterAdult(items) {
   if (!items) return items;
-  return items.filter(i => !i.adult);
+  return items.filter(i => !i.adult && !looksExplicit(i));
 }
 
 function rowHtml(titleText, items, type) {
@@ -1212,8 +1212,18 @@ function buildDiscoverQuery(type) {
   if (currentTab === "asian") {
     const countries = activeCountryFilter ? activeCountryFilter : ASIAN_COUNTRIES.join("|");
     params.push(`with_origin_country=${countries}`);
+    // Extra safety net: TMDB's adult flag is unreliable for some regional content,
+    // so also require a minimum vote count — low-effort/explicit listings rarely clear this bar.
+    params.push(`vote_count.gte=20`);
   }
   return params.join("&");
+}
+
+// Keyword-based safety net for titles/overviews that slip past TMDB's adult flag
+const BLOCKED_KEYWORDS = ["porn", "erotic", "xxx", "hentai", "softcore", "nude"];
+function looksExplicit(item) {
+  const text = `${item.title || ""} ${item.name || ""} ${item.original_title || ""} ${item.original_name || ""} ${item.overview || ""}`.toLowerCase();
+  return BLOCKED_KEYWORDS.some(k => text.includes(k));
 }
 
 function hasActiveFilters() {
@@ -1409,7 +1419,7 @@ async function doSearch(query) {
   main.innerHTML = loadingState();
   try {
     const data = await tmdbFetch(`/search/multi?language=ar&query=${encodeURIComponent(query)}`);
-    let results = data.results.filter(r => (r.media_type === "movie" || r.media_type === "tv") && !r.adult);
+    let results = data.results.filter(r => (r.media_type === "movie" || r.media_type === "tv") && !r.adult && !looksExplicit(r));
     let yearSuffix = "";
     if (activeYearFilter) {
       results = results.filter(r => {
@@ -1442,7 +1452,7 @@ async function openModal(id, type) {
       tmdbFetch(`/${endpoint}/${id}/credits?language=ar`),
       tmdbFetch(`/${endpoint}/${id}/videos`)
     ]);
-    if (details.adult) {
+    if (details.adult || looksExplicit(details)) {
       modalContent.innerHTML = `<div style="padding:60px 20px;">${emptyState("هذا المحتوى غير متاح في هذا التطبيق.")}</div>`;
       return;
     }
