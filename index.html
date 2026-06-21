@@ -2002,7 +2002,13 @@ function hasUnsafeCertification(item) {
 }
 
 function isAllowedContent(item) {
-  if (!item || item.adult === true) return false;
+  if (!item) return false;
+
+  // MyDramaList is intentionally unrestricted. Keep all safety restrictions
+  // below active for TMDB, TVmaze, and any other source.
+  if (itemSource(item) === "mdl") return true;
+
+  if (item.adult === true) return false;
   if (looksExplicit(item)) return false;
   if (hasUnsafeCertification(item)) return false;
   if (STRICT_SAFE_MODE && isAnime(item)) return false;
