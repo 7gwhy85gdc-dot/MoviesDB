@@ -74,8 +74,7 @@
 
   /* ---------- Header ---------- */
   header {
-    position: sticky;
-    top: 0;
+    position: relative;
     z-index: 100;
     background: linear-gradient(180deg, var(--bg) 70%, transparent);
     padding: 24px 5vw 16px;
@@ -126,26 +125,43 @@
 
   .nav-tabs {
     display: flex;
-    gap: 8px;
+    gap: 10px;
+    align-items: stretch;
+    justify-content: center;
+    margin-top: 16px;
+    padding: 8px;
+    background: rgba(255,255,255,0.035);
+    border: 1px solid var(--border);
+    border-radius: 22px;
+    max-width: 980px;
+    margin-inline: auto;
   }
   .nav-tab {
-    padding: 8px 16px;
-    border-radius: 20px;
-    font-size: 14px;
-    font-weight: 600;
+    min-width: 92px;
+    padding: 10px 14px;
+    border-radius: 16px;
+    font-size: 13px;
+    font-weight: 800;
     color: var(--text-muted);
-    background: transparent;
+    background: var(--card);
     border: 1px solid var(--border);
     cursor: pointer;
     transition: all 0.2s;
     white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
   }
   .nav-tab.active {
     background: var(--gold);
     color: #0B0E14;
     border-color: var(--gold);
+    box-shadow: 0 8px 22px rgba(232, 197, 71, 0.24);
+    transform: translateY(-1px);
   }
-  .nav-tab:hover:not(.active) { background: var(--card-hover); color: var(--text); }
+  .nav-tab:hover:not(.active) { background: var(--card-hover); color: var(--text); transform: translateY(-1px); }
   .nav-tab:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 
   /* ---------- Search ---------- */
@@ -342,6 +358,7 @@
     position: relative;
   }
   .genre-select-wrap { position: relative; }
+  .genre-select-wrap[hidden] { display: none; }
   .genre-select {
     padding: 9px 36px 9px 14px;
     border-radius: 20px;
@@ -366,6 +383,19 @@
     color: var(--text-muted);
     pointer-events: none;
     font-size: 12px;
+  }
+  .sort-select-wrap {
+    position: relative;
+  }
+  .sort-select-wrap::after {
+    content: "↕";
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--gold);
+    pointer-events: none;
+    font-size: 13px;
   }
   .genre-clear {
     padding: 9px 14px;
@@ -564,6 +594,27 @@
   }
   @keyframes spin { to { transform: rotate(360deg); } }
 
+  .load-more-wrap {
+    display: flex;
+    justify-content: center;
+    padding: 28px 0 12px;
+  }
+  .load-more-btn {
+    min-width: 180px;
+    padding: 12px 24px;
+    border-radius: 12px;
+    border: 1px solid var(--gold);
+    background: var(--gold);
+    color: #0B0E14;
+    font-family: 'Cairo', sans-serif;
+    font-size: 14px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: transform 0.15s, opacity 0.2s;
+  }
+  .load-more-btn:hover:not(:disabled) { transform: translateY(-2px); }
+  .load-more-btn:disabled { opacity: 0.55; cursor: wait; }
+
   /* ---------- Modal ---------- */
   .modal-overlay {
     position: fixed; inset: 0;
@@ -597,13 +648,26 @@
     width: 100%;
     aspect-ratio: 16/9;
     background: var(--card);
-    background-size: cover;
-    background-position: center;
+    overflow: hidden;
+  }
+  .modal-backdrop-media {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+    object-position: center;
+  }
+  .modal-backdrop-media.poster-fallback {
+    object-fit: contain;
+    background:
+      radial-gradient(circle at center, rgba(232,197,71,0.12), transparent 55%),
+      #0b0e14;
   }
   .modal-backdrop-img::after {
     content: "";
     position: absolute; inset: 0;
     background: linear-gradient(180deg, rgba(11,14,20,0.1) 0%, var(--bg-soft) 95%);
+    pointer-events: none;
   }
   .modal-close {
     position: absolute;
@@ -695,6 +759,40 @@
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
   }
+
+  @media (max-width: 600px) {
+    header { padding: 16px 16px 12px; }
+    main { padding: 8px 16px 50px; }
+
+    .nav-tabs,
+    .genre-bar,
+    .country-bar {
+      justify-content: flex-start !important;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      overscroll-behavior-inline: contain;
+      scrollbar-width: none;
+      padding-bottom: 8px;
+    }
+    .nav-tabs {
+      border-radius: 18px;
+      padding: 7px;
+      margin-top: 14px !important;
+      scroll-snap-type: x mandatory;
+    }
+    .nav-tab { min-width: 104px; scroll-snap-align: start; flex-direction: column; gap: 2px; }
+    .nav-tabs::-webkit-scrollbar,
+    .genre-bar::-webkit-scrollbar,
+    .country-bar::-webkit-scrollbar { display: none; }
+
+    .nav-tab,
+    .genre-select-wrap,
+    .genre-clear,
+    .country-chip { flex: 0 0 auto; }
+
+    .year-filter { margin-top: 14px; }
+    .modal-body { padding-inline: 20px; }
+  }
 </style>
 </head>
 <body data-theme="dark">
@@ -708,15 +806,16 @@
   </div>
 
   <div class="search-wrap">
-    <input type="text" class="search-input" id="searchInput" placeholder="ابحث عن فيلم أو مسلسل..." autocomplete="off">
+    <input type="text" class="search-input" id="searchInput" placeholder="ابحث بالعربي أو الإنجليزي عن فيلم أو مسلسل..." autocomplete="off">
     <span class="search-icon">🔍</span>
   </div>
 
-  <div class="nav-tabs" id="navTabs" role="tablist" style="margin-top: 16px; justify-content: center;">
-    <button class="nav-tab active" data-tab="home" role="tab">الرئيسية</button>
-    <button class="nav-tab" data-tab="movies" role="tab">أفلام رائجة</button>
-    <button class="nav-tab" data-tab="tv" role="tab">مسلسلات رائجة</button>
-    <button class="nav-tab" data-tab="asian" role="tab">🌏 آسيوي</button>
+  <div class="nav-tabs" id="navTabs" role="tablist">
+    <button class="nav-tab active" data-tab="home" role="tab">🏠 الرئيسية</button>
+    <button class="nav-tab" data-tab="movies" role="tab">🎬 أفلام</button>
+    <button class="nav-tab" data-tab="tv" role="tab">📺 مسلسلات</button>
+    <button class="nav-tab" data-tab="asianMovies" role="tab">🌏 أفلام آسيوية</button>
+    <button class="nav-tab" data-tab="asianTv" role="tab">🌏 مسلسلات آسيوية</button>
     <button class="nav-tab" data-tab="favorites" role="tab">⭐ المفضلة</button>
     <button class="nav-tab" data-tab="history" role="tab">📜 السجل</button>
   </div>
@@ -729,14 +828,24 @@
   </div>
 
   <div class="genre-bar">
-    <div class="genre-select-wrap">
+    <div class="genre-select-wrap" id="movieGenreWrap" hidden>
       <select class="genre-select" id="movieGenreSelect">
         <option value="">تصنيف الأفلام...</option>
       </select>
     </div>
-    <div class="genre-select-wrap">
+    <div class="genre-select-wrap" id="tvGenreWrap" hidden>
       <select class="genre-select" id="tvGenreSelect">
         <option value="">تصنيف المسلسلات...</option>
+      </select>
+    </div>
+    <div class="sort-select-wrap">
+      <select class="genre-select" id="sortSelect" aria-label="ترتيب النتائج">
+        <option value="default">الترتيب الافتراضي</option>
+        <option value="rating-desc">الأعلى تقييماً</option>
+        <option value="date-desc">الأحدث أولاً</option>
+        <option value="date-asc">الأقدم أولاً</option>
+        <option value="title-asc">الاسم: أ ← ي</option>
+        <option value="title-desc">الاسم: ي ← أ</option>
       </select>
     </div>
     <button class="genre-clear" id="genreClearBtn">✕ إزالة الفلتر</button>
@@ -745,13 +854,13 @@
   <div class="year-filter" id="yearFilter">
     <div class="year-filter-header">
       <span>تحديد نطاق السنوات</span>
-      <span class="range-values" id="yearRangeLabel">1980 - 2026</span>
+      <span class="range-values" id="yearRangeLabel"></span>
     </div>
     <div class="year-slider-track">
       <div class="year-slider-bg"></div>
       <div class="year-slider-fill" id="yearSliderFill"></div>
-      <input type="range" id="yearMin" min="1950" max="2026" value="1980" step="1">
-      <input type="range" id="yearMax" min="1950" max="2026" value="2026" step="1">
+      <input type="range" id="yearMin" min="1950" value="1980" step="1">
+      <input type="range" id="yearMax" min="1950" step="1">
     </div>
     <button class="year-filter-apply" id="yearApplyBtn">تطبيق نطاق السنوات</button>
   </div>
@@ -762,12 +871,18 @@
 </main>
 
 <footer>
-  البيانات مقدّمة من <a href="https://www.themoviedb.org" target="_blank" rel="noopener" style="color: var(--gold); text-decoration: underline;">TMDB</a> · مشروع شخصي
+  البيانات مقدّمة من
+  <a href="https://www.themoviedb.org" target="_blank" rel="noopener" style="color: var(--gold); text-decoration: underline;">TMDB</a>
+  و
+  <a href="https://www.tvmaze.com" target="_blank" rel="noopener" style="color: var(--gold); text-decoration: underline;">TVmaze</a>
+  وبيانات دراما من
+  <a href="https://mydramalist.com" target="_blank" rel="noopener" style="color: var(--gold); text-decoration: underline;">MyDramaList</a>
+  · مشروع شخصي
 </footer>
 
 <!-- Modal -->
 <div class="modal-overlay" id="modalOverlay">
-  <div class="modal" id="modalContent" role="dialog" aria-modal="true">
+  <div class="modal" id="modalContent" role="dialog" aria-modal="true" aria-label="تفاصيل العمل" tabindex="-1">
     <!-- injected -->
   </div>
 </div>
@@ -775,8 +890,13 @@
 <script>
 const TMDB_TOKEN = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJiNDIzNTIzNzA3NmIzMjYxZTNhMWJlY2NjNjBlOWE5OCIsIm5iZiI6MTc4MTg2ODUzNS4zNjksInN1YiI6IjZhMzUyN2Y3OGZlZjY4YTJmNGY1YzY0NSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.UKo-xpAPugwSb3oj6KT3bMQxDtLQ6k_RdVrZc5Cuvvg";
 const API_BASE = "https://api.themoviedb.org/3";
+const TVMAZE_API_BASE = "https://api.tvmaze.com";
+const MDL_API_BASE = window.CINEMATEK_MDL_API_BASE || "https://mydramalistunofficialapi.vercel.app";
 const IMG_BASE = "https://image.tmdb.org/t/p/w500";
 const BACKDROP_BASE = "https://image.tmdb.org/t/p/w1280";
+const CURRENT_YEAR = new Date().getFullYear();
+const MIN_YEAR = 1950;
+const DEFAULT_MIN_YEAR = 1980;
 
 let favorites = [];
 try {
@@ -787,24 +907,40 @@ function saveFavorites() {
   localStorage.setItem("cinematek_favorites", JSON.stringify(favorites));
 }
 
-function isFavorite(id, type) {
-  return favorites.some(f => f.id === id && f.type === type);
+function itemSource(item) {
+  return item.source || "tmdb";
+}
+
+function parseSourceId(id, source = "tmdb") {
+  return source === "mdl" ? id : parseInt(id);
+}
+
+function isFavorite(id, type, source = "tmdb") {
+  return favorites.some(f => f.id === id && f.type === type && itemSource(f) === source);
 }
 
 function toggleFavorite(item, type) {
-  const idx = favorites.findIndex(f => f.id === item.id && f.type === type);
+  if (!isAllowedContent(item)) return;
+  const source = itemSource(item);
+  const idx = favorites.findIndex(f => f.id === item.id && f.type === type && itemSource(f) === source);
   if (idx >= 0) {
     favorites.splice(idx, 1);
   } else {
     favorites.push({
       id: item.id,
       type: type,
+      source,
       title: item.title || item.name,
       original_title: item.original_title,
       original_name: item.original_name,
       poster_path: item.poster_path,
+      poster_url: item.poster_url,
       vote_average: item.vote_average,
-      release_date: item.release_date || item.first_air_date
+      release_date: item.release_date || item.first_air_date,
+      adult: item.adult === true,
+      genre_ids: contentGenreIds(item),
+      original_language: item.original_language || "",
+      origin_country: item.origin_country || []
     });
   }
   saveFavorites();
@@ -820,45 +956,103 @@ function saveWatchHistory() {
   localStorage.setItem("cinematek_history", JSON.stringify(watchHistory));
 }
 
-function isWatched(id, type) {
-  return watchHistory.some(w => w.id === id && w.type === type);
+function isWatched(id, type, source = "tmdb") {
+  return watchHistory.some(w => w.id === id && w.type === type && itemSource(w) === source);
 }
 
 function toggleWatched(item, type) {
-  const idx = watchHistory.findIndex(w => w.id === item.id && w.type === type);
+  if (!isAllowedContent(item)) return;
+  const source = itemSource(item);
+  const idx = watchHistory.findIndex(w => w.id === item.id && w.type === type && itemSource(w) === source);
   if (idx >= 0) {
     watchHistory.splice(idx, 1);
   } else {
     watchHistory.unshift({
       id: item.id,
       type: type,
+      source,
       title: item.title || item.name,
       original_title: item.original_title,
       original_name: item.original_name,
       poster_path: item.poster_path,
+      poster_url: item.poster_url,
       vote_average: item.vote_average,
       release_date: item.release_date || item.first_air_date,
+      adult: item.adult === true,
+      genre_ids: contentGenreIds(item),
+      original_language: item.original_language || "",
+      origin_country: item.origin_country || [],
       watched_at: new Date().toISOString()
     });
   }
   saveWatchHistory();
 }
 
-async function tmdbFetch(path) {
-  // Always enforce include_adult=false, regardless of which endpoint is called.
-  const separator = path.includes("?") ? "&" : "?";
-  const safePath = `${path}${separator}include_adult=false`;
-  const res = await fetch(`${API_BASE}${safePath}`, {
+const apiResponseCache = new Map();
+const apiPendingRequests = new Map();
+
+function cacheTtlForPath(path) {
+  if (/\/(movie|tv|shows|id)\/[^/?]+/.test(path)) return 15 * 60 * 1000;
+  if (/genre\/(movie|tv)\/list/.test(path)) return 24 * 60 * 60 * 1000;
+  return 2 * 60 * 1000;
+}
+
+async function fetchJsonCached(url, options = {}, ttl = 2 * 60 * 1000) {
+  const cached = apiResponseCache.get(url);
+  if (cached && cached.expiresAt > Date.now()) return cached.data;
+
+  // Abortable search requests must remain independent so cancelling an old
+  // search never cancels a newer consumer of the same URL.
+  const canSharePending = !options.signal;
+  if (canSharePending && apiPendingRequests.has(url)) {
+    return apiPendingRequests.get(url);
+  }
+
+  const request = fetch(url, options).then(async response => {
+    if (!response.ok) throw new Error(`API error ${response.status}`);
+    const data = await response.json();
+    apiResponseCache.set(url, { data, expiresAt: Date.now() + ttl });
+    return data;
+  }).finally(() => {
+    if (canSharePending) apiPendingRequests.delete(url);
+  });
+
+  if (canSharePending) apiPendingRequests.set(url, request);
+  return request;
+}
+
+async function tmdbFetch(path, { signal } = {}) {
+  // Strict personal safe mode: force TMDB adult filtering on every request.
+  // URLSearchParams.set() prevents a caller from accidentally keeping include_adult=true.
+  const url = new URL(`${API_BASE}${path}`);
+  url.searchParams.set("include_adult", "false");
+  return fetchJsonCached(url.toString(), {
     headers: {
       "Authorization": `Bearer ${TMDB_TOKEN}`,
       "accept": "application/json"
-    }
-  });
-  if (!res.ok) throw new Error("API error " + res.status);
-  return res.json();
+    },
+    signal
+  }, cacheTtlForPath(path));
+}
+
+async function tvmazeFetch(path, { signal } = {}) {
+  return fetchJsonCached(
+    `${TVMAZE_API_BASE}${path}`,
+    { signal },
+    cacheTtlForPath(path)
+  );
+}
+
+async function mdlFetch(path, { signal } = {}) {
+  return fetchJsonCached(
+    `${MDL_API_BASE}${path}`,
+    { signal },
+    cacheTtlForPath(path)
+  );
 }
 
 const main = document.getElementById("mainContent");
+const header = document.querySelector("header");
 const navTabs = document.getElementById("navTabs");
 const searchInput = document.getElementById("searchInput");
 const themeToggle = document.getElementById("themeToggle");
@@ -867,15 +1061,24 @@ const modalContent = document.getElementById("modalContent");
 
 let currentTab = "home";
 let searchDebounce = null;
+let searchController = null;
+let searchRequestId = 0;
 let movieGenres = {};
 let tvGenres = {};
 let activeGenreFilter = null; // { id, type }
 let activeYearFilter = null; // { min, max }
 let activeCountryFilter = ""; // "" | "KR" | "JP" | "CN"
+const SORT_OPTIONS = new Set(["default", "rating-desc", "date-desc", "date-asc", "title-asc", "title-desc"]);
+let activeSort = localStorage.getItem("cinematek_sort") || "default";
+if (!SORT_OPTIONS.has(activeSort)) activeSort = "default";
+let paginationState = null;
 
 const movieGenreSelect = document.getElementById("movieGenreSelect");
 const tvGenreSelect = document.getElementById("tvGenreSelect");
+const movieGenreWrap = document.getElementById("movieGenreWrap");
+const tvGenreWrap = document.getElementById("tvGenreWrap");
 const genreClearBtn = document.getElementById("genreClearBtn");
+const sortSelect = document.getElementById("sortSelect");
 const countryBar = document.getElementById("countryBar");
 const yearFilter = document.getElementById("yearFilter");
 const yearMinInput = document.getElementById("yearMin");
@@ -884,6 +1087,7 @@ const yearRangeLabel = document.getElementById("yearRangeLabel");
 const yearSliderFill = document.getElementById("yearSliderFill");
 const yearApplyBtn = document.getElementById("yearApplyBtn");
 const ASIAN_COUNTRIES = ["KR", "JP", "CN"];
+sortSelect.value = activeSort;
 
 // ---------- Theme ----------
 function initTheme() {
@@ -913,7 +1117,8 @@ function emptyState(msg) {
 
 function posterImg(path, title) {
   if (path) {
-    return `<img src="${IMG_BASE}${path}" alt="${escapeHtml(title)}" loading="lazy">`;
+    const src = /^https?:\/\//.test(path) ? path : `${IMG_BASE}${path}`;
+    return `<img src="${src}" alt="${escapeHtml(title)}" loading="lazy" decoding="async">`;
   }
   return `<div class="poster-placeholder">${escapeHtml(title)}</div>`;
 }
@@ -930,76 +1135,364 @@ function yearOf(item) {
   return d ? d.slice(0,4) : "—";
 }
 
+function itemTimestamp(item) {
+  const value = item.release_date || item.first_air_date || "";
+  const timestamp = Date.parse(value);
+  if (Number.isFinite(timestamp)) return timestamp;
+  const year = parseInt(String(value).match(/\d{4}/)?.[0] || "", 10);
+  return Number.isFinite(year) ? Date.UTC(year, 0, 1) : 0;
+}
+
+function compareTitles(a, b) {
+  return getDisplayTitle(a).localeCompare(getDisplayTitle(b), ["ar", "en"], {
+    sensitivity: "base",
+    numeric: true
+  });
+}
+
+function applySort(items, sort = activeSort) {
+  if (!Array.isArray(items) || sort === "default") return [...(items || [])];
+  return [...items].sort((a, b) => {
+    if (sort === "rating-desc") {
+      return (b.vote_average || 0) - (a.vote_average || 0) ||
+        itemTimestamp(b) - itemTimestamp(a) ||
+        compareTitles(a, b);
+    }
+    if (sort === "date-desc") {
+      return itemTimestamp(b) - itemTimestamp(a) ||
+        (b.vote_average || 0) - (a.vote_average || 0) ||
+        compareTitles(a, b);
+    }
+    if (sort === "date-asc") {
+      const aDate = itemTimestamp(a);
+      const bDate = itemTimestamp(b);
+      if (!aDate && bDate) return 1;
+      if (aDate && !bDate) return -1;
+      return aDate - bDate ||
+        compareTitles(a, b);
+    }
+    if (sort === "title-desc") return compareTitles(b, a);
+    return compareTitles(a, b);
+  });
+}
+
+function tmdbSortValue(type) {
+  const shared = {
+    "rating-desc": "vote_average.desc",
+    "date-desc": type === "movie" ? "primary_release_date.desc" : "first_air_date.desc",
+    "date-asc": type === "movie" ? "primary_release_date.asc" : "first_air_date.asc"
+  };
+  return shared[activeSort] || "popularity.desc";
+}
+
+function getDisplayTitle(item) {
+  // Prefer the English/localized TMDB title returned by language=en-US.
+  // Fallback to the original title only when no English title is available.
+  return item.title || item.name || item.english_title || item.original_title || item.original_name || "Untitled";
+}
+
+function normalizeTitleText(title) {
+  return (title || "").trim().toLowerCase();
+}
+
+function getArabicTitle(item) {
+  return item.arabic_title || item.arabic_name || item.title_ar || item.name_ar || "";
+}
+
+function getSecondaryTitle(item) {
+  const displayTitle = getDisplayTitle(item);
+  const arabicTitle = getArabicTitle(item);
+  if (!arabicTitle || normalizeTitleText(arabicTitle) === normalizeTitleText(displayTitle)) return "";
+  return arabicTitle;
+}
+
+function applyArabicTitle(item, arabicItem) {
+  if (!item || !arabicItem) return item;
+  const arabicTitle = arabicItem.title || arabicItem.name || arabicItem.arabic_title || arabicItem.arabic_name || "";
+  const arabicOverview = hasArabicText(arabicItem.overview) ? arabicItem.overview.trim() : "";
+  const arabicTagline = hasArabicText(arabicItem.tagline) ? arabicItem.tagline.trim() : "";
+  return {
+    ...item,
+    ...(arabicTitle && normalizeTitleText(arabicTitle) !== normalizeTitleText(getDisplayTitle(item))
+      ? { arabic_title: arabicTitle, arabic_name: arabicTitle }
+      : {}),
+    ...(arabicOverview ? { overview: arabicOverview } : {}),
+    ...(arabicTagline ? { tagline: arabicTagline } : {})
+  };
+}
+
+function hasArabicText(text) {
+  return /[\u0600-\u06FF]/.test(String(text || ""));
+}
+
+const arabicDescriptionCache = (() => {
+  try {
+    return JSON.parse(localStorage.getItem("cinematek_arabic_descriptions") || "{}");
+  } catch(e) {
+    return {};
+  }
+})();
+
+function splitTranslationText(text, maxLength = 2800) {
+  const paragraphs = String(text || "").split(/\n+/).map(part => part.trim()).filter(Boolean);
+  const chunks = [];
+  let current = "";
+  paragraphs.forEach(paragraph => {
+    if ((current + "\n" + paragraph).length <= maxLength) {
+      current += `${current ? "\n" : ""}${paragraph}`;
+      return;
+    }
+    if (current) chunks.push(current);
+    for (let start = 0; start < paragraph.length; start += maxLength) {
+      chunks.push(paragraph.slice(start, start + maxLength));
+    }
+    current = "";
+  });
+  if (current) chunks.push(current);
+  return chunks;
+}
+
+function stableTextCacheKey(text) {
+  let hash = 2166136261;
+  for (let index = 0; index < text.length; index++) {
+    hash ^= text.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return `${text.length}:${(hash >>> 0).toString(36)}`;
+}
+
+async function translateTextToArabic(text) {
+  const cleanText = String(text || "").trim();
+  if (!cleanText || hasArabicText(cleanText)) return cleanText;
+  const cacheKey = stableTextCacheKey(cleanText);
+  if (arabicDescriptionCache[cacheKey]) return arabicDescriptionCache[cacheKey];
+
+  const translatedParts = [];
+  for (const chunk of splitTranslationText(cleanText)) {
+    const url = new URL("https://translate.googleapis.com/translate_a/single");
+    url.searchParams.set("client", "gtx");
+    url.searchParams.set("sl", "auto");
+    url.searchParams.set("tl", "ar");
+    url.searchParams.set("dt", "t");
+    url.searchParams.set("q", chunk);
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`Translation API error ${response.status}`);
+    const data = await response.json();
+    translatedParts.push((data[0] || []).map(part => part[0] || "").join("").trim());
+  }
+
+  const translated = translatedParts.filter(Boolean).join("\n\n");
+  if (translated && hasArabicText(translated)) {
+    arabicDescriptionCache[cacheKey] = translated;
+    try {
+      localStorage.setItem("cinematek_arabic_descriptions", JSON.stringify(arabicDescriptionCache));
+    } catch(e) {}
+    return translated;
+  }
+  return "";
+}
+
+async function ensureArabicDescription(item) {
+  const overview = String(item?.overview || "").trim();
+  if (!overview || hasArabicText(overview)) return item;
+  try {
+    const translated = await translateTextToArabic(overview);
+    return translated ? { ...item, overview: translated } : { ...item, overview: "" };
+  } catch(e) {
+    return { ...item, overview: "" };
+  }
+}
+
+function mergeArabicTitles(items, arabicItems) {
+  if (!Array.isArray(items) || !Array.isArray(arabicItems) || arabicItems.length === 0) return items || [];
+  const arabicById = new Map(arabicItems.map(item => [item.id, item]));
+  return items.map(item => applyArabicTitle(item, arabicById.get(item.id)));
+}
+
+function toArabicEndpoint(endpoint) {
+  if (endpoint.includes("language=")) return endpoint.replace(/language=[^&]+/, "language=ar");
+  return `${endpoint}${endpoint.includes("?") ? "&" : "?"}language=ar`;
+}
+
+async function fetchArabicList(endpoint) {
+  try {
+    const data = await tmdbFetch(toArabicEndpoint(endpoint));
+    return data.results || [];
+  } catch(e) {
+    return [];
+  }
+}
+
+const renderedItemCache = new Map();
+
+function renderedItemKey(id, type, source = "tmdb") {
+  return `${source}:${type}:${id}`;
+}
+
 function cardHtml(item, type) {
-  const originalTitle = item.original_title || item.original_name || item.title || item.name || "بدون عنوان";
-  const arabicTitle = item.title || item.name || "";
-  const showArabic = arabicTitle && arabicTitle.trim() !== "" && arabicTitle.trim() !== originalTitle.trim();
+  if (!isAllowedContent(item)) return "";
+  const displayTitle = getDisplayTitle(item);
+  const secondaryTitle = getSecondaryTitle(item);
+  const showSecondaryTitle = !!secondaryTitle;
+  const originalTitle = item.original_title || item.original_name || displayTitle;
+  const arabicTitle = getArabicTitle(item);
   const rating = item.vote_average ? item.vote_average.toFixed(1) : "—";
-  const fav = isFavorite(item.id, type);
-  const watched = isWatched(item.id, type);
-  const posterPath = item.poster_path || "";
+  const source = itemSource(item);
+  renderedItemCache.set(renderedItemKey(item.id, type, source), item);
+  const fav = isFavorite(item.id, type, source);
+  const watched = isWatched(item.id, type, source);
+  const posterPath = item.poster_url || item.poster_path || "";
   const dateVal = item.release_date || item.first_air_date || "";
+  const knownSourceStatus = item.in_production === true || item.in_production === false;
+  const sourceBadge = source === "tvmaze" || source === "mdl"
+    ? `<div class="status-badge ${knownSourceStatus ? (item.in_production ? 'ongoing' : 'ended') : ''} show"
+        ${source === "mdl" && type === "tv" ? `data-mdl-status-for="${escapeHtml(String(item.id))}"` : ""}>
+        <span>${knownSourceStatus ? (item.in_production ? 'مستمر' : 'منتهي') : 'جاري التحقق'}</span>
+        <span style="display:flex;align-items:center;">${source === "mdl" ? "MDL" : "TVmaze"}<span class="status-dot"></span></span>
+      </div>`
+    : `<div class="status-badge" data-status-for="${item.id}"></div>`;
   return `
-    <div class="card" tabindex="0" data-id="${item.id}" data-type="${type}" role="button" aria-label="${escapeHtml(originalTitle)}">
+    <div class="card" tabindex="0" data-id="${item.id}" data-type="${type}" data-source="${source}" role="button" aria-label="${escapeHtml(displayTitle)}">
       <div class="poster-wrap">
-        ${posterImg(item.poster_path, originalTitle)}
+        ${posterImg(posterPath, displayTitle)}
         <div class="rating-badge">★ ${rating}</div>
         <button class="fav-btn ${fav ? 'active' : ''}"
-          data-fav-id="${item.id}" data-fav-type="${type}"
-          data-fav-title="${escapeHtml(arabicTitle || originalTitle)}"
+          data-fav-id="${item.id}" data-fav-type="${type}" data-fav-source="${source}"
+          data-fav-title="${escapeHtml(displayTitle)}"
           data-fav-original-title="${escapeHtml(originalTitle)}"
+          data-fav-arabic-title="${escapeHtml(arabicTitle)}"
           data-fav-poster="${posterPath}"
           data-fav-rating="${item.vote_average || 0}"
           data-fav-date="${dateVal}"
+          data-fav-genres="${contentGenreIds(item).join(',')}"
+          data-fav-language="${escapeHtml(item.original_language || '')}"
+          data-fav-countries="${escapeHtml((item.origin_country || []).join(','))}"
           aria-label="إضافة للمفضلة">${fav ? '♥' : '♡'}</button>
-        ${type === 'tv' ? `<div class="status-badge" data-status-for="${item.id}"></div>` : ''}
+        ${type === 'tv' ? sourceBadge : ''}
         <button class="watched-btn ${watched ? 'active' : ''}"
-          data-watched-id="${item.id}" data-watched-type="${type}"
-          data-watched-title="${escapeHtml(arabicTitle || originalTitle)}"
+          data-watched-id="${item.id}" data-watched-type="${type}" data-watched-source="${source}"
+          data-watched-title="${escapeHtml(displayTitle)}"
           data-watched-original-title="${escapeHtml(originalTitle)}"
+          data-watched-arabic-title="${escapeHtml(arabicTitle)}"
           data-watched-poster="${posterPath}"
           data-watched-rating="${item.vote_average || 0}"
           data-watched-date="${dateVal}"
+          data-watched-genres="${contentGenreIds(item).join(',')}"
+          data-watched-language="${escapeHtml(item.original_language || '')}"
+          data-watched-countries="${escapeHtml((item.origin_country || []).join(','))}"
           aria-label="تمت المشاهدة" title="تمت المشاهدة">${watched ? '✔' : '👁'}</button>
       </div>
       <div class="card-info">
-        <div class="card-title">${escapeHtml(originalTitle)}</div>
-        ${showArabic ? `<div class="card-title-ar">${escapeHtml(arabicTitle)}</div>` : ""}
+        <div class="card-title">${escapeHtml(displayTitle)}</div>
+        ${showSecondaryTitle ? `<div class="card-title-ar">${escapeHtml(secondaryTitle)}</div>` : ""}
         <div class="card-sub">${yearOf(item)} · ${type === 'movie' ? 'فيلم' : 'مسلسل'}</div>
       </div>
     </div>
   `;
 }
 
-function filterAdult(items) {
+function filterAllowedContent(items) {
   if (!items) return items;
-  return items.filter(i => !i.adult && !looksExplicit(i));
+  return items.filter(isAllowedContent);
 }
 
-function rowHtml(titleText, items, type) {
-  items = filterAdult(items);
+function rowHtml(titleText, items, type, id = "") {
+  items = applySort(filterAllowedContent(items));
   if (!items || items.length === 0) return "";
   return `
     <h2 class="section-title">${titleText}</h2>
-    <div class="row-scroll">
+    <div class="row-scroll"${id ? ` id="${id}"` : ""}>
       ${items.map(i => cardHtml(i, type)).join("")}
     </div>
   `;
 }
 
 function gridHtml(items, type) {
-  items = filterAdult(items);
+  items = applySort(filterAllowedContent(items));
   if (!items || items.length === 0) return emptyState("لا توجد نتائج");
   return `<div class="grid">${items.map(i => cardHtml(i, type)).join("")}</div>`;
 }
 
-// ---------- TV status badges (lazy-loaded, since list endpoints don't include status/seasons) ----------
+function gridContainerHtml(items, type, id) {
+  items = applySort(filterAllowedContent(items));
+  if (!items || items.length === 0) return `<div class="grid" id="${id}"></div>`;
+  return `<div class="grid" id="${id}">${items.map(i => cardHtml(i, type)).join("")}</div>`;
+}
+
+function loadMoreHtml(stream, hasMore = true) {
+  return hasMore
+    ? `<div class="load-more-wrap"><button class="load-more-btn" data-load-stream="${stream}">تحميل المزيد</button></div>`
+    : "";
+}
+
+function addPageParam(endpoint, page) {
+  return `${endpoint}${endpoint.includes("?") ? "&" : "?"}page=${page}`;
+}
+
+function uniqueItems(existing, incoming) {
+  const seenIds = new Set(existing.map(item => `${itemSource(item)}:${item.id}:${item.type || item.media_type || ""}`));
+  const seenContent = new Set(existing.map(contentMatchKey));
+  return incoming.filter(item => {
+    const idKey = `${itemSource(item)}:${item.id}:${item.type || item.media_type || ""}`;
+    const contentKey = contentMatchKey(item);
+    if (seenIds.has(idKey) || (contentKey && seenContent.has(contentKey))) return false;
+    seenIds.add(idKey);
+    if (contentKey) seenContent.add(contentKey);
+    return true;
+  });
+}
+
+function appendCards(containerId, items, type) {
+  const container = document.getElementById(containerId);
+  if (!container || !items.length) return;
+  container.insertAdjacentHTML("beforeend", items.map(item => cardHtml(item, type)).join(""));
+}
+
+function replaceCards(containerId, items, type = null) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const sortedItems = applySort(filterAllowedContent(items));
+  container.innerHTML = sortedItems.map(item =>
+    cardHtml(item, type || item.media_type || item.type)
+  ).join("");
+}
+
+function refreshCurrentSort() {
+  const state = paginationState;
+  if (!state) {
+    renderTab(currentTab);
+    return;
+  }
+  if (state.mode === "home") {
+    replaceCards("homeMoviesRow", state.movieItems, "movie");
+    replaceCards("homeTvRow", state.tvItems, "tv");
+    replaceCards("homeTopRow", state.topItems, "movie");
+  } else if (state.mode === "dual" || state.mode === "asian") {
+    replaceCards("moviesGrid", state.movieItems, "movie");
+    replaceCards("tvGrid", state.tvItems, "tv");
+  } else {
+    replaceCards(state.containerId, state.items, state.type || null);
+  }
+  loadVisibleTvStatuses();
+}
+
+// ---------- TV status badges (loaded only when cards approach the viewport) ----------
 const tvStatusCache = {};
+const mdlStatusCache = {};
+const mdlStatusPending = {};
+const mdlStatusQueue = [];
+const queuedMdlStatusIds = new Set();
+const tvStatusQueue = [];
+const queuedTvStatusIds = new Set();
+let activeTvStatusRequests = 0;
+let activeMdlStatusRequests = 0;
+const MAX_TV_STATUS_REQUESTS = 4;
+const MAX_MDL_STATUS_REQUESTS = 3;
 
 async function fetchTvStatus(id) {
   if (tvStatusCache[id]) return tvStatusCache[id];
   try {
-    const d = await tmdbFetch(`/tv/${id}?language=ar`);
+    const d = await tmdbFetch(`/tv/${id}?language=en-US`);
     const info = {
       ongoing: d.status === "Returning Series" || d.in_production === true,
       statusRaw: d.status,
@@ -1018,15 +1511,158 @@ function statusLabel(info) {
   return { statusText, seasonsText, cls: info.ongoing ? 'ongoing' : 'ended' };
 }
 
+function renderTvStatus(badge, info) {
+  if (!badge.isConnected || !info) return;
+  const { statusText, seasonsText, cls } = statusLabel(info);
+  badge.classList.add(cls, "show");
+  badge.innerHTML = `<span>${statusText}</span><span style="display:flex;align-items:center;">${seasonsText}<span class="status-dot"></span></span>`;
+  delete badge.dataset.statusFor;
+  delete badge.dataset.mdlStatusFor;
+}
+
+function inferMdlProductionStatus(details) {
+  const explicit = String(details.status || details.type || "").toLowerCase();
+  if (/\b(returning|ongoing|airing)\b/.test(explicit)) return true;
+  if (/\b(ended|finished|completed)\b/.test(explicit)) return false;
+
+  const aired = String(details.aired || "").trim();
+  if (!aired) return null;
+  const rangeParts = aired.split(/\s+-\s+/);
+  const startDate = new Date(rangeParts[0].trim());
+  if (rangeParts.length < 2) {
+    if (Number.isNaN(startDate.getTime())) return null;
+    return startDate.getTime() <= Date.now() ? false : null;
+  }
+  const endText = rangeParts[1].trim();
+  if (!endText || /\?|present|ongoing|tba/i.test(endText)) {
+    return !Number.isNaN(startDate.getTime()) && startDate.getTime() <= Date.now() ? true : null;
+  }
+  const endDate = new Date(endText);
+  if (Number.isNaN(endDate.getTime())) return null;
+  if (!Number.isNaN(startDate.getTime()) && startDate.getTime() > Date.now()) return null;
+  return endDate.getTime() > Date.now();
+}
+
+async function fetchMdlStatus(id) {
+  if (Object.prototype.hasOwnProperty.call(mdlStatusCache, id)) return mdlStatusCache[id];
+  if (mdlStatusPending[id]) return mdlStatusPending[id];
+  mdlStatusPending[id] = (async () => {
+    try {
+      const details = await mdlFetch(`/api/id/${id}`);
+      const ongoing = inferMdlProductionStatus(details);
+      const info = ongoing === null ? null : {
+        ongoing,
+        statusRaw: ongoing ? "Returning Series" : "Ended",
+        seasons: null
+      };
+      mdlStatusCache[id] = info;
+      return info;
+    } catch(e) {
+      mdlStatusCache[id] = null;
+      return null;
+    } finally {
+      delete mdlStatusPending[id];
+    }
+  })();
+  return mdlStatusPending[id];
+}
+
+function renderUnknownMdlStatus(badge) {
+  if (!badge.isConnected) return;
+  badge.classList.remove("ongoing", "ended");
+  badge.innerHTML = `<span>غير معروف</span><span style="display:flex;align-items:center;">MDL<span class="status-dot"></span></span>`;
+  delete badge.dataset.mdlStatusFor;
+}
+
+function processMdlStatusQueue() {
+  while (activeMdlStatusRequests < MAX_MDL_STATUS_REQUESTS && mdlStatusQueue.length) {
+    const { id, badge } = mdlStatusQueue.shift();
+    queuedMdlStatusIds.delete(id);
+    activeMdlStatusRequests++;
+    fetchMdlStatus(id)
+      .then(info => {
+        document.querySelectorAll(`.status-badge[data-mdl-status-for="${CSS.escape(id)}"]`)
+          .forEach(currentBadge => info
+            ? renderTvStatus(currentBadge, info)
+            : renderUnknownMdlStatus(currentBadge));
+      })
+      .finally(() => {
+        activeMdlStatusRequests--;
+        processMdlStatusQueue();
+      });
+  }
+}
+
+function queueMdlStatus(badge) {
+  const id = badge.dataset.mdlStatusFor;
+  if (Object.prototype.hasOwnProperty.call(mdlStatusCache, id)) {
+    const info = mdlStatusCache[id];
+    info ? renderTvStatus(badge, info) : renderUnknownMdlStatus(badge);
+    return;
+  }
+  if (queuedMdlStatusIds.has(id)) return;
+  queuedMdlStatusIds.add(id);
+  mdlStatusQueue.push({ id, badge });
+  processMdlStatusQueue();
+}
+
+function processTvStatusQueue() {
+  while (activeTvStatusRequests < MAX_TV_STATUS_REQUESTS && tvStatusQueue.length) {
+    const { id, badge } = tvStatusQueue.shift();
+    queuedTvStatusIds.delete(id);
+    activeTvStatusRequests++;
+    fetchTvStatus(id)
+      .then(info => {
+        document.querySelectorAll(`.status-badge[data-status-for="${id}"]`)
+          .forEach(currentBadge => renderTvStatus(currentBadge, info));
+      })
+      .finally(() => {
+        activeTvStatusRequests--;
+        processTvStatusQueue();
+      });
+  }
+}
+
+function queueTvStatus(badge) {
+  const id = badge.dataset.statusFor;
+  if (tvStatusCache[id]) {
+    renderTvStatus(badge, tvStatusCache[id]);
+    return;
+  }
+  if (queuedTvStatusIds.has(id)) return;
+  queuedTvStatusIds.add(id);
+  tvStatusQueue.push({ id, badge });
+  processTvStatusQueue();
+}
+
+const tvStatusObserver = "IntersectionObserver" in window
+  ? new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        tvStatusObserver.unobserve(entry.target);
+        queueTvStatus(entry.target);
+      });
+    }, { rootMargin: "250px" })
+  : null;
+
+const mdlStatusObserver = "IntersectionObserver" in window
+  ? new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        mdlStatusObserver.unobserve(entry.target);
+        queueMdlStatus(entry.target);
+      });
+    }, { rootMargin: "250px" })
+  : null;
+
 function loadVisibleTvStatuses() {
-  const badges = document.querySelectorAll(".status-badge[data-status-for]");
-  badges.forEach(async (badge) => {
-    const id = badge.dataset.statusFor;
-    const info = await fetchTvStatus(id);
-    if (!info) return;
-    const { statusText, seasonsText, cls } = statusLabel(info);
-    badge.classList.add(cls, "show");
-    badge.innerHTML = `<span>${statusText}</span><span style="display:flex;align-items:center;">${seasonsText}<span class="status-dot"></span></span>`;
+  document.querySelectorAll(".status-badge[data-status-for]").forEach(badge => {
+    if (tvStatusObserver) tvStatusObserver.observe(badge);
+    else queueTvStatus(badge);
+  });
+  document.querySelectorAll(".status-badge[data-mdl-status-for]").forEach(badge => {
+    if (mdlStatusObserver) mdlStatusObserver.observe(badge);
+    else queueMdlStatus(badge);
   });
 }
 
@@ -1035,17 +1671,24 @@ main.addEventListener("click", (e) => {
   const favBtn = e.target.closest(".fav-btn");
   if (favBtn) {
     e.stopPropagation();
-    const id = parseInt(favBtn.dataset.favId);
     const type = favBtn.dataset.favType;
+    const source = favBtn.dataset.favSource || "tmdb";
+    const id = parseSourceId(favBtn.dataset.favId, source);
     const origTitle = favBtn.dataset.favOriginalTitle;
     const fakeItem = {
       id,
+      source,
       title: favBtn.dataset.favTitle,
       name: favBtn.dataset.favTitle,
       original_title: type === "movie" ? origTitle : undefined,
       original_name: type === "tv" ? origTitle : undefined,
+      arabic_title: favBtn.dataset.favArabicTitle || "",
+      arabic_name: favBtn.dataset.favArabicTitle || "",
       poster_path: favBtn.dataset.favPoster || null,
       vote_average: parseFloat(favBtn.dataset.favRating) || 0,
+      genre_ids: favBtn.dataset.favGenres.split(",").filter(Boolean).map(Number),
+      original_language: favBtn.dataset.favLanguage || "",
+      origin_country: favBtn.dataset.favCountries.split(",").filter(Boolean),
       release_date: type === "movie" ? favBtn.dataset.favDate : undefined,
       first_air_date: type === "tv" ? favBtn.dataset.favDate : undefined
     };
@@ -1058,17 +1701,24 @@ main.addEventListener("click", (e) => {
   const watchedBtn = e.target.closest(".watched-btn");
   if (watchedBtn) {
     e.stopPropagation();
-    const id = parseInt(watchedBtn.dataset.watchedId);
     const type = watchedBtn.dataset.watchedType;
+    const source = watchedBtn.dataset.watchedSource || "tmdb";
+    const id = parseSourceId(watchedBtn.dataset.watchedId, source);
     const origTitle = watchedBtn.dataset.watchedOriginalTitle;
     const fakeItem = {
       id,
+      source,
       title: watchedBtn.dataset.watchedTitle,
       name: watchedBtn.dataset.watchedTitle,
       original_title: type === "movie" ? origTitle : undefined,
       original_name: type === "tv" ? origTitle : undefined,
+      arabic_title: watchedBtn.dataset.watchedArabicTitle || "",
+      arabic_name: watchedBtn.dataset.watchedArabicTitle || "",
       poster_path: watchedBtn.dataset.watchedPoster || null,
       vote_average: parseFloat(watchedBtn.dataset.watchedRating) || 0,
+      genre_ids: watchedBtn.dataset.watchedGenres.split(",").filter(Boolean).map(Number),
+      original_language: watchedBtn.dataset.watchedLanguage || "",
+      origin_country: watchedBtn.dataset.watchedCountries.split(",").filter(Boolean),
       release_date: type === "movie" ? watchedBtn.dataset.watchedDate : undefined,
       first_air_date: type === "tv" ? watchedBtn.dataset.watchedDate : undefined
     };
@@ -1080,7 +1730,8 @@ main.addEventListener("click", (e) => {
   }
   const card = e.target.closest(".card");
   if (card) {
-    openModal(parseInt(card.dataset.id), card.dataset.type);
+    const source = card.dataset.source || "tmdb";
+    openModal(parseSourceId(card.dataset.id, source), card.dataset.type, source);
   }
 });
 main.addEventListener("keydown", (e) => {
@@ -1088,7 +1739,8 @@ main.addEventListener("keydown", (e) => {
     const card = e.target.closest(".card");
     if (card && document.activeElement === card) {
       e.preventDefault();
-      openModal(parseInt(card.dataset.id), card.dataset.type);
+      const source = card.dataset.source || "tmdb";
+      openModal(parseSourceId(card.dataset.id, source), card.dataset.type, source);
     }
   }
 });
@@ -1117,12 +1769,17 @@ function updateYearSliderUI() {
   let minV = parseInt(yearMinInput.value);
   let maxV = parseInt(yearMaxInput.value);
   yearRangeLabel.textContent = `${minV} - ${maxV}`;
-  const range = 2026 - 1950;
-  const leftPct = ((minV - 1950) / range) * 100;
-  const rightPct = ((maxV - 1950) / range) * 100;
+  const range = CURRENT_YEAR - MIN_YEAR;
+  const leftPct = ((minV - MIN_YEAR) / range) * 100;
+  const rightPct = ((maxV - MIN_YEAR) / range) * 100;
   yearSliderFill.style.right = `${leftPct}%`;
   yearSliderFill.style.left = `${100 - rightPct}%`;
 }
+yearMinInput.max = CURRENT_YEAR;
+yearMaxInput.max = CURRENT_YEAR;
+yearMinInput.value = DEFAULT_MIN_YEAR;
+yearMaxInput.value = CURRENT_YEAR;
+
 yearMinInput.addEventListener("input", () => {
   if (parseInt(yearMinInput.value) > parseInt(yearMaxInput.value)) {
     yearMinInput.value = yearMaxInput.value;
@@ -1178,8 +1835,8 @@ genreClearBtn.addEventListener("click", () => {
   activeYearFilter = null;
   movieGenreSelect.value = "";
   tvGenreSelect.value = "";
-  yearMinInput.value = 1980;
-  yearMaxInput.value = 2026;
+  yearMinInput.value = DEFAULT_MIN_YEAR;
+  yearMaxInput.value = CURRENT_YEAR;
   updateYearSliderUI();
   genreClearBtn.classList.remove("show");
   renderTab(currentTab);
@@ -1195,8 +1852,62 @@ countryBar.addEventListener("click", (e) => {
   renderTab(currentTab);
 });
 
+sortSelect.addEventListener("change", () => {
+  activeSort = sortSelect.value;
+  localStorage.setItem("cinematek_sort", activeSort);
+  cancelActiveSearch();
+  const query = searchInput.value.trim();
+  if (query) {
+    doSearch(query);
+  } else {
+    renderTab(currentTab);
+  }
+});
+
+function isAsianTab(tab = currentTab) {
+  return tab === "asianMovies" || tab === "asianTv";
+}
+
+function tabContentType(tab = currentTab) {
+  if (tab === "movies" || tab === "asianMovies") return "movie";
+  if (tab === "tv" || tab === "asianTv") return "tv";
+  return null;
+}
+
+function isAsianContent(item) {
+  if (itemSource(item) === "mdl") return true;
+  const countries = [
+    ...(item.origin_country || []),
+    ...(item.production_countries || []).map(c => c.iso_3166_1).filter(Boolean)
+  ];
+  const countryByLanguage = { ko: "KR", ja: "JP", zh: "CN" };
+  const langCountry = countryByLanguage[item.original_language];
+  return countries.some(country => ASIAN_COUNTRIES.includes(country)) || ASIAN_COUNTRIES.includes(langCountry);
+}
+
+function filterForCurrentTab(items, type = null, tab = currentTab) {
+  let filtered = filterAllowedContent(items || []);
+  const wantedType = tabContentType(tab) || type;
+  if (wantedType) {
+    filtered = filtered.filter(item => (item.media_type || item.type || wantedType) === wantedType);
+  }
+  if (isAsianTab(tab)) {
+    const allowedCountries = activeCountryFilter ? [activeCountryFilter] : ASIAN_COUNTRIES;
+    filtered = filtered.filter(item => matchesAsianCountry(item, allowedCountries));
+  } else if (tab === "movies" || tab === "tv") {
+    filtered = filtered.filter(item => !isAsianContent(item));
+  }
+  return filtered;
+}
+
 function buildDiscoverQuery(type) {
-  const params = [`language=ar`, `sort_by=popularity.desc`];
+  const params = [`language=en-US`, `sort_by=${tmdbSortValue(type)}`];
+  if (activeSort === "rating-desc") params.push("vote_count.gte=20");
+  if (STRICT_SAFE_MODE && type === "movie") {
+    // Keep movie discovery under common family-safe certification limits where TMDB has ratings.
+    params.push(`certification_country=US`);
+    params.push(`certification.lte=PG-13`);
+  }
   if (activeGenreFilter && activeGenreFilter.type === type) {
     params.push(`with_genres=${activeGenreFilter.id}`);
   }
@@ -1209,7 +1920,7 @@ function buildDiscoverQuery(type) {
       params.push(`first_air_date.lte=${activeYearFilter.max}-12-31`);
     }
   }
-  if (currentTab === "asian") {
+  if (isAsianTab()) {
     const countries = activeCountryFilter ? activeCountryFilter : ASIAN_COUNTRIES.join("|");
     params.push(`with_origin_country=${countries}`);
     // Extra safety net: TMDB's adult flag is unreliable for some regional content,
@@ -1219,15 +1930,400 @@ function buildDiscoverQuery(type) {
   return params.join("&");
 }
 
-// Keyword-based safety net for titles/overviews that slip past TMDB's adult flag
-const BLOCKED_KEYWORDS = ["porn", "erotic", "xxx", "hentai", "softcore", "nude"];
+// Safety filters applied after TMDB's include_adult=false protection.
+// This is intentionally strict for personal/family-safe use. It may hide some normal mature titles.
+const ANIMATION_GENRE_ID = 16;
+const STRICT_SAFE_MODE = true;
+const BLOCKED_KEYWORDS = [
+  "porn", "pornography", "porno", "erotic", "erotica", "xxx", "hentai", "softcore", "hardcore",
+  "nude", "nudity", "sex", "sexual", "sensual", "seduction", "strip", "stripper", "brothel",
+  "prostitute", "prostitution", "playboy", "onlyfans", "camgirl", "av idol", "pink film",
+  "色情", "成人", "成人影片", "情色", "裸體", "裸", "エロ", "アダルト", "ポルノ", "성인", "에로",
+  "إباحي", "إباحية", "اباحي", "اباحية", "جنسي", "جنسية", "عاري", "عري", "تعري", "مثير", "إثارة جنسية"
+];
+const BLOCKED_GENRE_WORDS = ["adult", "erotic", "hentai", "porn", "إباح", "جنسي"];
+const BLOCKED_CERTIFICATIONS = ["NC-17", "X", "18", "18+", "R18", "R18+", "AO", "TV-MA"];
+
+function contentGenreIds(item) {
+  if (Array.isArray(item.genre_ids)) return item.genre_ids.map(Number);
+  if (Array.isArray(item.genres)) return item.genres.map(g => Number(g.id));
+  return [];
+}
+
+function contentGenreNames(item) {
+  if (!Array.isArray(item.genres)) return [];
+  return item.genres.map(g => String(g.name || "").toLowerCase());
+}
+
+function isAnime(item) {
+  const isAnimated = contentGenreIds(item).includes(ANIMATION_GENRE_ID);
+  const countries = [
+    ...(item.origin_country || []),
+    ...(item.production_countries || []).map(c => c.iso_3166_1).filter(Boolean)
+  ];
+  const asianLanguages = ["ja", "ko", "zh"];
+  const isAsian = asianLanguages.includes(item.original_language) ||
+    countries.some(country => ASIAN_COUNTRIES.includes(country));
+  return isAnimated && isAsian;
+}
+
+function normalizeSafeText(value) {
+  return String(value || "").toLowerCase().normalize("NFKC");
+}
+
 function looksExplicit(item) {
-  const text = `${item.title || ""} ${item.name || ""} ${item.original_title || ""} ${item.original_name || ""} ${item.overview || ""}`.toLowerCase();
-  return BLOCKED_KEYWORDS.some(k => text.includes(k));
+  const text = normalizeSafeText(`${item.title || ""} ${item.name || ""} ${item.original_title || ""} ${item.original_name || ""} ${item.overview || ""} ${item.tagline || ""}`);
+  const genreText = contentGenreNames(item).join(" ");
+  return BLOCKED_KEYWORDS.some(k => text.includes(normalizeSafeText(k))) ||
+    BLOCKED_GENRE_WORDS.some(k => genreText.includes(normalizeSafeText(k)));
+}
+
+function hasUnsafeCertification(item) {
+  const ratings = [];
+  if (item.content_rating) ratings.push(item.content_rating);
+  if (item.release_dates?.results) {
+    item.release_dates.results.forEach(country => {
+      (country.release_dates || []).forEach(r => ratings.push(r.certification));
+    });
+  }
+  if (item.content_ratings?.results) {
+    item.content_ratings.results.forEach(r => ratings.push(r.rating));
+  }
+  return ratings.some(rating => {
+    const rawRating = String(rating || "").toLowerCase();
+    const normalized = String(rating || "").replace(/\s+/g, "").toUpperCase();
+    if (itemSource(item) === "mdl" && normalized.includes("18+")) {
+      const explicitAdultReason = /\b(sex|sexual|nudity|adult|erotic|porn)\b|إباح|جنسي|عري|تعري/i.test(rawRating);
+      const nonSexualMatureReason = /\b(violence|profanity|language|crime|drug|horror|gore)\b|عنف|ألفاظ|مخدرات|رعب/i.test(rawRating);
+      if (nonSexualMatureReason && !explicitAdultReason) return false;
+    }
+    return BLOCKED_CERTIFICATIONS.includes(normalized) || normalized.includes("18+");
+  });
+}
+
+function isAllowedContent(item) {
+  if (!item || item.adult === true) return false;
+  if (looksExplicit(item)) return false;
+  if (hasUnsafeCertification(item)) return false;
+  if (STRICT_SAFE_MODE && isAnime(item)) return false;
+  return true;
+}
+
+function stripHtml(html) {
+  const div = document.createElement("div");
+  div.innerHTML = html || "";
+  return div.textContent || "";
+}
+
+function tvmazeCountry(show) {
+  return show.network?.country?.code || show.webChannel?.country?.code || "";
+}
+
+function matchesAsianCountry(item, allowedCountries) {
+  if (itemSource(item) === "mdl" && !activeCountryFilter) return true;
+  const countries = item.origin_country || [];
+  if (countries.some(country => allowedCountries.includes(country))) return true;
+  const countryByLanguage = { ko: "KR", ja: "JP", zh: "CN" };
+  return allowedCountries.includes(countryByLanguage[item.original_language]);
+}
+
+function normalizeTvmazeShow(show) {
+  const country = tvmazeCountry(show);
+  const languageByCountry = { KR: "ko", JP: "ja", CN: "zh" };
+  const languageCodes = { Korean: "ko", Japanese: "ja", Chinese: "zh" };
+  const tvmazeGenres = show.genres || [];
+  const isAnimated = tvmazeGenres.some(genre =>
+    ["anime", "animation"].includes(genre.toLowerCase())
+  );
+  return {
+    id: show.id,
+    source: "tvmaze",
+    type: "tv",
+    name: show.name || "",
+    original_name: show.name || "",
+    poster_url: show.image?.original || show.image?.medium || null,
+    backdrop_url: show.image?.original || null,
+    vote_average: show.rating?.average || 0,
+    first_air_date: show.premiered || "",
+    overview: stripHtml(show.summary),
+    genre_ids: isAnimated ? [ANIMATION_GENRE_ID] : [],
+    genres: tvmazeGenres.map((name, index) => ({ id: index + 1, name })),
+    original_language: languageByCountry[country] || languageCodes[show.language] ||
+      (show.language || "").slice(0, 2).toLowerCase(),
+    origin_country: country ? [country] : [],
+    status: show.status || "",
+    in_production: show.status === "Running" || show.status === "To Be Determined",
+    episode_run_time: [show.averageRuntime || show.runtime].filter(Boolean),
+    number_of_seasons: show._embedded?.episodes?.reduce((max, episode) => Math.max(max, episode.season || 0), 0) || null,
+    adult: false,
+    external_ids: show.externals || {},
+    tvmaze_url: show.url || ""
+  };
+}
+
+function normalizeTvmazeCast(show) {
+  return {
+    cast: (show._embedded?.cast || []).map(entry => ({
+      name: entry.person?.name || "",
+      character: entry.character?.name || "",
+      profile_url: entry.person?.image?.medium || entry.person?.image?.original || null
+    }))
+  };
+}
+
+function parseMdlRating(value) {
+  const rating = parseFloat(String(value || "").replace(/[^\d.]/g, ""));
+  return Number.isFinite(rating) ? rating : 0;
+}
+
+function mdlCountryCode(country) {
+  return {
+    "South Korea": "KR",
+    Korea: "KR",
+    Korean: "KR",
+    Japan: "JP",
+    Japanese: "JP",
+    China: "CN",
+    Chinese: "CN",
+    Taiwan: "TW",
+    Taiwanese: "TW",
+    Thailand: "TH",
+    Thai: "TH",
+    Philippines: "PH",
+    Filipino: "PH",
+    "Hong Kong": "HK"
+  }[country] || "";
+}
+
+function normalizeMdlSummary(item) {
+  const year = String(item.year || "").match(/\d{4}/)?.[0] || "";
+  const mediaType = item.media_type === "movie" ? "movie" : "tv";
+  const country = mdlCountryCode(item.country);
+  return {
+    id: item.slug,
+    source: "mdl",
+    type: mediaType,
+    media_type: mediaType,
+    title: mediaType === "movie" ? item.title || "" : undefined,
+    name: mediaType === "tv" ? item.title || "" : undefined,
+    original_title: mediaType === "movie" ? item.title || "" : undefined,
+    original_name: mediaType === "tv" ? item.title || "" : undefined,
+    poster_url: item.image || null,
+    vote_average: parseMdlRating(item.rating),
+    release_date: mediaType === "movie" && year ? `${year}-01-01` : "",
+    first_air_date: mediaType === "tv" && year ? `${year}-01-01` : "",
+    overview: "",
+    genres: [],
+    genre_ids: [],
+    original_language: "",
+    origin_country: country ? [country] : [],
+    status: "",
+    in_production: null,
+    adult: false,
+    mdl_url: item.url || (item.slug ? `https://mydramalist.com/${item.slug}` : "")
+  };
+}
+
+function normalizeMdlDetails(details, fallbackType = "tv") {
+  const year = String(details.aired || details.title || "").match(/\d{4}/)?.[0] || "";
+  const runtime = parseInt(String(details.duration || "").match(/\d+/)?.[0] || "", 10);
+  const country = mdlCountryCode(details.country);
+  const mediaType = /\bmovie\b/i.test(details.type || "") ? "movie" : fallbackType;
+  const inferredProductionStatus = mediaType === "movie" ? false : inferMdlProductionStatus(details);
+  return {
+    id: details.slug,
+    source: "mdl",
+    type: mediaType,
+    media_type: mediaType,
+    title: mediaType === "movie" ? details.title || "" : undefined,
+    name: mediaType === "tv" ? details.title || "" : undefined,
+    original_title: mediaType === "movie" ? details.native_title || details.title || "" : undefined,
+    original_name: mediaType === "tv" ? details.native_title || details.title || "" : undefined,
+    poster_url: details.image || null,
+    vote_average: parseMdlRating(details.rating),
+    release_date: mediaType === "movie" && year ? `${year}-01-01` : "",
+    first_air_date: mediaType === "tv" && year ? `${year}-01-01` : "",
+    overview: details.synopsis || "",
+    genres: (details.genres || []).map((name, index) => ({ id: 10000 + index, name })),
+    genre_ids: [],
+    original_language: country === "KR" ? "ko" : country === "JP" ? "ja" : country === "CN" ? "zh" : "",
+    origin_country: country ? [country] : [],
+    status: inferredProductionStatus === true ? "Returning Series" : inferredProductionStatus === false ? "Ended" : "",
+    in_production: inferredProductionStatus,
+    episode_run_time: Number.isFinite(runtime) ? [runtime] : [],
+    number_of_seasons: 1,
+    number_of_episodes: parseInt(details.episodes, 10) || null,
+    content_rating: details.content_rating || "",
+    adult: false,
+    mdl_url: details.url || ""
+  };
+}
+
+function normalizeMdlCast(data) {
+  const grouped = data?.cast || {};
+  return {
+    cast: Object.values(grouped).flat().map(person => ({
+      name: person.name || "",
+      character: person.character || "",
+      profile_url: person.image || null
+    }))
+  };
+}
+
+function currentQuarter() {
+  return Math.floor(new Date().getMonth() / 3) + 1;
+}
+
+async function fetchMdlSeasonalShows() {
+  if (activeCountryFilter) return [];
+  const year = new Date().getFullYear();
+  const quarter = currentQuarter();
+  const previousQuarter = quarter === 1 ? 4 : quarter - 1;
+  const previousYear = quarter === 1 ? year - 1 : year;
+  const responses = await Promise.allSettled([
+    mdlFetch(`/api/seasonal/${year}/${quarter}`),
+    mdlFetch(`/api/seasonal/${previousYear}/${previousQuarter}`)
+  ]);
+  const items = responses.flatMap(result =>
+    result.status === "fulfilled" ? (result.value.dramas || []) : []
+  );
+  return uniqueItems([], items.map(normalizeMdlSummary)).filter(isAllowedContent);
+}
+
+async function fetchMdlCatalog(type, page = 1, signal) {
+  // MDL catalog cards do not expose genres; use the structured fallback when
+  // a genre filter is active instead of returning misleading results.
+  if (activeGenreFilter) return { items: [], hasMore: false };
+  const data = await mdlFetch(`/api/catalog/${type}?page=${page}`, { signal });
+  let items = (data.results || []).map(normalizeMdlSummary);
+  items = filterForCurrentTab(items, type, type === "movie" ? "asianMovies" : "asianTv");
+  if (activeYearFilter) {
+    items = items.filter(item => {
+      const year = parseInt(yearOf(item));
+      return year >= activeYearFilter.min && year <= activeYearFilter.max;
+    });
+  }
+  return { items, hasMore: data.has_more === true };
+}
+
+async function fetchMdlCatalogBatch(type, startPage = 1, existingItems = [], signal) {
+  const TARGET_BATCH_SIZE = 20;
+  const MAX_PAGES_PER_BATCH = 15;
+  const PARALLEL_PAGE_COUNT = activeCountryFilter || activeYearFilter ? 5 : 1;
+  let pageNumber = startPage;
+  let lastPage = startPage - 1;
+  let hasMore = true;
+  let collected = [];
+  let scannedPages = 0;
+
+  while (
+    hasMore &&
+    collected.length < TARGET_BATCH_SIZE &&
+    scannedPages < MAX_PAGES_PER_BATCH
+  ) {
+    const remainingPageSlots = MAX_PAGES_PER_BATCH - scannedPages;
+    const pageCount = Math.min(PARALLEL_PAGE_COUNT, remainingPageSlots);
+    const requestedPages = Array.from({ length: pageCount }, (_, index) => pageNumber + index);
+    const pages = await Promise.all(
+      requestedPages.map(requestedPage => fetchMdlCatalog(type, requestedPage, signal))
+    );
+
+    for (let index = 0; index < pages.length; index++) {
+      const page = pages[index];
+      lastPage = requestedPages[index];
+      collected.push(...uniqueItems([...existingItems, ...collected], page.items));
+      hasMore = page.hasMore;
+      scannedPages++;
+      if (!hasMore || collected.length >= TARGET_BATCH_SIZE) break;
+    }
+    pageNumber = lastPage + 1;
+  }
+
+  return {
+    items: collected,
+    hasMore,
+    lastPage,
+    scannedPages
+  };
+}
+
+async function searchMdlShows(query, signal, type = "tv") {
+  const data = await mdlFetch(`/api/search/q/${encodeURIComponent(query)}`, { signal });
+  let items = (data.results || [])
+    .map(normalizeMdlSummary)
+    .filter(item => item.type === type)
+    .filter(isAllowedContent);
+  if (activeCountryFilter) {
+    items = items.filter(item => item.origin_country.includes(activeCountryFilter));
+  }
+  return items;
+}
+
+function contentMatchKey(item) {
+  const title = (item.original_title || item.original_name || item.title || item.name || "")
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, "");
+  return `${title}:${yearOf(item)}`;
+}
+
+function mergeUniqueContent(primary, secondary) {
+  const seen = new Set(primary.map(contentMatchKey));
+  return [...primary, ...secondary.filter(item => {
+    const key = contentMatchKey(item);
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  })];
+}
+
+function isoDateDaysAgo(days) {
+  const date = new Date();
+  date.setDate(date.getDate() - days);
+  return date.toISOString().slice(0, 10);
+}
+
+async function fetchTvmazeAsianShows() {
+  const countries = activeCountryFilter ? [activeCountryFilter] : ASIAN_COUNTRIES;
+  const dates = [0, 1, 3, 7].map(isoDateDaysAgo);
+  const requests = countries.flatMap(country =>
+    dates.map(date => tvmazeFetch(`/schedule?country=${country}&date=${date}`))
+  );
+  dates.forEach(date => requests.push(tvmazeFetch(`/schedule/web?date=${date}`)));
+  const responses = await Promise.allSettled(requests);
+  const shows = responses.flatMap(result =>
+    result.status === "fulfilled" ? result.value.map(episode => episode.show).filter(Boolean) : []
+  );
+  const unique = new Map();
+  shows.forEach(show => {
+    const normalized = normalizeTvmazeShow(show);
+    if (matchesAsianCountry(normalized, countries)) unique.set(show.id, normalized);
+  });
+  return [...unique.values()]
+    .filter(isAllowedContent)
+    .filter(item => {
+      if (!activeYearFilter) return true;
+      const year = parseInt(yearOf(item));
+      return year >= activeYearFilter.min && year <= activeYearFilter.max;
+    })
+    .sort((a, b) => (b.vote_average || 0) - (a.vote_average || 0));
+}
+
+async function searchTvmazeAsianShows(query, signal) {
+  const results = await tvmazeFetch(`/search/shows?q=${encodeURIComponent(query)}`, { signal });
+  const allowedCountries = activeCountryFilter ? [activeCountryFilter] : ASIAN_COUNTRIES;
+  return results
+    .map(result => normalizeTvmazeShow(result.show))
+    .filter(item => matchesAsianCountry(item, allowedCountries))
+    .filter(isAllowedContent);
 }
 
 function hasActiveFilters() {
   return !!activeGenreFilter || !!activeYearFilter;
+}
+
+function updateGenreFilterVisibility() {
+  movieGenreWrap.hidden = !(currentTab === "movies" || currentTab === "asianMovies");
+  tvGenreWrap.hidden = !(currentTab === "tv" || currentTab === "asianTv");
 }
 
 async function applyCurrentFilters() {
@@ -1235,7 +2331,7 @@ async function applyCurrentFilters() {
     renderTab(currentTab);
     return;
   }
-  if (currentTab === "asian") {
+  if (isAsianTab()) {
     renderAsianTab();
     return;
   }
@@ -1257,9 +2353,19 @@ async function renderByGenre() {
   const genreName = type === "movie" ? movieGenres[id] : tvGenres[id];
   const yearSuffix = activeYearFilter ? ` (${activeYearFilter.min}–${activeYearFilter.max})` : "";
   try {
-    const data = await tmdbFetch(`/discover/${type}?${buildDiscoverQuery(type)}`);
-    main.innerHTML = `<h2 class="section-title">تصنيف: ${escapeHtml(genreName || "")}${yearSuffix} <span class="count">(${data.results.length})</span></h2>` +
-      gridHtml(data.results, type);
+    const endpoint = `/discover/${type}?${buildDiscoverQuery(type)}`;
+    const [data, arabicResults] = await Promise.all([
+      tmdbFetch(endpoint),
+      fetchArabicList(endpoint)
+    ]);
+    const items = filterForCurrentTab(mergeArabicTitles(data.results, arabicResults), type);
+    paginationState = {
+      mode: "single", page: 1, totalPages: data.total_pages || 1,
+      endpoint, type, items, containerId: "pagedGrid"
+    };
+    main.innerHTML = `<h2 class="section-title">تصنيف: ${escapeHtml(genreName || "")}${yearSuffix} <span class="count" id="resultCount">(${items.length})</span></h2>` +
+      gridContainerHtml(items, type, "pagedGrid") +
+      loadMoreHtml("single", paginationState.page < paginationState.totalPages);
     loadVisibleTvStatuses();
   } catch(e) {
     main.innerHTML = errorState();
@@ -1270,34 +2376,96 @@ async function renderByYearOnly() {
   if (!activeYearFilter) return;
   main.innerHTML = loadingState();
   try {
-    const [movies, tv] = await Promise.all([
-      tmdbFetch(`/discover/movie?${buildDiscoverQuery("movie")}`),
-      tmdbFetch(`/discover/tv?${buildDiscoverQuery("tv")}`)
+    const movieEndpoint = `/discover/movie?${buildDiscoverQuery("movie")}`;
+    const tvEndpoint = `/discover/tv?${buildDiscoverQuery("tv")}`;
+    const [movies, tv, arabicMovies, arabicTv] = await Promise.all([
+      tmdbFetch(movieEndpoint),
+      tmdbFetch(tvEndpoint),
+      fetchArabicList(movieEndpoint),
+      fetchArabicList(tvEndpoint)
     ]);
+    const movieItems = currentTab === "movies" ? filterForCurrentTab(mergeArabicTitles(movies.results, arabicMovies), "movie", "movies") : filterAllowedContent(mergeArabicTitles(movies.results, arabicMovies));
+    const tvItems = currentTab === "tv" ? filterForCurrentTab(mergeArabicTitles(tv.results, arabicTv), "tv", "tv") : filterAllowedContent(mergeArabicTitles(tv.results, arabicTv));
+    paginationState = {
+      mode: "dual", moviePage: 1, tvPage: 1,
+      movieEndpoint,
+      tvEndpoint,
+      movieTotalPages: movies.total_pages || 1,
+      tvTotalPages: tv.total_pages || 1,
+      movieItems, tvItems
+    };
     main.innerHTML =
-      `<h2 class="section-title">أفلام (${activeYearFilter.min}–${activeYearFilter.max}) <span class="count">(${movies.results.length})</span></h2>` +
-      gridHtml(movies.results.slice(0,20), "movie") +
-      `<h2 class="section-title">مسلسلات (${activeYearFilter.min}–${activeYearFilter.max}) <span class="count">(${tv.results.length})</span></h2>` +
-      gridHtml(tv.results.slice(0,20), "tv");
+      `<h2 class="section-title">أفلام (${activeYearFilter.min}–${activeYearFilter.max}) <span class="count" id="movieResultCount">(${movieItems.length})</span></h2>` +
+      gridContainerHtml(movieItems, "movie", "moviesGrid") +
+      loadMoreHtml("movies", paginationState.moviePage < paginationState.movieTotalPages) +
+      `<h2 class="section-title">مسلسلات (${activeYearFilter.min}–${activeYearFilter.max}) <span class="count" id="tvResultCount">(${tvItems.length})</span></h2>` +
+      gridContainerHtml(tvItems, "tv", "tvGrid") +
+      loadMoreHtml("tv", paginationState.tvPage < paginationState.tvTotalPages);
     loadVisibleTvStatuses();
   } catch(e) {
     main.innerHTML = errorState();
   }
 }
 
-async function renderAsianTab() {
+async function renderAsianTab(type = tabContentType()) {
   main.innerHTML = loadingState();
   const countryLabel = { "": "آسيوي (الكل)", "KR": "كوري", "JP": "ياباني", "CN": "صيني" }[activeCountryFilter];
+  const isMovies = type === "movie";
   try {
-    const [movies, tv] = await Promise.all([
-      tmdbFetch(`/discover/movie?${buildDiscoverQuery("movie")}`),
-      tmdbFetch(`/discover/tv?${buildDiscoverQuery("tv")}`)
+    const mdlCatalog = await fetchMdlCatalogBatch(type).catch(() => ({
+      items: [],
+      hasMore: false,
+      lastPage: 1
+    }));
+    if (mdlCatalog.items.length) {
+      paginationState = {
+        mode: "mdlCatalog",
+        page: mdlCatalog.lastPage,
+        hasMore: mdlCatalog.hasMore,
+        type,
+        items: mdlCatalog.items,
+        containerId: "pagedGrid"
+      };
+      main.innerHTML =
+        `<h2 class="section-title">${isMovies ? "🎬 أفلام" : "📺 مسلسلات"} ${countryLabel} <span class="count" id="resultCount">(${mdlCatalog.items.length}) · MyDramaList</span></h2>` +
+        gridContainerHtml(mdlCatalog.items, type, "pagedGrid") +
+        loadMoreHtml("mdlCatalog", mdlCatalog.hasMore);
+      loadVisibleTvStatuses();
+      return;
+    }
+
+    if (!isMovies) {
+      const tvmazeShows = await fetchTvmazeAsianShows().catch(() => []);
+      if (tvmazeShows.length) {
+        paginationState = null;
+        main.innerHTML =
+          `<h2 class="section-title">📺 مسلسلات ${countryLabel} <span class="count" id="resultCount">(${tvmazeShows.length}) · TVmaze fallback</span></h2>` +
+          gridContainerHtml(tvmazeShows, "tv", "pagedGrid");
+        loadVisibleTvStatuses();
+        return;
+      }
+    }
+
+    // TVmaze has no movie catalog. TMDB is retained as the final safety
+    // fallback for Asian movies, and for TV if both MDL and TVmaze fail.
+    const endpoint = `/discover/${type}?${buildDiscoverQuery(type)}`;
+    const [data, arabicResults] = await Promise.all([
+      tmdbFetch(endpoint),
+      fetchArabicList(endpoint)
     ]);
+    const items = filterForCurrentTab(
+      mergeArabicTitles(data.results, arabicResults),
+      type,
+      isMovies ? "asianMovies" : "asianTv"
+    );
+    paginationState = {
+      mode: "single", page: 1, totalPages: data.total_pages || 1,
+      endpoint, type, items, containerId: "pagedGrid"
+    };
     main.innerHTML =
-      `<h2 class="section-title">🎬 أفلام ${countryLabel} <span class="count">(${movies.results.length})</span></h2>` +
-      gridHtml(movies.results.slice(0,20), "movie") +
-      `<h2 class="section-title">📺 مسلسلات ${countryLabel} <span class="count">(${tv.results.length})</span></h2>` +
-      gridHtml(tv.results.slice(0,20), "tv");
+      `<h2 class="section-title">${isMovies ? "🎬 أفلام" : "📺 مسلسلات"} ${countryLabel} <span class="count" id="resultCount">(${items.length}) · TMDB fallback</span></h2>` +
+      gridContainerHtml(items, type, "pagedGrid") +
+      loadMoreHtml("single", paginationState.page < paginationState.totalPages);
     loadVisibleTvStatuses();
   } catch(e) {
     main.innerHTML = errorState();
@@ -1310,15 +2478,18 @@ navTabs.addEventListener("click", (e) => {
   document.querySelectorAll(".nav-tab").forEach(t => t.classList.remove("active"));
   tab.classList.add("active");
   currentTab = tab.dataset.tab;
+  paginationState = null;
+  updateGenreFilterVisibility();
   searchInput.value = "";
+  cancelActiveSearch();
   activeGenreFilter = null;
   movieGenreSelect.value = "";
   tvGenreSelect.value = "";
-  genreClearBtn.classList.remove("show");
+  genreClearBtn.classList.toggle("show", hasActiveFilters());
 
-  // toggle country bar visibility for the Asian tab
-  countryBar.style.display = currentTab === "asian" ? "flex" : "none";
-  if (currentTab !== "asian") {
+  // toggle country bar visibility for the Asian movie/TV tabs
+  countryBar.style.display = isAsianTab() ? "flex" : "none";
+  if (!isAsianTab()) {
     activeCountryFilter = "";
     document.querySelectorAll(".country-chip").forEach(c => c.classList.remove("active"));
     document.querySelector('.country-chip[data-country=""]')?.classList.add("active");
@@ -1336,77 +2507,164 @@ async function renderTab(tab) {
     renderHistory();
     return;
   }
-  if (tab === "asian") {
-    renderAsianTab();
+  if (tab === "asianMovies" || tab === "asianTv") {
+    renderAsianTab(tabContentType(tab));
     return;
   }
   if (tab === "movies") {
     main.innerHTML = loadingState();
     try {
-      const endpoint = activeYearFilter ? `/discover/movie?${buildDiscoverQuery("movie")}` : "/trending/movie/week?language=ar";
-      const data = await tmdbFetch(endpoint);
+      const endpoint = `/discover/movie?${buildDiscoverQuery("movie")}`;
+      const [data, arabicResults] = await Promise.all([
+        tmdbFetch(endpoint),
+        fetchArabicList(endpoint)
+      ]);
+      const items = filterForCurrentTab(mergeArabicTitles(data.results, arabicResults), "movie", "movies");
+      paginationState = {
+        mode: "single", page: 1, totalPages: data.total_pages || 1,
+        endpoint, type: "movie", items, containerId: "pagedGrid"
+      };
       const yearSuffix = activeYearFilter ? ` (${activeYearFilter.min}–${activeYearFilter.max})` : "";
-      main.innerHTML = `<h2 class="section-title">أفلام رائجة${yearSuffix} <span class="count">(${data.results.length})</span></h2>` + gridHtml(data.results, "movie");
+      main.innerHTML = `<h2 class="section-title">الأفلام غير الآسيوية${yearSuffix} <span class="count" id="resultCount">(${items.length})</span></h2>` +
+        gridContainerHtml(items, "movie", "pagedGrid") +
+        loadMoreHtml("single", paginationState.page < paginationState.totalPages);
     } catch(e) { main.innerHTML = errorState(); }
     return;
   }
   if (tab === "tv") {
     main.innerHTML = loadingState();
     try {
-      const endpoint = activeYearFilter ? `/discover/tv?${buildDiscoverQuery("tv")}` : "/trending/tv/week?language=ar";
-      const data = await tmdbFetch(endpoint);
+      const endpoint = `/discover/tv?${buildDiscoverQuery("tv")}`;
+      const [data, arabicResults] = await Promise.all([
+        tmdbFetch(endpoint),
+        fetchArabicList(endpoint)
+      ]);
+      const items = filterForCurrentTab(mergeArabicTitles(data.results, arabicResults), "tv", "tv");
+      paginationState = {
+        mode: "single", page: 1, totalPages: data.total_pages || 1,
+        endpoint, type: "tv", items, containerId: "pagedGrid"
+      };
       const yearSuffix = activeYearFilter ? ` (${activeYearFilter.min}–${activeYearFilter.max})` : "";
-      main.innerHTML = `<h2 class="section-title">مسلسلات رائجة${yearSuffix} <span class="count">(${data.results.length})</span></h2>` + gridHtml(data.results, "tv");
+      main.innerHTML = `<h2 class="section-title">المسلسلات غير الآسيوية${yearSuffix} <span class="count" id="resultCount">(${items.length})</span></h2>` +
+        gridContainerHtml(items, "tv", "pagedGrid") +
+        loadMoreHtml("single", paginationState.page < paginationState.totalPages);
       loadVisibleTvStatuses();
     } catch(e) { main.innerHTML = errorState(); }
     return;
   }
   // home
+  paginationState = null;
   main.innerHTML = loadingState();
   try {
-    const [trendingMovies, trendingTv, topRated] = await Promise.all([
-      tmdbFetch("/trending/movie/week?language=ar"),
-      tmdbFetch("/trending/tv/week?language=ar"),
-      tmdbFetch("/movie/top_rated?language=ar&page=1")
+    const movieEndpoint = "/trending/movie/week?language=en-US";
+    const tvEndpoint = "/trending/tv/week?language=en-US";
+    const topEndpoint = "/movie/top_rated?language=en-US&page=1";
+    const [trendingMovies, trendingTv, topRated, arabicMovies, arabicTv, arabicTop] = await Promise.all([
+      tmdbFetch(movieEndpoint),
+      tmdbFetch(tvEndpoint),
+      tmdbFetch(topEndpoint),
+      fetchArabicList(movieEndpoint),
+      fetchArabicList(tvEndpoint),
+      fetchArabicList(topEndpoint)
     ]);
+    const movieItems = filterAllowedContent(mergeArabicTitles(trendingMovies.results, arabicMovies));
+    const tvItems = filterAllowedContent(mergeArabicTitles(trendingTv.results, arabicTv));
+    const topItems = filterAllowedContent(mergeArabicTitles(topRated.results, arabicTop));
+    paginationState = {
+      mode: "home", moviePage: 1, tvPage: 1, topPage: 1,
+      movieEndpoint,
+      tvEndpoint,
+      topEndpoint,
+      movieTotalPages: trendingMovies.total_pages || 1,
+      tvTotalPages: trendingTv.total_pages || 1,
+      topTotalPages: topRated.total_pages || 1,
+      movieItems, tvItems, topItems
+    };
     main.innerHTML =
-      rowHtml("🔥 الأفلام الرائجة الآن", trendingMovies.results.slice(0,15), "movie") +
-      rowHtml("📺 المسلسلات الرائجة الآن", trendingTv.results.slice(0,15), "tv") +
-      rowHtml("🏆 الأعلى تقييماً", topRated.results.slice(0,15), "movie");
+      rowHtml("🔥 الأفلام الرائجة الآن", movieItems, "movie", "homeMoviesRow") +
+      loadMoreHtml("homeMovies", paginationState.moviePage < paginationState.movieTotalPages) +
+      rowHtml("📺 المسلسلات الرائجة الآن", tvItems, "tv", "homeTvRow") +
+      loadMoreHtml("homeTv", paginationState.tvPage < paginationState.tvTotalPages) +
+      rowHtml("🏆 الأعلى تقييماً", topItems, "movie", "homeTopRow") +
+      loadMoreHtml("homeTop", paginationState.topPage < paginationState.topTotalPages);
     loadVisibleTvStatuses();
   } catch(e) {
     main.innerHTML = errorState();
   }
 }
 
-function renderFavorites() {
-  if (favorites.length === 0) {
+async function refreshStoredContent(collection, save) {
+  const refreshed = await Promise.all(collection.map(async item => {
+    if ((item.genre_ids?.length || itemSource(item) === "tvmaze") && item.original_language) return item;
+    try {
+      let details;
+      if (itemSource(item) === "tvmaze") {
+        details = normalizeTvmazeShow(await tvmazeFetch(`/shows/${item.id}`));
+      } else if (itemSource(item) === "mdl") {
+        details = normalizeMdlDetails(await mdlFetch(`/api/id/${item.id}`), item.type);
+      } else {
+        const [englishDetails, arabicDetails] = await Promise.all([
+          tmdbFetch(`/${item.type}/${item.id}?language=en-US`),
+          tmdbFetch(`/${item.type}/${item.id}?language=ar`)
+        ]);
+        details = applyArabicTitle(englishDetails, arabicDetails);
+      }
+      return {
+        ...item,
+        ...details,
+        adult: details.adult === true,
+        genre_ids: contentGenreIds(details),
+        original_language: details.original_language || "",
+        origin_country: details.origin_country || []
+      };
+    } catch(e) {
+      return item;
+    }
+  }));
+  const allowed = refreshed.filter(isAllowedContent);
+  collection.splice(0, collection.length, ...allowed);
+  save();
+  return allowed;
+}
+
+async function renderFavorites() {
+  main.innerHTML = loadingState();
+  const visibleFavorites = await refreshStoredContent(favorites, saveFavorites);
+  if (visibleFavorites.length === 0) {
     main.innerHTML = `<h2 class="section-title">⭐ المفضلة</h2>` + emptyState("لم تضف أي عمل للمفضلة بعد. اضغط على ♡ في أي بطاقة لإضافتها هنا.");
     return;
   }
-  main.innerHTML = `<h2 class="section-title">⭐ المفضلة <span class="count">(${favorites.length})</span></h2>` +
-    `<div class="grid">${favorites.map(f => cardHtml(f, f.type)).join("")}</div>`;
+  main.innerHTML = `<h2 class="section-title">⭐ المفضلة <span class="count">(${visibleFavorites.length})</span></h2>` +
+    `<div class="grid">${applySort(visibleFavorites).map(f => cardHtml(f, f.type)).join("")}</div>`;
   loadVisibleTvStatuses();
 }
 
-function renderHistory() {
-  if (watchHistory.length === 0) {
+async function renderHistory() {
+  main.innerHTML = loadingState();
+  const visibleHistory = await refreshStoredContent(watchHistory, saveWatchHistory);
+  if (visibleHistory.length === 0) {
     main.innerHTML = `<h2 class="section-title">📜 سجل المشاهدة</h2>` + emptyState("لم تشاهد أي عمل بعد. اضغط على 👁 في أي بطاقة لتسجيلها كمُشاهَدة.");
     return;
   }
-  main.innerHTML = `<h2 class="section-title">📜 سجل المشاهدة <span class="count">(${watchHistory.length})</span></h2>` +
-    `<div class="grid">${watchHistory.map(w => cardHtml(w, w.type)).join("")}</div>`;
+  const historyItems = activeSort === "default"
+    ? visibleHistory
+    : applySort(visibleHistory);
+  main.innerHTML = `<h2 class="section-title">📜 سجل المشاهدة <span class="count">(${visibleHistory.length})</span></h2>` +
+    `<div class="grid">${historyItems.map(w => cardHtml(w, w.type)).join("")}</div>`;
   loadVisibleTvStatuses();
 }
 
 // ---------- Search ----------
 searchInput.addEventListener("input", () => {
   clearTimeout(searchDebounce);
+  cancelActiveSearch();
+  paginationState = null;
   const q = searchInput.value.trim();
   if (q !== "") {
     activeGenreFilter = null;
     movieGenreSelect.value = "";
     tvGenreSelect.value = "";
+    genreClearBtn.classList.toggle("show", hasActiveFilters());
   }
   if (q === "") {
     renderTab(currentTab);
@@ -1415,11 +2673,118 @@ searchInput.addEventListener("input", () => {
   searchDebounce = setTimeout(() => doSearch(q), 400);
 });
 
+function cancelActiveSearch() {
+  searchController?.abort();
+  searchController = null;
+  searchRequestId++;
+}
+
+function rankSearchResults(items, query) {
+  const q = query.toLowerCase().trim();
+  return [...items].sort((a, b) => {
+    const at = `${a.title || a.name || ""} ${a.original_title || a.original_name || ""}`.toLowerCase();
+    const bt = `${b.title || b.name || ""} ${b.original_title || b.original_name || ""}`.toLowerCase();
+    const exactA = at === q ? 3 : at.startsWith(q) ? 2 : at.includes(q) ? 1 : 0;
+    const exactB = bt === q ? 3 : bt.startsWith(q) ? 2 : bt.includes(q) ? 1 : 0;
+    if (exactA !== exactB) return exactB - exactA;
+    return (b.vote_average || 0) - (a.vote_average || 0);
+  });
+}
+
 async function doSearch(query) {
+  cancelActiveSearch();
+  const requestId = searchRequestId;
+  searchController = new AbortController();
   main.innerHTML = loadingState();
   try {
-    const data = await tmdbFetch(`/search/multi?language=ar&query=${encodeURIComponent(query)}`);
-    let results = data.results.filter(r => (r.media_type === "movie" || r.media_type === "tv") && !r.adult && !looksExplicit(r));
+    const wantedType = tabContentType();
+    if (isAsianTab()) {
+      let preferredResults = await searchMdlShows(
+        query,
+        searchController.signal,
+        wantedType
+      ).catch(error => {
+        if (error.name === "AbortError") throw error;
+        return [];
+      });
+      let sourceLabel = "MyDramaList";
+
+      if (!preferredResults.length && wantedType === "tv") {
+        preferredResults = await searchTvmazeAsianShows(
+          query,
+          searchController.signal
+        ).catch(error => {
+          if (error.name === "AbortError") throw error;
+          return [];
+        });
+        sourceLabel = "TVmaze fallback";
+      }
+
+      if (activeYearFilter) {
+        preferredResults = preferredResults.filter(item => {
+          const year = parseInt(yearOf(item));
+          return year >= activeYearFilter.min && year <= activeYearFilter.max;
+        });
+      }
+
+      if (preferredResults.length) {
+        preferredResults = activeSort === "default"
+          ? rankSearchResults(uniqueItems([], preferredResults), query)
+          : applySort(uniqueItems([], preferredResults));
+        paginationState = null;
+        main.innerHTML =
+          `<h2 class="section-title">نتائج البحث عن "${escapeHtml(query)}" <span class="count">(${preferredResults.length}) · ${sourceLabel}</span></h2>` +
+          `<div class="grid" id="searchGrid">${preferredResults.map(item => cardHtml(item, wantedType)).join("")}</div>`;
+        loadVisibleTvStatuses();
+        return;
+      }
+    }
+
+    const searchMovies = !wantedType || wantedType === "movie";
+    const searchTv = !wantedType || wantedType === "tv";
+    const calls = [];
+    const arabicLookupCalls = [];
+    if (searchMovies) {
+      const movieSearchEndpoint = `/search/movie?language=en-US&query=${encodeURIComponent(query)}`;
+      calls.push(tmdbFetch(movieSearchEndpoint, { signal: searchController.signal })
+        .then(data => ({ kind: "movie", data })));
+      arabicLookupCalls.push(fetchArabicList(movieSearchEndpoint).then(results => ({ kind: "movie", results })));
+    }
+    if (searchTv) {
+      const tvSearchEndpoint = `/search/tv?language=en-US&query=${encodeURIComponent(query)}`;
+      calls.push(tmdbFetch(tvSearchEndpoint, { signal: searchController.signal })
+        .then(data => ({ kind: "tv", data })));
+      arabicLookupCalls.push(fetchArabicList(tvSearchEndpoint).then(results => ({ kind: "tv", results })));
+    }
+    const [responses, arabicLookups] = await Promise.all([
+      Promise.all(calls),
+      Promise.all(arabicLookupCalls)
+    ]);
+    if (requestId !== searchRequestId || searchInput.value.trim() !== query) return;
+
+    const arabicByKindAndId = new Map();
+    arabicLookups.forEach(({ kind, results }) => {
+      (results || []).forEach(item => arabicByKindAndId.set(`${kind}:${item.id}`, item));
+    });
+
+    let totalPages = 1;
+    let results = [];
+    responses.forEach(({ kind, data }) => {
+      totalPages = Math.max(totalPages, data.total_pages || 1);
+      const typed = (data.results || []).map(item => applyArabicTitle({
+        ...item,
+        media_type: kind === "movie" ? "movie" : "tv",
+        type: kind === "movie" ? "movie" : "tv",
+        source: kind === "tvmaze" ? "tvmaze" : kind === "mdl" ? "mdl" : (item.source || "tmdb")
+      }, arabicByKindAndId.get(`${kind}:${item.id}`)));
+      results.push(...typed);
+    });
+
+    results = filterForCurrentTab(results, wantedType);
+    results = activeSort === "default"
+      ? rankSearchResults(uniqueItems([], results), query)
+      : applySort(uniqueItems([], results));
+
     let yearSuffix = "";
     if (activeYearFilter) {
       results = results.filter(r => {
@@ -1428,75 +2793,381 @@ async function doSearch(query) {
       });
       yearSuffix = ` · ${activeYearFilter.min}–${activeYearFilter.max}`;
     }
+
+    paginationState = {
+      mode: "search", page: 1, totalPages,
+      query, items: results, containerId: "searchGrid", wantedType
+    };
     if (results.length === 0) {
-      main.innerHTML = `<h2 class="section-title">نتائج البحث عن "${escapeHtml(query)}"${yearSuffix}</h2>` + emptyState("لا توجد نتائج مطابقة. جرّب كلمة أخرى أو وسّع نطاق السنوات.");
+      main.innerHTML = `<h2 class="section-title">نتائج البحث عن "${escapeHtml(query)}"${yearSuffix}</h2>` + emptyState("لا توجد نتائج مطابقة. جرّب الاسم الإنجليزي، أو غيّر التبويب، أو وسّع نطاق السنوات.");
       return;
     }
-    main.innerHTML = `<h2 class="section-title">نتائج البحث عن "${escapeHtml(query)}"${yearSuffix} <span class="count">(${results.length})</span></h2>` +
-      `<div class="grid">${results.map(r => cardHtml(r, r.media_type)).join("")}</div>`;
+    main.innerHTML = `<h2 class="section-title">نتائج البحث عن "${escapeHtml(query)}"${yearSuffix} <span class="count" id="resultCount">(${results.length})</span></h2>` +
+      `<div class="grid" id="searchGrid">${results.map(r => cardHtml(r, r.media_type || r.type)).join("")}</div>` +
+      loadMoreHtml("search", paginationState.page < paginationState.totalPages);
     loadVisibleTvStatuses();
   } catch(e) {
+    if (e.name === "AbortError") return;
     main.innerHTML = errorState();
+  } finally {
+    if (requestId === searchRequestId) searchController = null;
   }
 }
+
+function updatePaginationCount(id, count, suffix = "") {
+  const element = document.getElementById(id);
+  if (element) element.textContent = `(${count})${suffix}`;
+}
+
+async function loadMoreResults(stream, button) {
+  const state = paginationState;
+  if (!state || !button || button.disabled) return;
+
+  button.disabled = true;
+  button.textContent = "جاري التحميل...";
+
+  try {
+    if (state.mode === "home") {
+      const config = {
+        homeMovies: {
+          pageKey: "moviePage", totalKey: "movieTotalPages", endpointKey: "movieEndpoint",
+          itemsKey: "movieItems", containerId: "homeMoviesRow", type: "movie"
+        },
+        homeTv: {
+          pageKey: "tvPage", totalKey: "tvTotalPages", endpointKey: "tvEndpoint",
+          itemsKey: "tvItems", containerId: "homeTvRow", type: "tv"
+        },
+        homeTop: {
+          pageKey: "topPage", totalKey: "topTotalPages", endpointKey: "topEndpoint",
+          itemsKey: "topItems", containerId: "homeTopRow", type: "movie"
+        }
+      }[stream];
+      if (!config) throw new Error("Unknown home pagination stream");
+      const nextPage = state[config.pageKey] + 1;
+      const pageEndpoint = addPageParam(state[config.endpointKey], nextPage);
+      const [data, arabicResults] = await Promise.all([
+        tmdbFetch(pageEndpoint),
+        fetchArabicList(pageEndpoint)
+      ]);
+      const incoming = uniqueItems(state[config.itemsKey], filterAllowedContent(mergeArabicTitles(data.results, arabicResults)));
+      state[config.itemsKey].push(...incoming);
+      state[config.pageKey] = nextPage;
+      state[config.totalKey] = data.total_pages || state[config.totalKey];
+      if (activeSort === "default") {
+        appendCards(config.containerId, incoming, config.type);
+      } else {
+        replaceCards(config.containerId, state[config.itemsKey], config.type);
+      }
+      if (state[config.pageKey] >= state[config.totalKey]) button.closest(".load-more-wrap")?.remove();
+    } else if (state.mode === "mdlCatalog") {
+      const batch = await fetchMdlCatalogBatch(state.type, state.page + 1, state.items);
+      const incoming = batch.items;
+      state.items.push(...incoming);
+      state.page = batch.lastPage;
+      state.hasMore = batch.hasMore;
+      if (activeSort === "default") {
+        appendCards(state.containerId, incoming, state.type);
+      } else {
+        replaceCards(state.containerId, state.items, state.type);
+      }
+      updatePaginationCount("resultCount", state.items.length, " · MyDramaList");
+      if (!state.hasMore) button.closest(".load-more-wrap")?.remove();
+    } else if (state.mode === "single") {
+      const nextPage = state.page + 1;
+      const pageEndpoint = addPageParam(state.endpoint, nextPage);
+      const [data, arabicResults] = await Promise.all([
+        tmdbFetch(pageEndpoint),
+        fetchArabicList(pageEndpoint)
+      ]);
+      const incoming = uniqueItems(state.items, filterForCurrentTab(mergeArabicTitles(data.results, arabicResults), state.type));
+      state.items.push(...incoming);
+      state.page = nextPage;
+      state.totalPages = data.total_pages || state.totalPages;
+      if (activeSort === "default") {
+        appendCards(state.containerId, incoming, state.type);
+      } else {
+        replaceCards(state.containerId, state.items, state.type);
+      }
+      updatePaginationCount("resultCount", state.items.length);
+      if (state.page >= state.totalPages) button.closest(".load-more-wrap")?.remove();
+    } else if (state.mode === "dual" || state.mode === "asian") {
+      const isMovies = stream === "movies";
+      const pageKey = isMovies ? "moviePage" : "tvPage";
+      const totalKey = isMovies ? "movieTotalPages" : "tvTotalPages";
+      const endpoint = isMovies ? state.movieEndpoint : state.tvEndpoint;
+      const items = isMovies ? state.movieItems : state.tvItems;
+      const nextPage = state[pageKey] + 1;
+      const pageEndpoint = addPageParam(endpoint, nextPage);
+      const [data, arabicResults] = await Promise.all([
+        tmdbFetch(pageEndpoint),
+        fetchArabicList(pageEndpoint)
+      ]);
+      const incoming = uniqueItems(items, filterAllowedContent(mergeArabicTitles(data.results, arabicResults)));
+      items.push(...incoming);
+      state[pageKey] = nextPage;
+      state[totalKey] = data.total_pages || state[totalKey];
+      const targetContainer = isMovies ? "moviesGrid" : "tvGrid";
+      const targetType = isMovies ? "movie" : "tv";
+      if (activeSort === "default") {
+        appendCards(targetContainer, incoming, targetType);
+      } else {
+        replaceCards(targetContainer, items, targetType);
+      }
+      updatePaginationCount(
+        isMovies ? "movieResultCount" : "tvResultCount",
+        items.length,
+        !isMovies && state.mode === "asian" ? " · TMDB + TVmaze" : ""
+      );
+      if (state[pageKey] >= state[totalKey]) button.closest(".load-more-wrap")?.remove();
+    } else if (state.mode === "search") {
+      const nextPage = state.page + 1;
+      const searchPageEndpoint = `/search/multi?language=en-US&query=${encodeURIComponent(state.query)}&page=${nextPage}`;
+      const [data, arabicResults] = await Promise.all([
+        tmdbFetch(searchPageEndpoint),
+        fetchArabicList(searchPageEndpoint)
+      ]);
+      let incoming = mergeArabicTitles(data.results, arabicResults).filter(item =>
+        (item.media_type === "movie" || item.media_type === "tv") && isAllowedContent(item)
+      );
+      if (isAsianTab()) {
+        const allowedCountries = activeCountryFilter ? [activeCountryFilter] : ASIAN_COUNTRIES;
+        incoming = incoming.filter(item => matchesAsianCountry(item, allowedCountries));
+      }
+      if (activeYearFilter) {
+        incoming = incoming.filter(item => {
+          const year = parseInt(yearOf(item));
+          return year >= activeYearFilter.min && year <= activeYearFilter.max;
+        });
+      }
+      incoming = uniqueItems(state.items, incoming);
+      state.items.push(...incoming);
+      state.page = nextPage;
+      state.totalPages = data.total_pages || state.totalPages;
+      if (activeSort === "default") {
+        const container = document.getElementById(state.containerId);
+        if (container) {
+          container.insertAdjacentHTML(
+            "beforeend",
+            incoming.map(item => cardHtml(item, item.media_type || item.type)).join("")
+          );
+        }
+      } else {
+        replaceCards(state.containerId, state.items);
+      }
+      updatePaginationCount("resultCount", state.items.length);
+      if (state.page >= state.totalPages) button.closest(".load-more-wrap")?.remove();
+    }
+
+    loadVisibleTvStatuses();
+    if (button.isConnected) {
+      button.disabled = false;
+      button.textContent = "تحميل المزيد";
+    }
+  } catch(e) {
+    button.disabled = false;
+    button.textContent = "تعذّر التحميل — حاول مرة أخرى";
+  }
+}
+
+main.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-load-stream]");
+  if (button) loadMoreResults(button.dataset.loadStream, button);
+});
+
+// ---------- Infinite scroll (all tabs except home) ----------
+// Home keeps manual "load more" buttons per row; every other view (movies, tv,
+// asian tabs, genre/year filters, search) auto-loads the next page once its
+// button scrolls near the viewport.
+const infiniteScrollObserver = "IntersectionObserver" in window
+  ? new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        const button = entry.target;
+        if (!button.isConnected || button.disabled) return;
+        if (paginationState && paginationState.mode === "home") return;
+        loadMoreResults(button.dataset.loadStream, button);
+      });
+    }, { rootMargin: "600px" })
+  : null;
+
+function observeLoadMoreButtons() {
+  if (!infiniteScrollObserver) return;
+  main.querySelectorAll(".load-more-btn[data-load-stream]").forEach((button) => {
+    infiniteScrollObserver.observe(button);
+  });
+}
+
+// Re-scan whenever the main content changes (tab switch, filter, search,
+// pagination append) so newly inserted "load more" buttons get observed too.
+let observerScanScheduled = false;
+const mainContentObserver = new MutationObserver(() => {
+  if (observerScanScheduled) return;
+  observerScanScheduled = true;
+  requestAnimationFrame(() => {
+    observerScanScheduled = false;
+    observeLoadMoreButtons();
+  });
+});
+mainContentObserver.observe(main, { childList: true, subtree: true });
 
 // ---------- Modal ----------
-async function openModal(id, type) {
+let modalPreviouslyFocused = null;
+
+async function openModal(id, type, source = "tmdb") {
+  const summaryItem = renderedItemCache.get(renderedItemKey(id, type, source));
+  modalPreviouslyFocused = document.activeElement;
   modalOverlay.classList.add("open");
-  modalContent.innerHTML = `<div style="padding:60px 20px;">${loadingState()}</div>`;
+  modalContent.innerHTML = `
+    <button class="modal-close" id="modalCloseBtn" aria-label="إغلاق">✕</button>
+    <div style="padding:60px 20px;">${loadingState()}</div>`;
   document.body.style.overflow = "hidden";
+  document.getElementById("modalCloseBtn").addEventListener("click", closeModal);
+  document.getElementById("modalCloseBtn").focus();
   try {
-    const endpoint = type === "movie" ? "movie" : "tv";
-    const [details, credits, videos] = await Promise.all([
-      tmdbFetch(`/${endpoint}/${id}?language=ar`),
-      tmdbFetch(`/${endpoint}/${id}/credits?language=ar`),
-      tmdbFetch(`/${endpoint}/${id}/videos`)
-    ]);
-    if (details.adult || looksExplicit(details)) {
-      modalContent.innerHTML = `<div style="padding:60px 20px;">${emptyState("هذا المحتوى غير متاح في هذا التطبيق.")}</div>`;
+    if (source === "tvmaze") {
+      const show = await tvmazeFetch(`/shows/${id}?embed[]=cast&embed[]=episodes`);
+      const normalizedDetails = normalizeTvmazeShow(show);
+      const details = await ensureArabicDescription({
+        ...summaryItem,
+        ...normalizedDetails,
+        poster_url: normalizedDetails.poster_url || summaryItem?.poster_url || null,
+        backdrop_url: normalizedDetails.backdrop_url || summaryItem?.backdrop_url || null
+      });
+      if (!isAllowedContent(details)) {
+        modalContent.innerHTML = `
+          <button class="modal-close" id="modalCloseBtn" aria-label="إغلاق">✕</button>
+          <div style="padding:60px 20px;">${emptyState("هذا المحتوى غير متاح في هذا التطبيق.")}</div>`;
+        document.getElementById("modalCloseBtn").addEventListener("click", closeModal);
+        document.getElementById("modalCloseBtn").focus();
+        return;
+      }
+      renderModal(details, normalizeTvmazeCast(show), type, { results: [] });
       return;
     }
-    renderModal(details, credits, type, videos);
+    if (source === "mdl") {
+      try {
+        const [rawDetails, rawCast] = await Promise.all([
+          mdlFetch(`/api/id/${id}`),
+          mdlFetch(`/api/id/${id}/cast`).catch(() => ({ cast: {} }))
+        ]);
+        const normalizedDetails = normalizeMdlDetails(rawDetails, type);
+        const details = await ensureArabicDescription({
+          ...summaryItem,
+          ...normalizedDetails,
+          poster_url: normalizedDetails.poster_url || summaryItem?.poster_url || null,
+          backdrop_url: normalizedDetails.backdrop_url || summaryItem?.backdrop_url || null
+        });
+        if (!isAllowedContent(details)) {
+          modalContent.innerHTML = `
+            <button class="modal-close" id="modalCloseBtn" aria-label="إغلاق">✕</button>
+            <div style="padding:60px 20px;">${emptyState("هذا المحتوى غير متاح في هذا التطبيق.")}</div>`;
+          document.getElementById("modalCloseBtn").addEventListener("click", closeModal);
+          document.getElementById("modalCloseBtn").focus();
+          return;
+        }
+        renderModal(details, normalizeMdlCast(rawCast), details.type, { results: [] });
+        return;
+      } catch (mdlError) {
+        if (type === "tv") {
+          const fallbackQuery = String(id).replace(/^\d+-/, "").replace(/-/g, " ");
+          const fallbackMatches = await searchTvmazeAsianShows(fallbackQuery).catch(() => []);
+          if (fallbackMatches.length) {
+            const fallbackShow = await tvmazeFetch(`/shows/${fallbackMatches[0].id}?embed[]=cast&embed[]=episodes`);
+            renderModal(
+              await ensureArabicDescription(normalizeTvmazeShow(fallbackShow)),
+              normalizeTvmazeCast(fallbackShow),
+              "tv",
+              { results: [] }
+            );
+            return;
+          }
+        }
+        if (summaryItem && isAllowedContent(summaryItem)) {
+          renderModal(summaryItem, { cast: [] }, type, { results: [] });
+          return;
+        }
+        throw mdlError;
+      }
+    }
+    const endpoint = type === "movie" ? "movie" : "tv";
+    const [details, arabicDetails, credits, videos] = await Promise.all([
+      tmdbFetch(`/${endpoint}/${id}?language=en-US&append_to_response=release_dates,content_ratings`),
+      tmdbFetch(`/${endpoint}/${id}?language=ar`),
+      tmdbFetch(`/${endpoint}/${id}/credits?language=en-US`),
+      tmdbFetch(`/${endpoint}/${id}/videos`)
+    ]);
+    const localizedDetails = await ensureArabicDescription(applyArabicTitle(details, arabicDetails));
+    if (!isAllowedContent(localizedDetails)) {
+      modalContent.innerHTML = `
+        <button class="modal-close" id="modalCloseBtn" aria-label="إغلاق">✕</button>
+        <div style="padding:60px 20px;">${emptyState("هذا المحتوى غير متاح في هذا التطبيق.")}</div>`;
+      document.getElementById("modalCloseBtn").addEventListener("click", closeModal);
+      document.getElementById("modalCloseBtn").focus();
+      return;
+    }
+    renderModal(localizedDetails, credits, type, videos);
   } catch(e) {
-    modalContent.innerHTML = `<div style="padding:60px 20px;">${errorState()}</div>`;
+    modalContent.innerHTML = `
+      <button class="modal-close" id="modalCloseBtn" aria-label="إغلاق">✕</button>
+      <div style="padding:60px 20px;">${errorState()}</div>`;
+    document.getElementById("modalCloseBtn").addEventListener("click", closeModal);
+    document.getElementById("modalCloseBtn").focus();
   }
 }
 
-function findTrailerUrl(videos) {
-  if (!videos || !videos.results || videos.results.length === 0) return null;
-  const yt = videos.results.filter(v => v.site === "YouTube");
-  if (yt.length === 0) return null;
-  const officialTrailer = yt.find(v => v.type === "Trailer" && v.official);
-  const anyTrailer = yt.find(v => v.type === "Trailer");
-  const teaser = yt.find(v => v.type === "Teaser");
-  const chosen = officialTrailer || anyTrailer || teaser || yt[0];
-  return `https://www.youtube.com/watch?v=${chosen.key}`;
+function findTrailerUrl(videos, item) {
+  const yt = (videos?.results || []).filter(v => v.site === "YouTube");
+  if (yt.length) {
+    const officialTrailer = yt.find(v => v.type === "Trailer" && v.official);
+    const anyTrailer = yt.find(v => v.type === "Trailer");
+    const teaser = yt.find(v => v.type === "Teaser");
+    const chosen = officialTrailer || anyTrailer || teaser || yt[0];
+    return `https://www.youtube.com/watch?v=${chosen.key}`;
+  }
+
+  // MyDramaList and TVmaze do not provide trailer videos through the
+  // endpoints used by this app. Keep the button available by opening a
+  // focused YouTube search for the official trailer.
+  const title = item.original_title || item.original_name || item.title || item.name || "";
+  const year = (item.release_date || item.first_air_date || "").slice(0, 4);
+  if (!title) return null;
+  return `https://www.youtube.com/results?search_query=${encodeURIComponent(`${title} ${year} official trailer`)}`;
 }
 
 function renderModal(d, credits, type, videos) {
-  const originalTitle = d.original_title || d.original_name || d.title || d.name;
-  const arabicTitle = d.title || d.name || "";
-  const showArabic = arabicTitle && arabicTitle.trim() !== "" && arabicTitle.trim() !== originalTitle.trim();
+  const displayTitle = getDisplayTitle(d);
+  const secondaryTitle = getSecondaryTitle(d);
+  const showSecondaryTitle = !!secondaryTitle;
+  const originalTitle = d.original_title || d.original_name || displayTitle;
+  const arabicTitle = getArabicTitle(d);
   const year = (d.release_date || d.first_air_date || "").slice(0,4);
   const runtime = d.runtime ? `${d.runtime} دقيقة` : (d.episode_run_time && d.episode_run_time[0] ? `${d.episode_run_time[0]} دقيقة/حلقة` : "");
-  const fav = isFavorite(d.id, type);
-  const watched = isWatched(d.id, type);
-  const watchedEntry = watchHistory.find(w => w.id === d.id && w.type === type);
+  const source = itemSource(d);
+  const fav = isFavorite(d.id, type, source);
+  const watched = isWatched(d.id, type, source);
+  const watchedEntry = watchHistory.find(w => w.id === d.id && w.type === type && itemSource(w) === source);
   const genres = (d.genres || []).map(g => `<span class="genre-pill">${escapeHtml(g.name)}</span>`).join("");
   const cast = (credits.cast || []).slice(0, 10);
   const overview = d.overview && d.overview.trim() !== "" ? d.overview : "لا يوجد وصف متاح بالعربية لهذا العمل.";
   const tagline = d.tagline ? `<div class="modal-tagline">"${escapeHtml(d.tagline)}"</div>` : "";
-  const trailerUrl = findTrailerUrl(videos);
+  const trailerUrl = findTrailerUrl(videos, d);
   const watchedDateText = watched && watchedEntry ? `<div class="watched-date">شوهد بتاريخ ${new Date(watchedEntry.watched_at).toLocaleDateString('ar-EG')}</div>` : "";
 
+  const backdropUrl = d.backdrop_url || (d.backdrop_path ? `${BACKDROP_BASE}${d.backdrop_path}` : "");
+  const posterUrl = d.poster_url || (d.poster_path ? `${IMG_BASE}${d.poster_path}` : "");
+  const heroImageUrl = backdropUrl || posterUrl;
+  const usesPosterFallback = !backdropUrl && !!posterUrl;
   modalContent.innerHTML = `
-    <div class="modal-backdrop-img" style="${d.backdrop_path ? `background-image:url('${BACKDROP_BASE}${d.backdrop_path}')` : ''}">
+    <div class="modal-backdrop-img">
+      ${heroImageUrl
+        ? `<img class="modal-backdrop-media ${usesPosterFallback ? "poster-fallback" : ""}" src="${escapeHtml(heroImageUrl)}" alt="${escapeHtml(displayTitle)}">`
+        : `<div class="poster-placeholder" style="height:100%;display:flex;align-items:center;justify-content:center;">${escapeHtml(displayTitle)}</div>`}
       <button class="modal-close" id="modalCloseBtn" aria-label="إغلاق">✕</button>
       <button class="modal-fav ${fav ? 'active' : ''}" id="modalFavBtn" aria-label="إضافة للمفضلة">${fav ? '♥' : '♡'}</button>
     </div>
     <div class="modal-body">
-      <h2 class="modal-title">${escapeHtml(originalTitle)}</h2>
-      ${showArabic ? `<div style="color: var(--gold); font-weight: 600; font-size: 16px; margin-bottom: 10px;">${escapeHtml(arabicTitle)}</div>` : ""}
+      <h2 class="modal-title">${escapeHtml(displayTitle)}</h2>
+      ${showSecondaryTitle ? `<div style="color: var(--gold); font-weight: 600; font-size: 16px; margin-bottom: 10px;">${escapeHtml(secondaryTitle)}</div>` : ""}
       <div class="modal-meta">
         <span class="gold">★ ${d.vote_average ? d.vote_average.toFixed(1) : '—'}</span>
         <span>${year || '—'}</span>
@@ -1506,7 +3177,7 @@ function renderModal(d, credits, type, videos) {
       </div>
       ${tagline}
       <div style="display:flex; flex-wrap:wrap; align-items:center;">
-        ${trailerUrl ? `<a href="${trailerUrl}" target="_blank" rel="noopener" class="trailer-btn" style="margin-left:10px;">▶ شاهد الإعلان على يوتيوب</a>` : ''}
+        ${trailerUrl ? `<a href="${escapeHtml(trailerUrl)}" target="_blank" rel="noopener" class="trailer-btn" style="margin-left:10px;">▶ شاهد الإعلان على يوتيوب</a>` : ''}
         <button class="modal-watched-btn ${watched ? 'active' : ''}" id="modalWatchedBtn">${watched ? '✔ تمت المشاهدة' : '👁 وضع كمُشاهَد'}</button>
       </div>
       ${watchedDateText}
@@ -1517,8 +3188,8 @@ function renderModal(d, credits, type, videos) {
         <div class="cast-row">
           ${cast.map(c => `
             <div class="cast-item">
-              ${c.profile_path
-                ? `<img class="cast-photo" src="https://image.tmdb.org/t/p/w185${c.profile_path}" alt="${escapeHtml(c.name)}">`
+              ${c.profile_url || c.profile_path
+                ? `<img class="cast-photo" src="${c.profile_url || `https://image.tmdb.org/t/p/w185${c.profile_path}`}" alt="${escapeHtml(c.name)}">`
                 : `<div class="cast-photo" style="display:flex;align-items:center;justify-content:center;font-size:24px;">👤</div>`}
               <div class="cast-name">${escapeHtml(c.name)}</div>
               <div class="cast-char">${escapeHtml(c.character || '')}</div>
@@ -1530,6 +3201,7 @@ function renderModal(d, credits, type, videos) {
   `;
 
   document.getElementById("modalCloseBtn").addEventListener("click", closeModal);
+  document.getElementById("modalCloseBtn").focus();
   document.getElementById("modalFavBtn").addEventListener("click", (e) => {
     toggleFavorite(d, type);
     e.target.classList.toggle("active");
@@ -1537,7 +3209,7 @@ function renderModal(d, credits, type, videos) {
     if (currentTab === "favorites") renderFavorites();
     else {
       // refresh fav icon on underlying card if visible
-      const cardBtn = document.querySelector(`.fav-btn[data-fav-id="${d.id}"][data-fav-type="${type}"]`);
+      const cardBtn = document.querySelector(`.fav-btn[data-fav-id="${d.id}"][data-fav-type="${type}"][data-fav-source="${source}"]`);
       if (cardBtn) {
         cardBtn.classList.toggle("active");
         cardBtn.textContent = cardBtn.classList.contains("active") ? "♥" : "♡";
@@ -1549,7 +3221,7 @@ function renderModal(d, credits, type, videos) {
     const nowActive = e.target.classList.toggle("active");
     e.target.textContent = nowActive ? "✔ تمت المشاهدة" : "👁 وضع كمُشاهَد";
     if (currentTab === "history") renderHistory();
-    const cardBtn = document.querySelector(`.watched-btn[data-watched-id="${d.id}"][data-watched-type="${type}"]`);
+    const cardBtn = document.querySelector(`.watched-btn[data-watched-id="${d.id}"][data-watched-type="${type}"][data-watched-source="${source}"]`);
     if (cardBtn) {
       cardBtn.classList.toggle("active");
       cardBtn.textContent = cardBtn.classList.contains("active") ? "✔" : "👁";
@@ -1560,17 +3232,59 @@ function renderModal(d, credits, type, videos) {
 function closeModal() {
   modalOverlay.classList.remove("open");
   document.body.style.overflow = "";
+  if (modalPreviouslyFocused instanceof HTMLElement) modalPreviouslyFocused.focus();
+  modalPreviouslyFocused = null;
 }
 modalOverlay.addEventListener("click", (e) => {
   if (e.target === modalOverlay) closeModal();
 });
 document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape" && modalOverlay.classList.contains("open")) closeModal();
+  if (!modalOverlay.classList.contains("open")) return;
+  if (e.key === "Escape") {
+    closeModal();
+    return;
+  }
+  if (e.key !== "Tab") return;
+  const focusable = [...modalContent.querySelectorAll(
+    'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+  )].filter(el => el.offsetParent !== null);
+  if (!focusable.length) {
+    e.preventDefault();
+    modalContent.focus();
+    return;
+  }
+  const first = focusable[0];
+  const last = focusable[focusable.length - 1];
+  if (e.shiftKey && document.activeElement === first) {
+    e.preventDefault();
+    last.focus();
+  } else if (!e.shiftKey && document.activeElement === last) {
+    e.preventDefault();
+    first.focus();
+  }
 });
 
 // ---------- Init ----------
-loadGenres();
-renderTab("home");
+async function initializeApp() {
+  yearMinInput.min = MIN_YEAR;
+  yearMinInput.max = CURRENT_YEAR;
+  yearMaxInput.min = MIN_YEAR;
+  yearMaxInput.max = CURRENT_YEAR;
+  if (!yearMaxInput.value || parseInt(yearMaxInput.value) > CURRENT_YEAR) {
+    yearMaxInput.value = CURRENT_YEAR;
+  }
+  updateYearSliderUI();
+  updateGenreFilterVisibility();
+
+  // Content and genre metadata are independent. Start both immediately so a
+  // slow genre request never delays the first useful screen.
+  await Promise.allSettled([
+    loadGenres(),
+    renderTab(currentTab)
+  ]);
+}
+
+initializeApp();
 </script>
 
 </body>
