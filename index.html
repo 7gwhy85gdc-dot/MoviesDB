@@ -575,6 +575,393 @@
     margin-top: 4px;
   }
 
+  /* ---------- AI recommendations ---------- */
+  .recommend-panel {
+    max-width: 980px;
+    margin: 0 auto 28px;
+    padding: 22px;
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    background:
+      radial-gradient(circle at 12% 0%, rgba(232,197,71,0.18), transparent 28%),
+      linear-gradient(135deg, rgba(255,255,255,0.055), rgba(255,255,255,0.015)),
+      var(--card);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.16);
+  }
+  .recommend-head {
+    display: grid;
+    gap: 8px;
+    margin-bottom: 18px;
+  }
+  .recommend-kicker {
+    color: var(--gold);
+    font-family: 'Cairo', sans-serif;
+    font-weight: 900;
+    font-size: 13px;
+    letter-spacing: 0.3px;
+  }
+  .recommend-title {
+    font-family: 'Cairo', sans-serif;
+    font-weight: 900;
+    font-size: clamp(24px, 4vw, 42px);
+    letter-spacing: -0.8px;
+    line-height: 1.1;
+  }
+  .recommend-copy {
+    max-width: 760px;
+    color: var(--text-muted);
+    font-size: 15px;
+    line-height: 1.9;
+  }
+  .recommend-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-top: 18px;
+  }
+  .recommend-mode-toggle {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    padding: 6px;
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    background: rgba(255,255,255,0.035);
+  }
+  .recommend-mode-btn {
+    border: 1px solid transparent;
+    border-radius: 14px;
+    background: transparent;
+    color: var(--text-muted);
+    font-family: 'Cairo', sans-serif;
+    font-size: 14px;
+    font-weight: 900;
+    padding: 11px 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .recommend-mode-btn.active {
+    background: var(--gold);
+    color: #0B0E14;
+    border-color: var(--gold);
+    box-shadow: 0 10px 24px rgba(232,197,71,0.18);
+  }
+  .recommend-mode-section {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  .recommend-mode-section[hidden] { display: none; }
+  .recommend-field {
+    display: grid;
+    gap: 7px;
+  }
+  .recommend-field.wide { grid-column: 1 / -1; }
+  .recommend-label {
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 800;
+  }
+  .recommend-input,
+  .recommend-textarea,
+  .recommend-select {
+    width: 100%;
+    border: 1.5px solid var(--border);
+    border-radius: 14px;
+    background: rgba(255,255,255,0.04);
+    color: var(--text);
+    font-family: 'Tajawal', sans-serif;
+    font-size: 14px;
+    padding: 12px 14px;
+    outline: none;
+  }
+  .recommend-textarea {
+    min-height: 112px;
+    resize: vertical;
+    line-height: 1.8;
+  }
+  .recommend-input:focus,
+  .recommend-textarea:focus,
+  .recommend-select:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(232,197,71,0.12);
+  }
+  .recommend-actions {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 4px;
+  }
+  .recommend-btn {
+    border: none;
+    border-radius: 14px;
+    background: var(--gold);
+    color: #0B0E14;
+    font-family: 'Cairo', sans-serif;
+    font-size: 15px;
+    font-weight: 900;
+    padding: 12px 22px;
+    cursor: pointer;
+    transition: transform 0.15s, opacity 0.2s;
+  }
+  .recommend-btn:hover:not(:disabled) { transform: translateY(-2px); }
+  .recommend-btn:disabled { opacity: 0.58; cursor: wait; }
+  .recommend-note {
+    color: var(--text-muted);
+    font-size: 12px;
+  }
+  .recommend-note a {
+    color: var(--gold);
+    text-decoration: underline;
+  }
+  .phrase-section {
+    grid-column: 1 / -1;
+    display: grid;
+    gap: 10px;
+    padding: 14px;
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    background: rgba(0,0,0,0.08);
+  }
+  .phrase-title {
+    color: var(--text);
+    font-family: 'Cairo', sans-serif;
+    font-size: 14px;
+    font-weight: 900;
+  }
+  .phrase-grid {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .phrase-chip {
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: rgba(255,255,255,0.035);
+    color: var(--text-muted);
+    font-family: 'Tajawal', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: all 0.18s;
+  }
+  .phrase-chip:hover {
+    border-color: rgba(232,197,71,0.55);
+    color: var(--text);
+  }
+  .phrase-chip.active {
+    background: rgba(232,197,71,0.16);
+    color: var(--gold);
+    border-color: var(--gold);
+  }
+  .quiz-card {
+    grid-column: 1 / -1;
+    display: grid;
+    gap: 12px;
+    padding: 16px;
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    background: rgba(0,0,0,0.08);
+  }
+  .quiz-question {
+    color: var(--text);
+    font-family: 'Cairo', sans-serif;
+    font-size: 15px;
+    font-weight: 900;
+  }
+  .quiz-intro {
+    grid-column: 1 / -1;
+    padding: 14px 16px;
+    border: 1px solid rgba(232,197,71,0.28);
+    border-radius: 18px;
+    background: rgba(232,197,71,0.08);
+    color: var(--text-muted);
+    font-size: 13px;
+    line-height: 1.85;
+  }
+  .quiz-trait {
+    color: var(--gold);
+    font-family: 'Cairo', sans-serif;
+    font-size: 12px;
+    font-weight: 900;
+  }
+  .quiz-options {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .quiz-option {
+    position: relative;
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 9px 10px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: rgba(255,255,255,0.035);
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1.5;
+    cursor: pointer;
+    transition: all 0.18s;
+  }
+  .quiz-option input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .quiz-option:hover {
+    border-color: rgba(232,197,71,0.55);
+    color: var(--text);
+  }
+  .quiz-option.active {
+    background: rgba(232,197,71,0.16);
+    color: var(--gold);
+    border-color: var(--gold);
+    box-shadow: 0 8px 22px rgba(232,197,71,0.1);
+  }
+  .personality-score-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(138px, 1fr));
+    gap: 10px;
+    margin-top: 14px;
+  }
+  .personality-score {
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: rgba(255,255,255,0.035);
+  }
+  .personality-score strong {
+    display: block;
+    color: var(--gold);
+    font-family: 'Cairo', sans-serif;
+    font-size: 13px;
+    margin-bottom: 4px;
+  }
+  .dimension-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .dimension-pill {
+    padding: 7px 11px;
+    border-radius: 999px;
+    border: 1px solid rgba(232,197,71,0.38);
+    color: var(--gold);
+    background: rgba(232,197,71,0.09);
+    font-size: 12px;
+    font-weight: 800;
+  }
+  .saved-profile-list {
+    grid-column: 1 / -1;
+    display: grid;
+    gap: 10px;
+    padding: 14px;
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    background: rgba(255,255,255,0.035);
+  }
+  .saved-profile-title {
+    font-family: 'Cairo', sans-serif;
+    font-size: 14px;
+    font-weight: 900;
+    color: var(--text);
+  }
+  .saved-profile-empty {
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+  .saved-profile-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: rgba(0,0,0,0.09);
+  }
+  .saved-profile-meta {
+    display: grid;
+    gap: 3px;
+    min-width: 0;
+  }
+  .saved-profile-name {
+    color: var(--gold);
+    font-weight: 900;
+    font-family: 'Cairo', sans-serif;
+  }
+  .saved-profile-sub {
+    color: var(--text-muted);
+    font-size: 12px;
+  }
+  .saved-profile-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+  }
+  .saved-profile-btn {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: transparent;
+    color: var(--text);
+    padding: 7px 10px;
+    font-family: 'Tajawal', sans-serif;
+    font-weight: 800;
+    cursor: pointer;
+  }
+  .saved-profile-btn:hover {
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+  .saved-profile-btn.danger:hover {
+    border-color: var(--danger);
+    color: var(--danger);
+  }
+  .saved-profile-confirm {
+    margin: 0 auto 16px;
+    max-width: 980px;
+    padding: 12px 16px;
+    border: 1px solid rgba(74,222,128,0.35);
+    border-radius: 14px;
+    color: #4ADE80;
+    background: rgba(74,222,128,0.08);
+    font-weight: 800;
+  }
+  .ai-profile-card {
+    max-width: 980px;
+    margin: 0 auto 22px;
+    padding: 18px 20px;
+    border: 1px solid rgba(232,197,71,0.35);
+    border-radius: 18px;
+    background: rgba(232,197,71,0.08);
+    color: var(--text);
+    line-height: 1.9;
+  }
+  .ai-profile-card strong {
+    color: var(--gold);
+    font-family: 'Cairo', sans-serif;
+  }
+  .recommend-reason {
+    margin-top: 8px;
+    color: var(--text-muted);
+    font-size: 13px;
+    line-height: 1.7;
+  }
+  .recommend-result-card {
+    display: grid;
+    gap: 8px;
+  }
+  .recommend-result-card .card { width: 100%; }
+
   /* ---------- Empty / Loading states ---------- */
   .state-msg {
     text-align: center;
@@ -742,6 +1129,52 @@
   }
   .cast-name { font-size: 12px; font-weight: 600; line-height: 1.3; }
   .cast-char { font-size: 11px; color: var(--text-muted); }
+  .modal-similar {
+    margin-top: 28px;
+    padding-top: 22px;
+    border-top: 1px solid var(--border);
+  }
+  .modal-similar-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .modal-similar-title {
+    font-size: 17px;
+    font-weight: 900;
+    font-family: 'Cairo', sans-serif;
+  }
+  .modal-similar-source {
+    color: var(--text-muted);
+    font-size: 12px;
+  }
+  .modal-similar-state {
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    background: rgba(255,255,255,0.035);
+    color: var(--text-muted);
+    font-size: 13px;
+    line-height: 1.8;
+    padding: 16px;
+    text-align: center;
+  }
+  .modal-similar .grid {
+    grid-template-columns: repeat(auto-fill, minmax(125px, 1fr));
+    gap: 12px;
+  }
+  .modal-similar .card {
+    min-width: 0;
+    border-radius: 14px;
+  }
+  .modal-similar .fav-btn,
+  .modal-similar .watched-btn {
+    display: none;
+  }
+  .modal-similar .card-title { font-size: 12px; }
+  .modal-similar .card-title-ar,
+  .modal-similar .card-sub { font-size: 11px; }
 
   /* ---------- Footer ---------- */
   footer {
@@ -792,6 +1225,11 @@
 
     .year-filter { margin-top: 14px; }
     .modal-body { padding-inline: 20px; }
+    .recommend-form { grid-template-columns: 1fr; }
+    .recommend-mode-toggle,
+    .recommend-mode-section { grid-template-columns: 1fr; }
+    .quiz-options { grid-template-columns: 1fr; }
+    .recommend-panel { padding: 18px; border-radius: 20px; }
   }
 </style>
 </head>
@@ -816,6 +1254,7 @@
     <button class="nav-tab" data-tab="tv" role="tab">📺 مسلسلات</button>
     <button class="nav-tab" data-tab="asianMovies" role="tab">🌏 أفلام آسيوية</button>
     <button class="nav-tab" data-tab="asianTv" role="tab">🌏 مسلسلات آسيوية</button>
+    <button class="nav-tab" data-tab="recommendations" role="tab">🧠 اقتراحات ذكية</button>
     <button class="nav-tab" data-tab="favorites" role="tab">⭐ المفضلة</button>
     <button class="nav-tab" data-tab="history" role="tab">📜 السجل</button>
   </div>
@@ -877,6 +1316,8 @@
   <a href="https://www.tvmaze.com" target="_blank" rel="noopener" style="color: var(--gold); text-decoration: underline;">TVmaze</a>
   وبيانات دراما من
   <a href="https://mydramalist.com" target="_blank" rel="noopener" style="color: var(--gold); text-decoration: underline;">MyDramaList</a>
+  وتوصيات مشابهة من
+  <a href="https://tastedive.com" target="_blank" rel="noopener" style="color: var(--gold); text-decoration: underline;">TasteDive</a>
   · مشروع شخصي
 </footer>
 
@@ -892,6 +1333,10 @@ const TMDB_TOKEN = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJiNDIzNTIzNzA3NmIzMjYxZTNhMWJ
 const API_BASE = "https://api.themoviedb.org/3";
 const TVMAZE_API_BASE = "https://api.tvmaze.com";
 const MDL_API_BASE = window.CINEMATEK_MDL_API_BASE || "https://mydramalistunofficialapi.vercel.app";
+const GEMINI_API_BASE = "https://generativelanguage.googleapis.com/v1beta";
+const GEMINI_MODEL = "gemini-2.5-flash";
+const TASTEDIVE_API_BASE = "https://tastedive.com/api/similar";
+const TASTEDIVE_PROXY_BASE = window.CINEMATEK_TASTEDIVE_PROXY_BASE || `${MDL_API_BASE}/api/tastedive/similar`;
 const IMG_BASE = "https://image.tmdb.org/t/p/w500";
 const BACKDROP_BASE = "https://image.tmdb.org/t/p/w1280";
 const CURRENT_YEAR = new Date().getFullYear();
@@ -1320,6 +1765,1069 @@ async function fetchArabicList(endpoint) {
     return data.results || [];
   } catch(e) {
     return [];
+  }
+}
+
+function getGeminiApiKey() {
+  return (localStorage.getItem("cinematek_gemini_api_key") || window.CINEMATEK_GEMINI_API_KEY || "").trim();
+}
+
+function saveGeminiApiKey(key) {
+  const cleanKey = String(key || "").trim();
+  if (cleanKey) localStorage.setItem("cinematek_gemini_api_key", cleanKey);
+}
+
+function getTasteDiveApiKey() {
+  return (localStorage.getItem("cinematek_tastedive_api_key") || window.CINEMATEK_TASTEDIVE_API_KEY || "").trim();
+}
+
+function saveTasteDiveApiKey(key) {
+  const cleanKey = String(key || "").trim();
+  if (cleanKey) localStorage.setItem("cinematek_tastedive_api_key", cleanKey);
+}
+
+function loadPersonalityProfiles() {
+  try {
+    const profiles = JSON.parse(localStorage.getItem("cinematek_personality_profiles") || "[]");
+    return Array.isArray(profiles) ? profiles : [];
+  } catch(e) {
+    return [];
+  }
+}
+
+function savePersonalityProfiles(profiles) {
+  localStorage.setItem("cinematek_personality_profiles", JSON.stringify(profiles.slice(0, 20)));
+}
+
+function normalizeProfileName(name) {
+  return String(name || "").trim().replace(/\s+/g, " ");
+}
+
+function defaultProfileName(result) {
+  const top = (result?.top_dimensions || []).slice(0, 2).join(" + ");
+  const date = new Date().toLocaleDateString("ar-SA");
+  return top ? `شخصية ${top}` : `شخصية ${date}`;
+}
+
+function savePersonalityProfile(profile) {
+  const profiles = loadPersonalityProfiles();
+  const normalizedName = normalizeProfileName(profile.name);
+  const index = profiles.findIndex(existing =>
+    normalizeProfileName(existing.name).toLowerCase() === normalizedName.toLowerCase()
+  );
+  const record = {
+    ...profile,
+    name: normalizedName,
+    updated_at: new Date().toISOString()
+  };
+  if (index >= 0) {
+    profiles[index] = { ...profiles[index], ...record };
+  } else {
+    profiles.unshift({ ...record, id: `profile_${Date.now()}` });
+  }
+  savePersonalityProfiles(profiles);
+  return index >= 0 ? profiles[index] : profiles[0];
+}
+
+function deletePersonalityProfile(id) {
+  savePersonalityProfiles(loadPersonalityProfiles().filter(profile => profile.id !== id));
+}
+
+function watchedContextForGemini() {
+  const picked = [
+    ...favorites.slice(-12).map(item => `مفضلة: ${getDisplayTitle(item)} (${item.type === "movie" ? "فيلم" : "مسلسل"})`),
+    ...watchHistory.slice(0, 12).map(item => `شوهد: ${getDisplayTitle(item)} (${item.type === "movie" ? "فيلم" : "مسلسل"})`)
+  ];
+  return picked.length ? picked.join("\n") : "لا يوجد سجل أو مفضلة كافية.";
+}
+
+const BIG_FIVE_QUESTIONS = [
+  { id: "O1", trait: "O", reverse: false, traitLabel: "الانفتاح", text: "أستمتع بتجربة أفكار وأساليب غير مألوفة بالنسبة لي." },
+  { id: "O2", trait: "O", reverse: false, traitLabel: "الانفتاح", text: "عندي خيال واسع وأحب أتخيل احتمالات مختلفة." },
+  { id: "O3", trait: "O", reverse: true, traitLabel: "الانفتاح", text: "أفضّل الأشياء الواضحة والمباشرة على الأفكار المعقدة أو الغامضة." },
+  { id: "O4", trait: "O", reverse: true, traitLabel: "الانفتاح", text: "نادراً أهتم بالمواضيع الفلسفية أو التجريدية." },
+  { id: "C1", trait: "C", reverse: false, traitLabel: "الضمير/التنظيم", text: "أحب أنظّم أشيائي وأتابع مهامي بدقة." },
+  { id: "C2", trait: "C", reverse: false, traitLabel: "الضمير/التنظيم", text: "أنجز الشي اللي أبدأه حتى لو طوّل الوقت." },
+  { id: "C3", trait: "C", reverse: true, traitLabel: "الضمير/التنظيم", text: "غالباً أأجل أشياء كان المفروض أسويها بسرعة." },
+  { id: "C4", trait: "C", reverse: true, traitLabel: "الضمير/التنظيم", text: "أميل للعشوائية أكثر من التخطيط المسبق." },
+  { id: "E1", trait: "E", reverse: false, traitLabel: "الانبساطية", text: "أرتاح وأنبسط لما أكون وسط مجموعة من الناس." },
+  { id: "E2", trait: "E", reverse: false, traitLabel: "الانبساطية", text: "أحب أكون البادئ بالكلام أو اللي يقود الجو في التجمعات." },
+  { id: "E3", trait: "E", reverse: true, traitLabel: "الانبساطية", text: "أفضّل الهدوء والخصوصية على التجمعات الكبيرة." },
+  { id: "E4", trait: "E", reverse: true, traitLabel: "الانبساطية", text: "أحتاج وقت لحالي عشان أسترجع طاقتي بعد المناسبات." },
+  { id: "A1", trait: "A", reverse: false, traitLabel: "المقبولية", text: "أتعاطف بسرعة مع مشاعر وظروف الآخرين." },
+  { id: "A2", trait: "A", reverse: false, traitLabel: "المقبولية", text: "أحب أساعد الناس حتى لو ما طلبوا مساعدتي." },
+  { id: "A3", trait: "A", reverse: true, traitLabel: "المقبولية", text: "أركز على مصلحتي الشخصية أكثر من تفاصيل الآخرين." },
+  { id: "A4", trait: "A", reverse: true, traitLabel: "المقبولية", text: "أصبر بصعوبة على أشخاص يكثرون الشكوى أو يحتاجون اهتمام زائد." },
+  { id: "N1", trait: "N", reverse: false, traitLabel: "العصابية/التقلب العاطفي", text: "مشاعري وتقلباتي تتغير بسرعة خلال اليوم." },
+  { id: "N2", trait: "N", reverse: false, traitLabel: "العصابية/التقلب العاطفي", text: "يتوتر أو ينزعج مزاجي بسهولة من أشياء بسيطة." },
+  { id: "N3", trait: "N", reverse: true, traitLabel: "العصابية/التقلب العاطفي", text: "أبقى هادئ ومتزن حتى في المواقف الضاغطة." },
+  { id: "N4", trait: "N", reverse: true, traitLabel: "العصابية/التقلب العاطفي", text: "نادراً أحس بالقلق أو الحزن لفترة طويلة." }
+];
+
+const TRAIT_LABELS = {
+  O: "الانفتاح",
+  C: "الضمير/التنظيم",
+  E: "الانبساطية",
+  A: "المقبولية",
+  N: "التقلب العاطفي"
+};
+
+const TMDB_GENRE_IDS = {
+  movie: {
+    Action: 28, Adventure: 12, Comedy: 35, Crime: 80, Documentary: 99, Drama: 18,
+    Family: 10751, Fantasy: 14, History: 36, Horror: 27, Music: 10402,
+    Mystery: 9648, Romance: 10749, "Science Fiction": 878, Thriller: 53, War: 10752
+  },
+  tv: {
+    Action: 10759, Adventure: 10759, Comedy: 35, Crime: 80, Documentary: 99, Drama: 18,
+    Family: 10751, Fantasy: 10765, History: 10768, Horror: 9648, Music: 10767,
+    Mystery: 9648, News: 10763, Reality: 10764, Romance: 10766, "Science Fiction": 10765,
+    Talk: 10767, Thriller: 9648, War: 10768
+  }
+};
+
+const DIMENSION_GENRES = {
+  Communal: ["Romance", "Family", "Comedy", "Talk", "Reality"],
+  Aesthetic: ["Drama", "Music", "Documentary"],
+  Dark: ["Horror", "Crime", "Thriller"],
+  Thrilling: ["Adventure", "Science Fiction", "Fantasy", "Action"],
+  Cerebral: ["Documentary", "History", "War", "News"]
+};
+
+function bigFiveLevel(score) {
+  if (score <= 33) return "منخفض";
+  if (score <= 65) return "متوسط";
+  return "مرتفع";
+}
+
+function collectBigFiveAnswers() {
+  return BIG_FIVE_QUESTIONS.map(question => {
+    const checked = document.querySelector(`input[name="bigfive_${question.id}"]:checked`);
+    return checked ? {
+      id: question.id,
+      trait: question.trait,
+      reverse: question.reverse,
+      value: parseInt(checked.value, 10)
+    } : null;
+  });
+}
+
+function calculateBigFiveAssessment(answers) {
+  const raw = { O: 0, C: 0, E: 0, A: 0, N: 0 };
+  answers.forEach(answer => {
+    const normalizedValue = answer.reverse ? 6 - answer.value : answer.value;
+    raw[answer.trait] += normalizedValue;
+  });
+  const scores = {};
+  const levels = {};
+  Object.keys(raw).forEach(trait => {
+    scores[trait] = Math.round(((raw[trait] - 4) / 16) * 100);
+    levels[trait] = bigFiveLevel(scores[trait]);
+  });
+  return {
+    answers,
+    ocean_scores: scores,
+    ocean_level: levels,
+    ...inferEntertainmentPreferences(scores, levels)
+  };
+}
+
+function dimensionLevel(score) {
+  if (score >= 66) return "مرتفع";
+  if (score >= 34) return "متوسط";
+  return "منخفض";
+}
+
+function inferEntertainmentPreferences(scores, levels) {
+  const dimensionScores = {
+    Communal: (scores.A * 0.62) + (scores.E * 0.38),
+    Aesthetic: scores.O,
+    Dark: ((100 - scores.C) * 0.78) + (scores.E * 0.22),
+    Thrilling: (scores.O * 0.58) + (scores.E * 0.42),
+    Cerebral: (scores.C * 0.58) + (scores.O * 0.42)
+  };
+  const entertainmentDimensions = {};
+  Object.entries(dimensionScores).forEach(([dimension, score]) => {
+    entertainmentDimensions[dimension] = dimensionLevel(score);
+  });
+  const rankedDimensions = Object.entries(dimensionScores)
+    .sort((a, b) => b[1] - a[1])
+    .map(([dimension]) => dimension);
+  const topDimensions = rankedDimensions
+    .filter(dimension => entertainmentDimensions[dimension] === "مرتفع")
+    .slice(0, 3);
+  if (!topDimensions.length) topDimensions.push(...rankedDimensions.slice(0, 2));
+
+  const recommendedGenres = uniqueStrings(topDimensions.flatMap(dimension => DIMENSION_GENRES[dimension] || []));
+  const moodModifier = levels.N === "مرتفع" ? "intense" : levels.N === "منخفض" ? "light" : "none";
+  return {
+    entertainment_dimensions: entertainmentDimensions,
+    dimension_scores: Object.fromEntries(Object.entries(dimensionScores).map(([k, v]) => [k, Math.round(v)])),
+    top_dimensions: topDimensions,
+    recommended_tmdb_genres: recommendedGenres,
+    mood_modifier: moodModifier
+  };
+}
+
+function uniqueStrings(values) {
+  return [...new Set((values || []).filter(Boolean))];
+}
+
+async function geminiRecommend(payload) {
+  const key = getGeminiApiKey();
+  if (!key) {
+    throw new Error("ضع مفتاح Gemini API أولاً. يتم حفظه محلياً في هذا المتصفح فقط.");
+  }
+
+  const contextText = payload.includeLocalTaste ? watchedContextForGemini() : "لا تستخدم السجل أو المفضلة. اعتمد فقط على مدخلات المستخدم.";
+  const prompt = `
+أنت محرك اقتراحات ذكي داخل تطبيق أفلام ومسلسلات عربي.
+حلل شخصية المستخدم ومزاجه بكلمات عربية بسيطة، لطيفة، ومتجددة، ثم اقترح أعمالاً حقيقية يمكن البحث عنها في TMDB أو MyDramaList.
+
+مدخلات المستخدم:
+- المزاج الآن: ${payload.mood || "غير محدد"}
+- وصف الشخصية/الذوق: ${payload.personality || "غير محدد"}
+- يريد: ${payload.wantType}
+- يفضّل: ${payload.region}
+- ملاحظات إضافية: ${payload.extra || "لا يوجد"}
+- سياق محلي اختياري من المفضلة/السجل:
+${contextText}
+
+قواعد مهمة:
+- لا تقترح أنمي إلا إذا طلب المستخدم ذلك صراحة.
+- لا تقترح محتوى إباحي أو واضح الجنس.
+- نوّع بين فيلم ومسلسل إذا اختار المستخدم الاثنين.
+- اجعل الأسباب قصيرة، شخصية، وبالعربية.
+- استخدم العنوان الرسمي المعروف فقط في حقل title. لا تضع عنواناً قريباً أو نسخة محلية مختلفة إذا كنت تقصد عملاً عالمياً معروفاً.
+- إذا كان العمل أمريكياً أو بريطانياً أو ألمانياً أو غير آسيوي، اجعل source_hint = "tmdb".
+- إذا كان العمل كورياً أو يابانياً أو صينياً أو تايلندياً، اجعل source_hint = "mdl".
+- يجب أن يكون سبب الاقتراح متطابقاً مع العمل نفسه، لا تصف عملاً آخر.
+- أخرج JSON فقط بدون markdown.
+
+الشكل المطلوب:
+{
+  "profile": "تحليل قصير جداً لشخصية ومزاج المستخدم بالعربي",
+  "mood_words": ["كلمة", "كلمة", "كلمة"],
+  "recommendations": [
+    {
+      "title": "English or original title",
+      "type": "movie",
+      "year": "2020",
+      "source_hint": "tmdb",
+      "why": "سبب عربي قصير",
+      "search_query": "exact official title"
+    }
+  ]
+}
+اقترح 12 عملاً فقط.
+`;
+
+  const response = await fetch(`${GEMINI_API_BASE}/models/${GEMINI_MODEL}:generateContent?key=${encodeURIComponent(key)}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      generationConfig: {
+        temperature: 0.85,
+        responseMimeType: "application/json"
+      }
+    })
+  });
+
+  if (!response.ok) {
+    let message = `Gemini API error ${response.status}`;
+    try {
+      const errorBody = await response.json();
+      message = errorBody?.error?.message || message;
+    } catch(e) {}
+    throw new Error(message);
+  }
+
+  const data = await response.json();
+  const text = (data.candidates?.[0]?.content?.parts || [])
+    .map(part => part.text || "")
+    .join("")
+    .trim();
+  return parseGeminiJson(text);
+}
+
+async function geminiPersonalityGenres(assessment, payload) {
+  const key = getGeminiApiKey();
+  if (!key) return localPersonalityGenreResult(assessment);
+
+  const prompt = `
+أنت محرك توصية أفلام ومسلسلات مبني على تقييم شخصية علمي مختصر Big Five ونموذج أبعاد التفضيلات الترفيهية الخماسي:
+Communal / Aesthetic / Dark / Thrilling / Cerebral.
+
+التطبيق زوّدك بإجابات وحسابات جاهزة. لا تعيد الأسئلة. لا تخترع عناوين أفلام أو مسلسلات. مهمتك فقط:
+1) راجع نتائج OCEAN.
+2) استنتج أعلى أبعاد الترفيه.
+3) أخرج أنواع TMDB المناسبة فقط.
+4) اكتب تفسيراً عربياً سعودياً قصيراً، ودوداً، غير تشخيصي.
+
+نتائج الاختبار المحسوبة:
+${JSON.stringify({
+  ocean_scores: assessment.ocean_scores,
+  ocean_level: assessment.ocean_level,
+  entertainment_dimensions: assessment.entertainment_dimensions,
+  top_dimensions: assessment.top_dimensions,
+  recommended_tmdb_genres: assessment.recommended_tmdb_genres,
+  mood_modifier: assessment.mood_modifier,
+  wantType: payload.wantType,
+  region: payload.region
+}, null, 2)}
+
+القواعد:
+- لا تذكر تشخيصاً نفسياً أو لغة إكلينيكية.
+- قل إن النتيجة ميول عامة وليست حكماً قطعياً.
+- لا تخرج أسماء أعمال.
+- recommended_tmdb_genres يجب أن يحتوي أسماء إنجليزية قياسية فقط من هذه القائمة عند الإمكان:
+Romance, Family, Comedy, Drama, Music, Documentary, Horror, Crime, Thriller, Adventure, Science Fiction, Fantasy, Action, History, War, News, Talk, Reality
+- إذا mood_modifier = intense زِد الدراما/الرومانس/الثريلر المكثف عند الحاجة.
+- إذا mood_modifier = light فضّل محتوى أخف داخل نفس الأبعاد.
+
+JSON فقط:
+{
+  "ocean_scores": {"O": 0, "C": 0, "E": 0, "A": 0, "N": 0},
+  "ocean_level": {"O": "منخفض|متوسط|مرتفع", "C": "منخفض|متوسط|مرتفع", "E": "منخفض|متوسط|مرتفع", "A": "منخفض|متوسط|مرتفع", "N": "منخفض|متوسط|مرتفع"},
+  "entertainment_dimensions": {"Communal": "منخفض|متوسط|مرتفع", "Aesthetic": "منخفض|متوسط|مرتفع", "Dark": "منخفض|متوسط|مرتفع", "Thrilling": "منخفض|متوسط|مرتفع", "Cerebral": "منخفض|متوسط|مرتفع"},
+  "top_dimensions": ["..."],
+  "recommended_tmdb_genres": ["..."],
+  "mood_modifier": "light|intense|none",
+  "explanation_ar": "٣-٤ جمل بالعربي السعودي"
+}`;
+
+  const response = await fetch(`${GEMINI_API_BASE}/models/${GEMINI_MODEL}:generateContent?key=${encodeURIComponent(key)}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      generationConfig: {
+        temperature: 0.35,
+        responseMimeType: "application/json"
+      }
+    })
+  });
+
+  if (!response.ok) return localPersonalityGenreResult(assessment);
+  const data = await response.json();
+  const text = (data.candidates?.[0]?.content?.parts || [])
+    .map(part => part.text || "")
+    .join("")
+    .trim();
+  try {
+    return sanitizePersonalityGenreResult(parseGeminiJson(text), assessment);
+  } catch(e) {
+    return localPersonalityGenreResult(assessment);
+  }
+}
+
+function sanitizePersonalityGenreResult(result, fallback) {
+  const allowedGenres = new Set([
+    "Romance", "Family", "Comedy", "Drama", "Music", "Documentary", "Horror", "Crime", "Thriller",
+    "Adventure", "Science Fiction", "Fantasy", "Action", "History", "War", "News", "Talk", "Reality"
+  ]);
+  const genres = uniqueStrings((result.recommended_tmdb_genres || fallback.recommended_tmdb_genres || [])
+    .filter(genre => allowedGenres.has(genre)));
+  return {
+    ocean_scores: result.ocean_scores || fallback.ocean_scores,
+    ocean_level: result.ocean_level || fallback.ocean_level,
+    entertainment_dimensions: result.entertainment_dimensions || fallback.entertainment_dimensions,
+    top_dimensions: Array.isArray(result.top_dimensions) && result.top_dimensions.length ? result.top_dimensions : fallback.top_dimensions,
+    recommended_tmdb_genres: genres.length ? genres : fallback.recommended_tmdb_genres,
+    mood_modifier: ["light", "intense", "none"].includes(result.mood_modifier) ? result.mood_modifier : fallback.mood_modifier,
+    explanation_ar: result.explanation_ar || localExplanation(fallback)
+  };
+}
+
+function localPersonalityGenreResult(assessment) {
+  return {
+    ocean_scores: assessment.ocean_scores,
+    ocean_level: assessment.ocean_level,
+    entertainment_dimensions: assessment.entertainment_dimensions,
+    top_dimensions: assessment.top_dimensions,
+    recommended_tmdb_genres: assessment.recommended_tmdb_genres,
+    mood_modifier: assessment.mood_modifier,
+    explanation_ar: localExplanation(assessment)
+  };
+}
+
+function localExplanation(assessment) {
+  const dimensions = (assessment.top_dimensions || []).join(" و ");
+  return `نتيجتك تميل إلى أبعاد ${dimensions || "متنوعة"}، لذلك الاقتراحات هنا مبنية على أنواع تناسب طريقة تفاعلك مع القصص. هذا تحليل ميول عام وليس تصنيفاً قطعياً لشخصيتك. استخدمه كبداية ذكية، وعدّل النتائج بالمفضلة والسجل مع الوقت.`;
+}
+
+function parseGeminiJson(text) {
+  const clean = String(text || "").trim()
+    .replace(/^```json\s*/i, "")
+    .replace(/^```\s*/i, "")
+    .replace(/```$/i, "")
+    .trim();
+  try {
+    return JSON.parse(clean);
+  } catch(e) {
+    const match = clean.match(/\{[\s\S]*\}/);
+    if (match) return JSON.parse(match[0]);
+    throw new Error("تعذر قراءة رد Gemini كـ JSON.");
+  }
+}
+
+function normalizeTasteDiveSeed(value) {
+  return tasteDiveSeedParts(value).join(", ");
+}
+
+function tasteDiveSeedParts(value) {
+  return String(value || "")
+    .split(/[\n،,]+/)
+    .map(part => part.trim())
+    .filter(Boolean)
+    .slice(0, 5);
+}
+
+function tasteDiveOutputTypes(wantedType = "both") {
+  if (wantedType === "movies") return ["movie"];
+  if (wantedType === "tv") return ["show"];
+  return ["movie", "show"];
+}
+
+function tasteDiveResultToRecommendation(result, outputType) {
+  const title = String(result?.Name || result?.name || "").trim();
+  if (!title) return null;
+  const typeText = String(result?.Type || result?.type || outputType || "").toLowerCase();
+  const isShow = typeText.includes("show") || outputType === "show";
+  const teaser = String(result?.wTeaser || result?.description || "").trim();
+  return {
+    title,
+    type: isShow ? "tv" : "movie",
+    year: "",
+    source_hint: "tastedive",
+    why: teaser
+      ? `اقتراح مشابه حسب TasteDive: ${teaser.slice(0, 150)}`
+      : "اقتراح مشابه حسب TasteDive بناءً على الأعمال التي أدخلتها.",
+    search_query: title
+  };
+}
+
+async function tasteDiveProxyFetch(url, key) {
+  const response = await fetch(url.toString(), {
+    headers: {
+      "Accept": "application/json",
+      "x-tastedive-key": key
+    }
+  });
+  if (!response.ok) {
+    let message = `TasteDive proxy error ${response.status}`;
+    try {
+      const data = await response.json();
+      message = data?.detail?.description || data?.detail || data?.error || message;
+    } catch(e) {}
+    throw new Error(message);
+  }
+  return response.json();
+}
+
+async function tasteDiveRecommend(payload) {
+  const key = getTasteDiveApiKey();
+  if (!key) {
+    throw new Error("ضع مفتاح TasteDive API أولاً. تحصل عليه من tastedive.com/read/api ويُحفظ محلياً في هذا المتصفح فقط.");
+  }
+
+  const seeds = tasteDiveSeedParts(payload.tasteDiveSeed);
+  const seed = seeds.join(", ");
+  if (!seeds.length) {
+    throw new Error("اكتب في خانة TasteDive عنوان فيلم أو مسلسل تحبه، ويمكنك إضافة أكثر من عنوان مفصول بفواصل.");
+  }
+
+  const jobs = seeds.flatMap(seedTitle => tasteDiveOutputTypes(payload.wantType).map(async outputType => {
+    const url = new URL(TASTEDIVE_PROXY_BASE);
+    url.searchParams.set("q", seedTitle);
+    url.searchParams.set("type", outputType);
+    url.searchParams.set("info", "1");
+    url.searchParams.set("limit", String(Math.max(4, Math.ceil(16 / seeds.length))));
+    const data = await tasteDiveProxyFetch(url, key);
+    return (data?.Similar?.Results || data?.similar?.results || [])
+      .map(result => tasteDiveResultToRecommendation(result, outputType))
+      .filter(Boolean);
+  }));
+
+  const settled = await Promise.allSettled(jobs);
+  const failedJobs = settled.filter(result => result.status === "rejected");
+  const seen = new Set();
+  const recommendations = settledRecommendationsFromJobs(settled)
+    .filter(rec => {
+      const key = `${rec.type}:${simpleTitleKey(rec.title)}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .slice(0, 16);
+
+  if (!recommendations.length) {
+    if (failedJobs.length === settled.length) {
+      const reason = String(failedJobs[0]?.reason?.message || failedJobs[0]?.reason || "");
+      throw new Error(`تعذر الاتصال بـ TasteDive من المتصفح مباشرة. ${reason ? `السبب: ${reason}` : "قد يكون السبب CORS أو المفتاح."}`);
+    }
+    throw new Error("TasteDive لم يرجع اقتراحات كافية. جرّب عنواناً أشهر أو غيّر نوع الاقتراح.");
+  }
+
+  return {
+    seed,
+    recommendations
+  };
+}
+
+function settledRecommendationsFromJobs(settled) {
+  return settled
+    .filter(result => result.status === "fulfilled")
+    .flatMap(result => result.value || []);
+}
+
+function recommendationQuery(rec) {
+  const title = String(rec.title || "").trim();
+  const year = String(rec.year || "").match(/\d{4}/)?.[0] || "";
+  if (title) return `${title}${year ? ` ${year}` : ""}`.trim();
+  return String(rec.search_query || "").trim();
+}
+
+function recommendationType(rec, wantedType = "both") {
+  const type = String(rec.type || "").toLowerCase();
+  if (type === "movie" || type === "tv") return type;
+  if (type === "series" || type === "show" || type === "drama") return "tv";
+  return wantedType === "movies" ? "movie" : wantedType === "tv" ? "tv" : "movie";
+}
+
+function simpleTitleKey(value) {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/\(\d{4}\)/g, "")
+    .replace(/\b(19|20)\d{2}\b/g, "")
+    .replace(/[^\p{L}\p{N}]+/gu, "")
+    .trim();
+}
+
+function recommendationSourcePreference(rec) {
+  const text = `${rec.source_hint || ""} ${rec.why || ""} ${rec.title || ""} ${rec.search_query || ""}`.toLowerCase();
+  if (/\btmdb\b|american|british|german|french|spanish|western|أمريك|بريطان|ألمان|فرنس|إسبان|غربي/.test(text)) return "tmdb";
+  if (/\bmdl\b|mydramalist|korean|japanese|chinese|thai|asian|كور|يابان|صين|تايلند|آسيو/.test(text)) return "mdl";
+  return "";
+}
+
+function recommendationMatchScore(item, rec, context = {}) {
+  const wantedTitle = simpleTitleKey(rec.title || rec.search_query || "");
+  const wantedYear = String(rec.year || "").match(/\d{4}/)?.[0] || "";
+  const titleKeys = [
+    getDisplayTitle(item),
+    item.original_title,
+    item.original_name,
+    getArabicTitle(item)
+  ].map(simpleTitleKey).filter(Boolean);
+  let value = 0;
+  if (wantedTitle && titleKeys.some(title => title === wantedTitle)) value += 100;
+  else if (wantedTitle && titleKeys.some(title => title.startsWith(wantedTitle) || wantedTitle.startsWith(title))) value += 66;
+  else if (wantedTitle && titleKeys.some(title => title.includes(wantedTitle) || wantedTitle.includes(title))) value += 42;
+  else if (wantedTitle) {
+    const wantedTokens = new Set(wantedTitle.match(/[\p{L}\p{N}]+/gu) || []);
+    const bestOverlap = Math.max(0, ...titleKeys.map(title => {
+      const tokens = new Set(title.match(/[\p{L}\p{N}]+/gu) || []);
+      let overlap = 0;
+      wantedTokens.forEach(token => { if (tokens.has(token)) overlap++; });
+      return wantedTokens.size ? overlap / wantedTokens.size : 0;
+    }));
+    value += bestOverlap * 25;
+  }
+  if (wantedYear && yearOf(item) === wantedYear) value += 22;
+  if (context.sourcePreference === "tmdb") value += itemSource(item) === "tmdb" ? 18 : -28;
+  if (context.sourcePreference === "mdl") value += itemSource(item) === "mdl" ? 12 : -8;
+  if (context.prefersAsian && itemSource(item) === "mdl") value += 7;
+  if (!context.prefersAsian && itemSource(item) === "tmdb") value += 7;
+  value += Math.min(item.vote_average || 0, 10);
+  return value;
+}
+
+function rankResolvedResults(items, rec, context = {}) {
+  return [...items].sort((a, b) =>
+    recommendationMatchScore(b, rec, context) - recommendationMatchScore(a, rec, context)
+  );
+}
+
+async function searchTmdbForRecommendation(rec, type) {
+  const query = recommendationQuery(rec);
+  if (!query) return null;
+  const endpointType = type === "tv" ? "tv" : "movie";
+  const baseEndpoint = `/search/${endpointType}?language=en-US&query=${encodeURIComponent(query)}`;
+  const year = String(rec.year || "").match(/\d{4}/)?.[0] || "";
+  const endpoint = year
+    ? `${baseEndpoint}&${endpointType === "movie" ? "primary_release_year" : "first_air_date_year"}=${year}`
+    : baseEndpoint;
+  let [data, arabicResults] = await Promise.all([
+    tmdbFetch(endpoint),
+    fetchArabicList(endpoint)
+  ]);
+  if (year && !(data.results || []).length) {
+    [data, arabicResults] = await Promise.all([
+      tmdbFetch(baseEndpoint),
+      fetchArabicList(baseEndpoint)
+    ]);
+  }
+  const items = mergeArabicTitles(data.results || [], arabicResults).map(item => ({
+    ...item,
+    source: "tmdb",
+    type,
+    media_type: type
+  })).filter(isAllowedContent);
+  return rankResolvedResults(items, rec)[0] || null;
+}
+
+async function searchMdlForRecommendation(rec, type) {
+  const query = recommendationQuery(rec);
+  if (!query) return null;
+  const items = await searchMdlShows(query, undefined, type).catch(() => []);
+  return rankResolvedResults(items, rec)[0] || null;
+}
+
+async function searchTvmazeForRecommendation(rec) {
+  const query = recommendationQuery(rec);
+  if (!query) return null;
+  const items = await searchTvmazeAsianShows(query).catch(() => []);
+  return rankResolvedResults(items, rec)[0] || null;
+}
+
+async function resolveRecommendation(rec, wantedType) {
+  const type = recommendationType(rec, wantedType);
+  const sourceHint = String(rec.source_hint || "").toLowerCase();
+  const wantsAsian = sourceHint.includes("mdl") || sourceHint.includes("asian") || /korean|japanese|chinese|drama|كور|يابان|صين|آسيو/i.test(`${rec.title || ""} ${rec.search_query || ""}`);
+  const sourcePreference = recommendationSourcePreference(rec);
+
+  const candidates = (await Promise.allSettled([
+    searchTmdbForRecommendation(rec, type),
+    type === "tv" ? searchMdlForRecommendation(rec, type) : Promise.resolve(null),
+    type === "tv" ? searchTvmazeForRecommendation(rec) : Promise.resolve(null)
+  ]))
+    .filter(result => result.status === "fulfilled" && result.value)
+    .map(result => result.value);
+
+  const ranked = rankResolvedResults(uniqueItems([], candidates), rec, {
+    prefersAsian: wantsAsian,
+    sourcePreference
+  });
+  const item = ranked[0] || null;
+  if (!item) return null;
+  return { item, type: item.media_type || item.type || type, why: rec.why || "مناسب لمزاجك الحالي." };
+}
+
+async function resolveAiRecommendations(aiData, wantedType) {
+  const recommendations = Array.isArray(aiData?.recommendations) ? aiData.recommendations.slice(0, 12) : [];
+  const settled = await Promise.allSettled(recommendations.map(rec => resolveRecommendation(rec, wantedType)));
+  return uniqueItems([], settled
+    .filter(result => result.status === "fulfilled" && result.value?.item)
+    .map(result => ({ ...result.value.item, ai_reason: result.value.why, media_type: result.value.type, type: result.value.type })));
+}
+
+function genreIdsForType(genres, type) {
+  const map = TMDB_GENRE_IDS[type] || {};
+  return uniqueStrings(genres || []).map(genre => map[genre]).filter(Boolean);
+}
+
+async function fetchRecommendationsByGenres(result, wantedType = "both") {
+  const genres = result.recommended_tmdb_genres || [];
+  const shouldFetchMovies = wantedType !== "tv";
+  const shouldFetchTv = wantedType !== "movies";
+  const jobs = [];
+  const today = new Date().toISOString().slice(0, 10);
+
+  if (shouldFetchMovies) {
+    genreIdsForType(genres, "movie").slice(0, 5).forEach(id => {
+      const endpoint = `/discover/movie?language=en-US&sort_by=popularity.desc&vote_average.gte=6.7&vote_count.gte=350&primary_release_date.lte=${today}&with_genres=${id}`;
+      jobs.push(Promise.all([tmdbFetch(endpoint), fetchArabicList(endpoint)])
+        .then(([data, arabic]) => mergeArabicTitles(data.results || [], arabic).map(item => ({
+          ...item,
+          type: "movie",
+          media_type: "movie",
+          source: "tmdb",
+          ai_reason: `يناسب بُعد ${result.top_dimensions?.[0] || "التفضيل"} وأنواع: ${genres.slice(0, 3).join("، ")}`
+        }))));
+    });
+  }
+
+  if (shouldFetchTv) {
+    genreIdsForType(genres, "tv").slice(0, 5).forEach(id => {
+      const endpoint = `/discover/tv?language=en-US&sort_by=popularity.desc&vote_average.gte=6.7&vote_count.gte=120&first_air_date.lte=${today}&with_genres=${id}`;
+      jobs.push(Promise.all([tmdbFetch(endpoint), fetchArabicList(endpoint)])
+        .then(([data, arabic]) => mergeArabicTitles(data.results || [], arabic).map(item => ({
+          ...item,
+          type: "tv",
+          media_type: "tv",
+          source: "tmdb",
+          ai_reason: `يناسب بُعد ${result.top_dimensions?.[0] || "التفضيل"} وأنواع: ${genres.slice(0, 3).join("، ")}`
+        }))));
+    });
+  }
+
+  const settled = await Promise.allSettled(jobs);
+  let items = settled
+    .filter(result => result.status === "fulfilled")
+    .flatMap(result => result.value)
+    .filter(isAllowedContent);
+
+  if (result.mood_modifier === "light") {
+    items = items.filter(item => !contentGenreIds(item).includes(TMDB_GENRE_IDS.movie.Horror));
+  }
+
+  return applySort(uniqueItems([], items).slice(0, 24), "rating-desc");
+}
+
+function recommendationResultsHtml(items) {
+  if (!items.length) return emptyState("وصلتنا اقتراحات أسماء، لكن ما قدرنا نطابقها مع مصادر سينماتك الحالية. جرّب عنواناً أشهر أو غيّر نوع الاقتراح.");
+  return `<div class="grid" id="recommendationGrid">
+    ${items.map(item => `
+      <div class="recommend-result-card">
+        ${cardHtml(item, item.media_type || item.type)}
+        <div class="recommend-reason">${escapeHtml(item.ai_reason || "")}</div>
+      </div>
+    `).join("")}
+  </div>`;
+}
+
+function personalityQuizHtml() {
+  const scale = [
+    [1, "لا أوافق أبداً"],
+    [2, "لا أوافق"],
+    [3, "محايد"],
+    [4, "أوافق"],
+    [5, "أوافق تماماً"]
+  ];
+  return `
+    <div class="quiz-intro">
+      اختبار مختصر مبني على Big Five. اختر درجة موافقتك على كل عبارة من 1 إلى 5.
+      النتيجة تُستخدم كميول عامة للتوصية، وليست تشخيصاً نفسياً أو حكماً قطعياً.
+    </div>
+    ${BIG_FIVE_QUESTIONS.map((question, index) => `
+      <div class="quiz-card">
+        <div class="quiz-trait">${question.traitLabel} · ${question.id}${question.reverse ? " · معكوسة" : ""}</div>
+        <div class="quiz-question">${index + 1}. ${escapeHtml(question.text)}</div>
+        <div class="quiz-options">
+          ${scale.map(([value, label]) => `
+            <label class="quiz-option">
+              <input class="quiz-choice" type="radio" name="bigfive_${question.id}" value="${value}">
+              <span>${value} · ${label}</span>
+            </label>
+          `).join("")}
+        </div>
+      </div>
+    `).join("")}
+  `;
+}
+
+function personalityResultHtml(result, items) {
+  const scoreCards = Object.entries(result.ocean_scores || {}).map(([trait, score]) => `
+    <div class="personality-score">
+      <strong>${TRAIT_LABELS[trait] || trait}</strong>
+      <div>${score}/100 · ${escapeHtml(result.ocean_level?.[trait] || "")}</div>
+    </div>
+  `).join("");
+  const dimensionPills = [
+    ...(result.top_dimensions || []),
+    ...(result.recommended_tmdb_genres || []).slice(0, 8)
+  ].map(value => `<span class="dimension-pill">${escapeHtml(value)}</span>`).join("");
+  return `
+    <div class="ai-profile-card">
+      <strong>نتيجة الاختبار:</strong>
+      ${escapeHtml(result.explanation_ar || "")}
+      <div class="personality-score-grid">${scoreCards}</div>
+      <div class="dimension-pills">${dimensionPills}</div>
+    </div>
+    <h2 class="section-title">🧠 اقتراحات من TMDB حسب شخصيتك <span class="count">(${items.length})</span></h2>
+    ${recommendationResultsHtml(items)}
+  `;
+}
+
+function savedProfilesHtml() {
+  const profiles = loadPersonalityProfiles();
+  return `
+    <div class="saved-profile-list" id="savedProfilesList">
+      <div class="saved-profile-title">الشخصيات المحفوظة في هذا المتصفح</div>
+      ${profiles.length ? profiles.map(profile => `
+        <div class="saved-profile-row">
+          <div class="saved-profile-meta">
+            <div class="saved-profile-name">${escapeHtml(profile.name)}</div>
+            <div class="saved-profile-sub">
+              ${escapeHtml((profile.result?.top_dimensions || []).join(" + ") || "بدون أبعاد")}
+              · ${profile.updated_at ? new Date(profile.updated_at).toLocaleDateString("ar-SA") : ""}
+            </div>
+          </div>
+          <div class="saved-profile-actions">
+            <button class="saved-profile-btn" type="button" data-profile-show="${escapeHtml(profile.id)}">عرض النتيجة</button>
+            <button class="saved-profile-btn danger" type="button" data-profile-delete="${escapeHtml(profile.id)}">حذف</button>
+          </div>
+        </div>
+      `).join("") : `<div class="saved-profile-empty">ما فيه نتائج محفوظة حتى الآن. اكتب اسم الشخصية وشغّل الاختبار، وراح تنحفظ هنا.</div>`}
+    </div>
+  `;
+}
+
+function refreshSavedProfilesList() {
+  const wrap = document.getElementById("savedProfilesWrap");
+  if (wrap) wrap.innerHTML = savedProfilesHtml();
+}
+
+async function showSavedPersonalityProfile(id) {
+  const profile = loadPersonalityProfiles().find(item => item.id === id);
+  const output = document.getElementById("recommendationOutput");
+  if (!profile || !profile.result || !output) return;
+  output.innerHTML = loadingState();
+  try {
+    const items = await fetchRecommendationsByGenres(profile.result, profile.payload?.wantType || "both");
+    paginationState = { mode: "recommendations", items, containerId: "recommendationGrid" };
+    output.innerHTML = `
+      <div class="saved-profile-confirm">تم عرض النتيجة المحفوظة باسم: ${escapeHtml(profile.name)}</div>
+      ${personalityResultHtml(profile.result, items)}
+    `;
+    document.getElementById("personalityProfileName").value = profile.name;
+    loadVisibleTvStatuses();
+  } catch(e) {
+    output.innerHTML = errorState();
+  }
+}
+
+function renderRecommendationsPage() {
+  paginationState = null;
+  const savedKey = getGeminiApiKey();
+  const savedTasteDiveKey = getTasteDiveApiKey();
+  main.innerHTML = `
+    <section class="recommend-panel">
+      <div class="recommend-head">
+        <div class="recommend-kicker">Gemini AI · TasteDive · اقتراحات شخصية ومشابهة</div>
+        <h2 class="recommend-title">قل لي مزاجك، وأعطيك أفلام ومسلسلات تناسبك.</h2>
+        <p class="recommend-copy">
+          اكتب كلمات بسيطة ليحللها Gemini، أو استخدم اختبار الشخصية، أو أدخل أعمالاً تحبها ليقترح TasteDive أعمالاً مشابهة. التطبيق يطابق النتائج مع TMDB وMyDramaList وTVmaze حتى تظهر كبطاقات قابلة للفتح داخل سينماتك.
+        </p>
+      </div>
+      <form class="recommend-form" id="recommendForm">
+        <div class="recommend-mode-toggle" aria-label="طريقة إدخال الذوق">
+          <button class="recommend-mode-btn active" type="button" data-recommend-mode="manual">✍️ كتابة يدوية</button>
+          <button class="recommend-mode-btn" type="button" data-recommend-mode="quiz">🧠 اختبار الشخصية</button>
+          <button class="recommend-mode-btn" type="button" data-recommend-mode="tastedive">🔗 TasteDive مشابه</button>
+        </div>
+        <div class="recommend-field">
+          <label class="recommend-label" for="geminiKeyInput">مفتاح Gemini API</label>
+          <input class="recommend-input" id="geminiKeyInput" type="password" autocomplete="off"
+            placeholder="${savedKey ? "محفوظ محلياً — اتركه فارغاً" : "ضع Gemini API key هنا"}">
+        </div>
+        <div class="recommend-field">
+          <label class="recommend-label" for="tasteDiveKeyInput">مفتاح TasteDive API</label>
+          <input class="recommend-input" id="tasteDiveKeyInput" type="password" autocomplete="off"
+            placeholder="${savedTasteDiveKey ? "محفوظ محلياً — اتركه فارغاً" : "ضع TasteDive API key هنا"}">
+        </div>
+        <div class="recommend-field">
+          <label class="recommend-label" for="recommendType">نوع الاقتراح</label>
+          <select class="recommend-select" id="recommendType">
+            <option value="both">أفلام ومسلسلات</option>
+            <option value="movies">أفلام فقط</option>
+            <option value="tv">مسلسلات فقط</option>
+          </select>
+        </div>
+        <div class="recommend-field">
+          <label class="recommend-label" for="recommendRegion">المصدر/الطابع</label>
+          <select class="recommend-select" id="recommendRegion">
+            <option value="متنوع عالمي وآسيوي">متنوع</option>
+            <option value="غير آسيوي غالباً من TMDB">غير آسيوي</option>
+            <option value="آسيوي من MyDramaList أولاً">آسيوي</option>
+          </select>
+        </div>
+        <div class="recommend-mode-section" id="manualRecommendSection">
+          <div class="recommend-field">
+            <label class="recommend-label" for="recommendMood">مزاجك الآن</label>
+            <input class="recommend-input" id="recommendMood" placeholder="مثلاً: هادي، متوتر، أبي شيء ذكي، أبي أضحك...">
+          </div>
+          <div class="recommend-field wide">
+            <label class="recommend-label" for="recommendPersonality">شخصيتك وذوقك بكلمات بسيطة</label>
+            <textarea class="recommend-textarea" id="recommendPersonality" placeholder="مثلاً: أحب الأعمال العميقة، ما أحب الملل، أحب الغموض والرومانسية الهادئة، ما أحب الأنمي..."></textarea>
+          </div>
+          <div class="recommend-field wide">
+            <label class="recommend-label" for="recommendExtra">أي ملاحظة إضافية؟</label>
+            <input class="recommend-input" id="recommendExtra" placeholder="مثلاً: مناسب للسهرة، بدون رعب، شيء قصير، جودة عالية...">
+          </div>
+        </div>
+        <div class="recommend-mode-section" id="quizRecommendSection" hidden>
+          <div class="recommend-field wide">
+            <label class="recommend-label" for="personalityProfileName">اسم الشخصية لحفظ النتيجة</label>
+            <input class="recommend-input" id="personalityProfileName" placeholder="مثلاً: شخصية الغموض الهادئ، شخصية الأكشن الذكي...">
+          </div>
+          ${personalityQuizHtml()}
+        </div>
+        <div class="recommend-mode-section" id="tasteDiveRecommendSection" hidden>
+          <div class="recommend-field wide">
+            <label class="recommend-label" for="tasteDiveSeedInput">أعمال تحبها ليقترح TasteDive أشياء مشابهة</label>
+            <textarea class="recommend-textarea" id="tasteDiveSeedInput" placeholder="مثلاً: Inception, Dark, The Prestige&#10;اكتب حتى 5 عناوين، وافصل بينها بفاصلة أو سطر جديد."></textarea>
+          </div>
+          <div class="recommend-field wide">
+            <span class="recommend-note">
+              TasteDive يرجع أسماء مشابهة فقط؛ سينماتك يطابقها بعدها مع TMDB / MyDramaList / TVmaze لعرض البطاقة والوصف والإعلان.
+              للحصول على المفتاح: <a href="https://tastedive.com/read/api" target="_blank" rel="noopener">TasteDive API</a>.
+            </span>
+          </div>
+        </div>
+        <div class="recommend-actions">
+          <button class="recommend-btn" type="submit" id="recommendSubmit">اقترح لي الآن</button>
+          <label class="recommend-note">
+            <input type="checkbox" id="recommendUseLocalTaste">
+            استخدم عناوين المفضلة والسجل لتحسين الذوق
+          </label>
+          <span class="recommend-note">مفاتيح Gemini وTasteDive تُحفظ في localStorage على جهازك فقط.</span>
+        </div>
+        <div id="savedProfilesWrap" class="recommend-field wide">
+          ${savedProfilesHtml()}
+        </div>
+      </form>
+    </section>
+    <div id="recommendationOutput"></div>
+  `;
+
+  document.getElementById("recommendForm").addEventListener("submit", handleRecommendationSubmit);
+  bindRecommendationModeControls();
+}
+
+function bindRecommendationModeControls() {
+  const modeButtons = [...document.querySelectorAll("[data-recommend-mode]")];
+  const manualSection = document.getElementById("manualRecommendSection");
+  const quizSection = document.getElementById("quizRecommendSection");
+  const tasteDiveSection = document.getElementById("tasteDiveRecommendSection");
+
+  modeButtons.forEach(button => {
+    button.addEventListener("click", () => {
+      const mode = button.dataset.recommendMode;
+      modeButtons.forEach(btn => btn.classList.toggle("active", btn === button));
+      manualSection.hidden = mode !== "manual";
+      quizSection.hidden = mode !== "quiz";
+      tasteDiveSection.hidden = mode !== "tastedive";
+      document.getElementById("recommendationOutput").innerHTML = "";
+    });
+  });
+
+  document.querySelectorAll(".quiz-choice").forEach(input => {
+    input.addEventListener("change", () => {
+      document.querySelectorAll(`input[name="${input.name}"]`).forEach(peer => {
+        peer.closest(".quiz-option")?.classList.toggle("active", peer.checked);
+      });
+      document.getElementById("recommendationOutput").innerHTML = "";
+    });
+  });
+
+  document.getElementById("savedProfilesWrap")?.addEventListener("click", (event) => {
+    const showButton = event.target.closest("[data-profile-show]");
+    if (showButton) {
+      showSavedPersonalityProfile(showButton.dataset.profileShow);
+      return;
+    }
+    const deleteButton = event.target.closest("[data-profile-delete]");
+    if (deleteButton) {
+      deletePersonalityProfile(deleteButton.dataset.profileDelete);
+      refreshSavedProfilesList();
+    }
+  });
+}
+
+function activeRecommendationMode() {
+  return document.querySelector("[data-recommend-mode].active")?.dataset.recommendMode || "manual";
+}
+
+function selectedRecommendationPhrases() {
+  const grouped = { mood: [], personality: [], extra: [] };
+  document.querySelectorAll(".quiz-choice:checked").forEach(choice => {
+    const kind = choice.dataset.phraseKind || "extra";
+    if (!grouped[kind]) grouped[kind] = [];
+    grouped[kind].push(choice.dataset.phrase || choice.closest(".quiz-option")?.textContent.trim() || "");
+  });
+  return grouped;
+}
+
+async function handleRecommendationSubmit(event) {
+  event.preventDefault();
+  const keyValue = document.getElementById("geminiKeyInput").value.trim();
+  if (keyValue) saveGeminiApiKey(keyValue);
+  const tasteDiveKeyValue = document.getElementById("tasteDiveKeyInput").value.trim();
+  if (tasteDiveKeyValue) saveTasteDiveApiKey(tasteDiveKeyValue);
+
+  const submitButton = document.getElementById("recommendSubmit");
+  const output = document.getElementById("recommendationOutput");
+  const mode = activeRecommendationMode();
+  const answers = mode === "quiz" ? collectBigFiveAnswers() : [];
+  if (mode === "quiz" && answers.some(answer => !answer)) {
+    output.innerHTML = `<div class="state-msg"><span class="big">🧠</span>أجب على عبارات الاختبار العشرين حتى تظهر نتيجة الشخصية والتوصيات.</div>`;
+    return;
+  }
+  const payload = {
+    mood: document.getElementById("recommendMood").value.trim(),
+    personality: document.getElementById("recommendPersonality").value.trim(),
+    extra: document.getElementById("recommendExtra").value.trim(),
+    tasteDiveSeed: document.getElementById("tasteDiveSeedInput")?.value.trim() || "",
+    wantType: document.getElementById("recommendType").value,
+    region: document.getElementById("recommendRegion").value,
+    includeLocalTaste: document.getElementById("recommendUseLocalTaste").checked
+  };
+
+  submitButton.disabled = true;
+  submitButton.textContent = mode === "quiz"
+    ? "تحليل الشخصية وجلب التوصيات..."
+    : mode === "tastedive"
+      ? "TasteDive يبحث عن أعمال مشابهة..."
+      : "Gemini يحلل ذوقك...";
+  output.innerHTML = loadingState();
+
+  try {
+    let resolved = [];
+    if (mode === "quiz") {
+      const assessment = calculateBigFiveAssessment(answers);
+      const genreResult = await geminiPersonalityGenres(assessment, payload);
+      resolved = await fetchRecommendationsByGenres(genreResult, payload.wantType);
+      const requestedName = normalizeProfileName(document.getElementById("personalityProfileName")?.value);
+      const savedProfile = savePersonalityProfile({
+        name: requestedName || defaultProfileName(genreResult),
+        assessment,
+        result: genreResult,
+        payload
+      });
+      refreshSavedProfilesList();
+      paginationState = { mode: "recommendations", items: resolved, containerId: "recommendationGrid" };
+      output.innerHTML = `
+        <div class="saved-profile-confirm">تم حفظ نتيجة الاختبار باسم: ${escapeHtml(savedProfile.name)}</div>
+        ${personalityResultHtml(genreResult, resolved)}
+      `;
+    } else if (mode === "tastedive") {
+      const tasteDiveData = await tasteDiveRecommend(payload);
+      resolved = await resolveAiRecommendations(tasteDiveData, payload.wantType);
+      paginationState = { mode: "recommendations", items: resolved, containerId: "recommendationGrid" };
+      output.innerHTML = `
+        <div class="ai-profile-card">
+          <strong>اقتراحات TasteDive مشابهة لـ:</strong>
+          ${escapeHtml(tasteDiveData.seed)}
+          <div style="margin-top:8px;color:var(--text-muted);">تمت مطابقة الأسماء الراجعة من TasteDive مع مصادر سينماتك حتى تظهر كبطاقات قابلة للفتح.</div>
+        </div>
+        <h2 class="section-title">🔗 اقتراحات مشابهة <span class="count">(${resolved.length})</span></h2>
+        ${recommendationResultsHtml(resolved)}
+      `;
+    } else {
+      const aiData = await geminiRecommend(payload);
+      resolved = await resolveAiRecommendations(aiData, payload.wantType);
+      paginationState = { mode: "recommendations", items: resolved, containerId: "recommendationGrid" };
+      output.innerHTML = `
+        <div class="ai-profile-card">
+          <strong>قراءة Gemini لك:</strong>
+          ${escapeHtml(aiData.profile || "مزاجك يحتاج اقتراحات مركزة ومريحة.")}
+          ${Array.isArray(aiData.mood_words) && aiData.mood_words.length
+            ? `<div style="margin-top:8px;color:var(--text-muted);">كلمات المزاج: ${aiData.mood_words.map(escapeHtml).join(" · ")}</div>`
+            : ""}
+        </div>
+        <h2 class="section-title">🧠 اقتراحات مناسبة لك <span class="count">(${resolved.length})</span></h2>
+        ${recommendationResultsHtml(resolved)}
+      `;
+    }
+    loadVisibleTvStatuses();
+  } catch(error) {
+    output.innerHTML = `<div class="state-msg"><span class="big">⚠️</span>${escapeHtml(error.message || "تعذر توليد الاقتراحات.")}</div>`;
+  } finally {
+    submitButton.disabled = false;
+    submitButton.textContent = "اقترح لي الآن";
   }
 }
 
@@ -1903,11 +3411,9 @@ function filterForCurrentTab(items, type = null, tab = currentTab) {
 function buildDiscoverQuery(type) {
   const params = [`language=en-US`, `sort_by=${tmdbSortValue(type)}`];
   if (activeSort === "rating-desc") params.push("vote_count.gte=20");
-  if (STRICT_SAFE_MODE && type === "movie") {
-    // Keep movie discovery under common family-safe certification limits where TMDB has ratings.
-    params.push(`certification_country=US`);
-    params.push(`certification.lte=PG-13`);
-  }
+  // TMDB already receives include_adult=false in tmdbFetch(). Do not cap movies
+  // at PG-13 here; many normal non-adult films are R/18+ because of violence,
+  // horror, language, or mature themes.
   if (activeGenreFilter && activeGenreFilter.type === type) {
     params.push(`with_genres=${activeGenreFilter.id}`);
   }
@@ -1931,18 +3437,21 @@ function buildDiscoverQuery(type) {
 }
 
 // Safety filters applied after TMDB's include_adult=false protection.
-// This is intentionally strict for personal/family-safe use. It may hide some normal mature titles.
+// Keep this focused on clearly adult/explicit content. Generic mature ratings
+// such as TV-MA, R, NC-17, or 18+ can mean violence/language/horror and should
+// not hide ordinary non-adult movies or shows.
 const ANIMATION_GENRE_ID = 16;
 const STRICT_SAFE_MODE = true;
 const BLOCKED_KEYWORDS = [
   "porn", "pornography", "porno", "erotic", "erotica", "xxx", "hentai", "softcore", "hardcore",
-  "nude", "nudity", "sex", "sexual", "sensual", "seduction", "strip", "stripper", "brothel",
+  "nude", "nudity", "stripper", "brothel",
   "prostitute", "prostitution", "playboy", "onlyfans", "camgirl", "av idol", "pink film",
   "色情", "成人", "成人影片", "情色", "裸體", "裸", "エロ", "アダルト", "ポルノ", "성인", "에로",
-  "إباحي", "إباحية", "اباحي", "اباحية", "جنسي", "جنسية", "عاري", "عري", "تعري", "مثير", "إثارة جنسية"
+  "إباحي", "إباحية", "اباحي", "اباحية", "عاري", "عري", "تعري", "إثارة جنسية"
 ];
 const BLOCKED_GENRE_WORDS = ["adult", "erotic", "hentai", "porn", "إباح", "جنسي"];
-const BLOCKED_CERTIFICATIONS = ["NC-17", "X", "18", "18+", "R18", "R18+", "AO", "TV-MA"];
+const BLOCKED_CERTIFICATIONS = ["X", "AO"];
+const EXPLICIT_CERTIFICATION_PATTERN = /\b(adult|sex|sexual|nudity|erotic|porn|xxx|hentai)\b|إباح|جنسي|عري|تعري/i;
 
 function contentGenreIds(item) {
   if (Array.isArray(item.genre_ids)) return item.genre_ids.map(Number);
@@ -1992,12 +3501,8 @@ function hasUnsafeCertification(item) {
   return ratings.some(rating => {
     const rawRating = String(rating || "").toLowerCase();
     const normalized = String(rating || "").replace(/\s+/g, "").toUpperCase();
-    if (itemSource(item) === "mdl" && normalized.includes("18+")) {
-      const explicitAdultReason = /\b(sex|sexual|nudity|adult|erotic|porn)\b|إباح|جنسي|عري|تعري/i.test(rawRating);
-      const nonSexualMatureReason = /\b(violence|profanity|language|crime|drug|horror|gore)\b|عنف|ألفاظ|مخدرات|رعب/i.test(rawRating);
-      if (nonSexualMatureReason && !explicitAdultReason) return false;
-    }
-    return BLOCKED_CERTIFICATIONS.includes(normalized) || normalized.includes("18+");
+    if (BLOCKED_CERTIFICATIONS.includes(normalized)) return true;
+    return EXPLICIT_CERTIFICATION_PATTERN.test(rawRating);
   });
 }
 
@@ -2330,10 +3835,12 @@ function hasActiveFilters() {
 function updateGenreFilterVisibility() {
   movieGenreWrap.hidden = !(currentTab === "movies" || currentTab === "asianMovies");
   tvGenreWrap.hidden = !(currentTab === "tv" || currentTab === "asianTv");
+  yearFilter.style.display = currentTab === "recommendations" ? "none" : "";
+  sortSelect.closest(".sort-select-wrap").style.display = currentTab === "recommendations" ? "none" : "";
 }
 
 async function applyCurrentFilters() {
-  if (currentTab === "favorites" || currentTab === "history") {
+  if (currentTab === "favorites" || currentTab === "history" || currentTab === "recommendations") {
     renderTab(currentTab);
     return;
   }
@@ -2505,6 +4012,10 @@ navTabs.addEventListener("click", (e) => {
 });
 
 async function renderTab(tab) {
+  if (tab === "recommendations") {
+    renderRecommendationsPage();
+    return;
+  }
   if (tab === "favorites") {
     renderFavorites();
     return;
@@ -3018,6 +4529,7 @@ mainContentObserver.observe(main, { childList: true, subtree: true });
 
 // ---------- Modal ----------
 let modalPreviouslyFocused = null;
+let modalSimilarRequestToken = 0;
 
 async function openModal(id, type, source = "tmdb") {
   const summaryItem = renderedItemCache.get(renderedItemKey(id, type, source));
@@ -3096,12 +4608,25 @@ async function openModal(id, type, source = "tmdb") {
       }
     }
     const endpoint = type === "movie" ? "movie" : "tv";
-    const [details, arabicDetails, credits, videos] = await Promise.all([
+    const [details, arabicDetails, credits, videosDefault, videosEnglish] = await Promise.all([
       tmdbFetch(`/${endpoint}/${id}?language=en-US&append_to_response=release_dates,content_ratings`),
       tmdbFetch(`/${endpoint}/${id}?language=ar`),
       tmdbFetch(`/${endpoint}/${id}/credits?language=en-US`),
-      tmdbFetch(`/${endpoint}/${id}/videos`)
+      tmdbFetch(`/${endpoint}/${id}/videos`),
+      tmdbFetch(`/${endpoint}/${id}/videos?language=en-US`).catch(() => ({ results: [] }))
     ]);
+    const seenVideoKeys = new Set();
+    const videos = {
+      results: [
+        ...(videosEnglish?.results || []),
+        ...(videosDefault?.results || [])
+      ].filter(video => {
+        const key = video?.key || video?.id;
+        if (!key || seenVideoKeys.has(key)) return false;
+        seenVideoKeys.add(key);
+        return true;
+      })
+    };
     const localizedDetails = await ensureArabicDescription(applyArabicTitle(details, arabicDetails));
     if (!isAllowedContent(localizedDetails)) {
       modalContent.innerHTML = `
@@ -3121,26 +4646,48 @@ async function openModal(id, type, source = "tmdb") {
   }
 }
 
-function findTrailerUrl(videos, item) {
-  const yt = (videos?.results || []).filter(v => v.site === "YouTube");
+function tmdbVideoScore(video) {
+  const type = String(video.type || "").toLowerCase();
+  const name = String(video.name || "").toLowerCase();
+  let score = 0;
+  if (type === "trailer") score += 100;
+  if (video.official) score += 45;
+  if (/\bofficial\b/.test(name)) score += 25;
+  if (/\btrailer\b/.test(name)) score += 20;
+  if (/\bteaser\b/.test(name)) score += 5;
+  if (/\b(clip|scene|featurette|behind|bts|interview|promo|music video|song|recap|review)\b/.test(name)) score -= 80;
+  if (type === "clip" || type === "featurette" || type === "behind the scenes") score -= 100;
+  if (video.iso_639_1 === "en") score += 8;
+  return score;
+}
+
+function cleanTrailerSearchTitle(item) {
+  return String(item.original_title || item.original_name || item.title || item.name || "")
+    .replace(/\s*\(\d{4}\)\s*$/, "")
+    .trim();
+}
+
+function findTrailerUrl(videos, item, type = null) {
+  const yt = (videos?.results || [])
+    .filter(v => v.site === "YouTube" && v.key)
+    .sort((a, b) => tmdbVideoScore(b) - tmdbVideoScore(a));
   if (yt.length) {
-    const officialTrailer = yt.find(v => v.type === "Trailer" && v.official);
-    const anyTrailer = yt.find(v => v.type === "Trailer");
-    const teaser = yt.find(v => v.type === "Teaser");
-    const chosen = officialTrailer || anyTrailer || teaser || yt[0];
+    const chosen = yt[0];
     return `https://www.youtube.com/watch?v=${chosen.key}`;
   }
 
   // MyDramaList and TVmaze do not provide trailer videos through the
   // endpoints used by this app. Keep the button available by opening a
   // focused YouTube search for the official trailer.
-  const title = item.original_title || item.original_name || item.title || item.name || "";
+  const title = cleanTrailerSearchTitle(item);
   const year = (item.release_date || item.first_air_date || "").slice(0, 4);
   if (!title) return null;
-  return `https://www.youtube.com/results?search_query=${encodeURIComponent(`${title} ${year} official trailer`)}`;
+  const contentType = type === "tv" ? "series" : "movie";
+  return `https://www.youtube.com/results?search_query=${encodeURIComponent(`${title} ${year} ${contentType} official trailer`)}`;
 }
 
 function renderModal(d, credits, type, videos) {
+  const similarToken = ++modalSimilarRequestToken;
   const displayTitle = getDisplayTitle(d);
   const secondaryTitle = getSecondaryTitle(d);
   const showSecondaryTitle = !!secondaryTitle;
@@ -3156,7 +4703,7 @@ function renderModal(d, credits, type, videos) {
   const cast = (credits.cast || []).slice(0, 10);
   const overview = d.overview && d.overview.trim() !== "" ? d.overview : "لا يوجد وصف متاح بالعربية لهذا العمل.";
   const tagline = d.tagline ? `<div class="modal-tagline">"${escapeHtml(d.tagline)}"</div>` : "";
-  const trailerUrl = findTrailerUrl(videos, d);
+  const trailerUrl = findTrailerUrl(videos, d, type);
   const watchedDateText = watched && watchedEntry ? `<div class="watched-date">شوهد بتاريخ ${new Date(watchedEntry.watched_at).toLocaleDateString('ar-EG')}</div>` : "";
 
   const backdropUrl = d.backdrop_url || (d.backdrop_path ? `${BACKDROP_BASE}${d.backdrop_path}` : "");
@@ -3203,6 +4750,15 @@ function renderModal(d, credits, type, videos) {
           `).join("")}
         </div>
       ` : ''}
+      <section class="modal-similar" id="modalSimilarRecommendations">
+        <div class="modal-similar-head">
+          <div>
+            <div class="modal-similar-title">🔗 اقتراحات مشابهة</div>
+            <div class="modal-similar-source">TMDB أولاً، ثم TasteDive احتياطياً</div>
+          </div>
+        </div>
+        <div class="modal-similar-state">جاري تحميل اقتراحات مشابهة لهذا العمل...</div>
+      </section>
     </div>
   `;
 
@@ -3233,9 +4789,122 @@ function renderModal(d, credits, type, videos) {
       cardBtn.textContent = cardBtn.classList.contains("active") ? "✔" : "👁";
     }
   });
+  loadModalSimilarRecommendations(d, type, similarToken);
+}
+
+function modalTasteDiveSeed(item) {
+  return cleanTrailerSearchTitle(item) || getDisplayTitle(item) || item.original_title || item.original_name || item.title || item.name || "";
+}
+
+function sameMediaItem(a, b, fallbackType = "") {
+  if (!a || !b) return false;
+  const aSource = itemSource(a);
+  const bSource = itemSource(b);
+  const aType = a.media_type || a.type || fallbackType;
+  const bType = b.media_type || b.type || fallbackType;
+  if (String(a.id) === String(b.id) && aType === bType && aSource === bSource) return true;
+  const aTitle = simpleTitleKey(getDisplayTitle(a) || a.original_title || a.original_name);
+  const bTitle = simpleTitleKey(getDisplayTitle(b) || b.original_title || b.original_name);
+  const aYear = yearOf(a);
+  const bYear = yearOf(b);
+  return !!aTitle && aTitle === bTitle && (!aYear || !bYear || aYear === bYear);
+}
+
+async function fetchTmdbModalSimilar(item, type) {
+  if (itemSource(item) !== "tmdb" || !item.id) return [];
+  const endpointType = type === "tv" ? "tv" : "movie";
+  const paths = [
+    `/${endpointType}/${item.id}/recommendations?language=en-US&page=1`,
+    `/${endpointType}/${item.id}/similar?language=en-US&page=1`
+  ];
+
+  const settled = await Promise.allSettled(paths.map(async path => {
+    const [data, arabic] = await Promise.all([
+      tmdbFetch(path),
+      fetchArabicList(path)
+    ]);
+    return mergeArabicTitles(data.results || [], arabic).map(result => ({
+      ...result,
+      type: endpointType === "tv" ? "tv" : "movie",
+      media_type: endpointType === "tv" ? "tv" : "movie",
+      source: "tmdb",
+      ai_reason: path.includes("/recommendations") ? "اقتراحات TMDB مرتبطة بهذا العمل." : "أعمال مشابهة حسب TMDB."
+    }));
+  }));
+
+  return uniqueItems([], settled
+    .filter(result => result.status === "fulfilled")
+    .flatMap(result => result.value)
+    .filter(isAllowedContent)
+    .filter(result => !sameMediaItem(result, item, type)))
+    .slice(0, 10);
+}
+
+async function fetchTasteDiveModalSimilar(item, type) {
+  const key = getTasteDiveApiKey();
+  if (!key) return { items: [], skippedReason: "ضع مفتاح TasteDive في تبويب اقتراحات ذكية لاستخدامه كخطة احتياطية." };
+
+  const seed = modalTasteDiveSeed(item);
+  if (!seed) return { items: [], skippedReason: "لا يوجد عنوان كافٍ لجلب اقتراحات TasteDive." };
+
+  const data = await tasteDiveRecommend({
+    tasteDiveSeed: seed,
+    wantType: type === "tv" ? "tv" : "movies"
+  });
+  const resolved = (await resolveAiRecommendations(data, type === "tv" ? "tv" : "movies"))
+    .filter(result => !sameMediaItem(result, item, type))
+    .slice(0, 8);
+  return { items: resolved, seed };
+}
+
+function renderModalSimilarSection(container, items, sourceLabel) {
+  container.innerHTML = `
+    <div class="modal-similar-head">
+      <div>
+        <div class="modal-similar-title">🔗 اقتراحات مشابهة</div>
+        <div class="modal-similar-source">${escapeHtml(sourceLabel)}</div>
+      </div>
+    </div>
+    <div class="grid">
+      ${items.map(result => cardHtml(result, result.media_type || result.type || "movie")).join("")}
+    </div>
+  `;
+  loadVisibleTvStatuses();
+}
+
+async function loadModalSimilarRecommendations(item, type, token) {
+  const container = document.getElementById("modalSimilarRecommendations");
+  if (!container) return;
+  const state = container.querySelector(".modal-similar-state");
+
+  try {
+    const tmdbItems = await fetchTmdbModalSimilar(item, type);
+    if (token !== modalSimilarRequestToken || !document.getElementById("modalSimilarRecommendations")) return;
+    if (tmdbItems.length) {
+      renderModalSimilarSection(container, tmdbItems.slice(0, 8), "TMDB Recommendations + Similar");
+      return;
+    }
+
+    const fallback = await fetchTasteDiveModalSimilar(item, type);
+    if (token !== modalSimilarRequestToken || !document.getElementById("modalSimilarRecommendations")) return;
+    if (fallback.items.length) {
+      renderModalSimilarSection(container, fallback.items, `TasteDive احتياطي بناءً على ${fallback.seed || modalTasteDiveSeed(item)}`);
+      return;
+    }
+
+    if (state) {
+      state.textContent = fallback.skippedReason || "لم نجد اقتراحات مشابهة كافية لهذا العمل حالياً.";
+    }
+  } catch(error) {
+    if (token !== modalSimilarRequestToken || !document.getElementById("modalSimilarRecommendations")) return;
+    if (state) {
+      state.textContent = error.message || "تعذر تحميل الاقتراحات المشابهة حالياً.";
+    }
+  }
 }
 
 function closeModal() {
+  modalSimilarRequestToken++;
   modalOverlay.classList.remove("open");
   document.body.style.overflow = "";
   if (modalPreviouslyFocused instanceof HTMLElement) modalPreviouslyFocused.focus();
@@ -3243,6 +4912,20 @@ function closeModal() {
 }
 modalOverlay.addEventListener("click", (e) => {
   if (e.target === modalOverlay) closeModal();
+});
+modalContent.addEventListener("click", (e) => {
+  const card = e.target.closest(".modal-similar .card");
+  if (!card) return;
+  const source = card.dataset.source || "tmdb";
+  openModal(parseSourceId(card.dataset.id, source), card.dataset.type, source);
+});
+modalContent.addEventListener("keydown", (e) => {
+  if (e.key !== "Enter" && e.key !== " ") return;
+  const card = e.target.closest(".modal-similar .card");
+  if (!card || document.activeElement !== card) return;
+  e.preventDefault();
+  const source = card.dataset.source || "tmdb";
+  openModal(parseSourceId(card.dataset.id, source), card.dataset.type, source);
 });
 document.addEventListener("keydown", (e) => {
   if (!modalOverlay.classList.contains("open")) return;
