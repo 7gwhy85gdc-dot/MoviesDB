@@ -575,6 +575,112 @@
     margin-top: 4px;
   }
 
+  .history-import-panel {
+    border: 1px solid var(--border);
+    border-radius: 22px;
+    background:
+      radial-gradient(circle at 8% 0%, rgba(232,197,71,0.14), transparent 30%),
+      var(--card);
+    padding: 18px;
+    margin-bottom: 24px;
+  }
+  .history-import-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    margin-bottom: 12px;
+  }
+  .history-import-title {
+    font-family: 'Cairo', sans-serif;
+    font-weight: 900;
+    font-size: 18px;
+  }
+  .history-import-copy {
+    color: var(--text-muted);
+    line-height: 1.8;
+    font-size: 13px;
+    margin-top: 4px;
+    max-width: 680px;
+  }
+  .history-import-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+  }
+  .history-import-file {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .history-import-btn {
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: rgba(255,255,255,0.04);
+    color: var(--text);
+    font-family: 'Cairo', sans-serif;
+    font-weight: 800;
+    font-size: 13px;
+    padding: 10px 16px;
+    cursor: pointer;
+  }
+  .history-import-btn.primary {
+    background: var(--gold);
+    color: #0B0E14;
+    border-color: var(--gold);
+  }
+  .history-import-btn:disabled {
+    opacity: 0.55;
+    cursor: wait;
+  }
+  .history-import-note {
+    color: var(--text-muted);
+    font-size: 12px;
+  }
+  .history-import-preview {
+    margin-top: 14px;
+    display: grid;
+    gap: 8px;
+  }
+  .history-import-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 10px 12px;
+    background: rgba(0,0,0,0.08);
+  }
+  .history-import-row strong {
+    display: block;
+    font-size: 13px;
+  }
+  .history-import-row span {
+    color: var(--text-muted);
+    font-size: 12px;
+  }
+  .history-import-badge {
+    align-self: center;
+    border-radius: 999px;
+    padding: 5px 9px;
+    font-size: 11px;
+    font-weight: 800;
+    background: rgba(139,146,165,0.18);
+    color: var(--text-muted);
+  }
+  .history-import-badge.ok {
+    background: rgba(74,222,128,0.16);
+    color: #4ADE80;
+  }
+  .history-import-badge.fail {
+    background: rgba(239,68,68,0.14);
+    color: #F87171;
+  }
+
   /* ---------- AI recommendations ---------- */
   .recommend-panel {
     max-width: 980px;
@@ -1397,6 +1503,7 @@ let watchHistory = [];
 try {
   watchHistory = JSON.parse(localStorage.getItem("cinematek_history") || "[]");
 } catch(e) { watchHistory = []; }
+let historyImportCandidates = [];
 
 function saveWatchHistory() {
   localStorage.setItem("cinematek_history", JSON.stringify(watchHistory));
@@ -1406,6 +1513,30 @@ function isWatched(id, type, source = "tmdb") {
   return watchHistory.some(w => w.id === id && w.type === type && itemSource(w) === source);
 }
 
+function createWatchRecord(item, type, watchedAt = new Date().toISOString()) {
+  const source = itemSource(item);
+  return {
+    id: item.id,
+    type: type,
+    source,
+    title: item.title || item.name,
+    original_title: item.original_title,
+    original_name: item.original_name,
+    arabic_title: item.arabic_title,
+    arabic_name: item.arabic_name,
+    poster_path: item.poster_path,
+    poster_url: item.poster_url,
+    vote_average: item.vote_average,
+    release_date: item.release_date || item.first_air_date,
+    first_air_date: item.first_air_date,
+    adult: item.adult === true,
+    genre_ids: contentGenreIds(item),
+    original_language: item.original_language || "",
+    origin_country: item.origin_country || [],
+    watched_at: watchedAt
+  };
+}
+
 function toggleWatched(item, type) {
   if (!isAllowedContent(item)) return;
   const source = itemSource(item);
@@ -1413,25 +1544,22 @@ function toggleWatched(item, type) {
   if (idx >= 0) {
     watchHistory.splice(idx, 1);
   } else {
-    watchHistory.unshift({
-      id: item.id,
-      type: type,
-      source,
-      title: item.title || item.name,
-      original_title: item.original_title,
-      original_name: item.original_name,
-      poster_path: item.poster_path,
-      poster_url: item.poster_url,
-      vote_average: item.vote_average,
-      release_date: item.release_date || item.first_air_date,
-      adult: item.adult === true,
-      genre_ids: contentGenreIds(item),
-      original_language: item.original_language || "",
-      origin_country: item.origin_country || [],
-      watched_at: new Date().toISOString()
-    });
+    watchHistory.unshift(createWatchRecord(item, type));
   }
   saveWatchHistory();
+}
+
+function addImportedWatchItem(item, type, watchedAt) {
+  if (!item || !isAllowedContent(item)) return false;
+  const source = itemSource(item);
+  const idx = watchHistory.findIndex(w => w.id === item.id && w.type === type && itemSource(w) === source);
+  const record = createWatchRecord(item, type, watchedAt || new Date().toISOString());
+  if (idx >= 0) {
+    watchHistory[idx] = { ...watchHistory[idx], ...record, watched_at: watchHistory[idx].watched_at || record.watched_at };
+    return false;
+  }
+  watchHistory.unshift(record);
+  return true;
 }
 
 const apiResponseCache = new Map();
@@ -2330,7 +2458,10 @@ function settledRecommendationsFromJobs(settled) {
 function recommendationQuery(rec) {
   const title = String(rec.title || "").trim();
   const year = String(rec.year || "").match(/\d{4}/)?.[0] || "";
-  if (title) return `${title}${year ? ` ${year}` : ""}`.trim();
+  if (title) {
+    const shouldAppendYear = rec.append_year_to_query !== false;
+    return `${title}${shouldAppendYear && year ? ` ${year}` : ""}`.trim();
+  }
   return String(rec.search_query || "").trim();
 }
 
@@ -4270,18 +4401,371 @@ async function renderFavorites() {
   loadVisibleTvStatuses();
 }
 
+function parseCsvRows(text) {
+  const rows = [];
+  let row = [];
+  let cell = "";
+  let quoted = false;
+  const value = String(text || "").replace(/^\uFEFF/, "");
+  for (let i = 0; i < value.length; i++) {
+    const ch = value[i];
+    const next = value[i + 1];
+    if (ch === '"' && quoted && next === '"') {
+      cell += '"';
+      i++;
+    } else if (ch === '"') {
+      quoted = !quoted;
+    } else if (ch === "," && !quoted) {
+      row.push(cell);
+      cell = "";
+    } else if ((ch === "\n" || ch === "\r") && !quoted) {
+      if (ch === "\r" && next === "\n") i++;
+      row.push(cell);
+      if (row.some(part => String(part).trim() !== "")) rows.push(row);
+      row = [];
+      cell = "";
+    } else {
+      cell += ch;
+    }
+  }
+  row.push(cell);
+  if (row.some(part => String(part).trim() !== "")) rows.push(row);
+  return rows;
+}
+
+function normalizeImportHeader(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[\s_-]+/g, "")
+    .replace(/[^\p{L}\p{N}]/gu, "");
+}
+
+function importRowValue(row, names) {
+  const normalizedNames = names.map(normalizeImportHeader);
+  for (const [key, value] of Object.entries(row || {})) {
+    if (normalizedNames.includes(normalizeImportHeader(key))) return String(value || "").trim();
+  }
+  return "";
+}
+
+function parseImportDate(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return new Date().toISOString();
+  const direct = Date.parse(raw);
+  if (Number.isFinite(direct)) return new Date(direct).toISOString();
+  const parts = raw.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})$/);
+  if (parts) {
+    const first = parseInt(parts[1], 10);
+    const second = parseInt(parts[2], 10);
+    const year = parseInt(parts[3].length === 2 ? `20${parts[3]}` : parts[3], 10);
+    const month = first > 12 ? second - 1 : first - 1;
+    const day = first > 12 ? first : second;
+    const parsed = new Date(Date.UTC(year, month, day));
+    if (Number.isFinite(parsed.getTime())) return parsed.toISOString();
+  }
+  return new Date().toISOString();
+}
+
+function cleanImportedTitle(raw) {
+  const original = String(raw || "").replace(/\s+/g, " ").trim();
+  if (!original) return { title: "", type: "", rawTitle: "" };
+  const parts = original.split(":").map(part => part.trim()).filter(Boolean);
+  const likelyEpisode = parts.length >= 2 && /(season|series|limited series|collection|book|part|volume|episode|الحلقة|الموسم|جزء|حلقة)\s*\d*/i.test(parts[1]);
+  const title = likelyEpisode ? parts[0] : original
+    .replace(/\s+\((19|20)\d{2}\)\s*$/g, "")
+    .trim();
+  return { title, type: likelyEpisode ? "tv" : "", rawTitle: original };
+}
+
+function normalizeImportType(value) {
+  const type = String(value || "").trim().toLowerCase();
+  if (/^(movie|film|فيلم|افلام|أفلام)$/.test(type)) return "movie";
+  if (/^(tv|show|series|drama|مسلسل|مسلسلات|برنامج)$/.test(type)) return "tv";
+  return "";
+}
+
+function isLetterboxdImportRow(entry) {
+  return Object.keys(entry || {}).some(key => normalizeImportHeader(key) === "letterboxduri");
+}
+
+function importCandidatesFromObjects(items, context = {}) {
+  return (items || []).map(entry => {
+    const isLetterboxd = context.sourceFormat === "letterboxd" || isLetterboxdImportRow(entry);
+    const titleValue = importRowValue(entry, ["title", "name", "movie", "show", "series", "العنوان", "الاسم"]);
+    const cleaned = cleanImportedTitle(titleValue);
+    const explicitType = normalizeImportType(importRowValue(entry, ["type", "media_type", "kind", "category", "النوع"]));
+    const year = String(importRowValue(entry, ["year", "release_year", "releaseYear", "سنة", "السنة"])).match(/\d{4}/)?.[0] || "";
+    const watchedAt = parseImportDate(importRowValue(entry, ["watched_at", "watchedAt", "watch_date", "watched date", "date", "تاريخ"]));
+    return {
+      rawTitle: cleaned.rawTitle || titleValue,
+      title: cleaned.title,
+      year,
+      type: explicitType || cleaned.type || (isLetterboxd ? "movie" : ""),
+      sourceFormat: isLetterboxd ? "letterboxd" : (context.sourceFormat || ""),
+      sourceUri: importRowValue(entry, ["letterboxd uri", "letterboxd_uri", "url", "uri", "link"]),
+      watchedAt,
+      status: "pending",
+      reason: "بانتظار المطابقة"
+    };
+  }).filter(candidate => candidate.title);
+}
+
+function parseHistoryImportFile(text, filename = "") {
+  const raw = String(text || "").trim();
+  if (!raw) return [];
+  if (/\.json$/i.test(filename) || raw.startsWith("[") || raw.startsWith("{")) {
+    const parsed = JSON.parse(raw);
+    const items = Array.isArray(parsed) ? parsed : (parsed.history || parsed.items || parsed.results || []);
+    return importCandidatesFromObjects(items);
+  }
+  const rows = parseCsvRows(raw);
+  if (!rows.length) return [];
+  const headers = rows[0].map(header => String(header || "").trim());
+  const normalizedHeaders = headers.map(normalizeImportHeader);
+  const sourceFormat = normalizedHeaders.includes("letterboxduri") ? "letterboxd" : "";
+  const hasHeader = normalizedHeaders.some(header =>
+    ["title", "name", "date", "watcheddate", "watchedat", "type", "year", "letterboxduri"].includes(header)
+  );
+  const dataRows = hasHeader ? rows.slice(1) : rows;
+  const objects = dataRows.map(row => {
+    if (hasHeader) {
+      return headers.reduce((obj, header, index) => {
+        obj[header || `col${index}`] = row[index] || "";
+        return obj;
+      }, {});
+    }
+    return { title: row[0] || "", watched_at: row[1] || "", type: row[2] || "", year: row[3] || "" };
+  });
+  return importCandidatesFromObjects(objects, { sourceFormat });
+}
+
+function historyImportConfidence(item, candidate) {
+  const wanted = simpleTitleKey(candidate.title);
+  const titles = [
+    getDisplayTitle(item),
+    item.original_title,
+    item.original_name,
+    getArabicTitle(item)
+  ].map(simpleTitleKey).filter(Boolean);
+  const wantedYear = parseInt(candidate.year || "", 10);
+  const foundYear = parseInt(yearOf(item), 10);
+  let score = 0;
+  if (wanted && titles.some(title => title === wanted)) score += 100;
+  else if (wanted && titles.some(title => title.startsWith(wanted) || wanted.startsWith(title))) score += 74;
+  else if (wanted && titles.some(title => title.includes(wanted) || wanted.includes(title))) score += 58;
+  else if (wanted) {
+    const wantedTokens = new Set(wanted.match(/[\p{L}\p{N}]+/gu) || []);
+    const bestOverlap = Math.max(0, ...titles.map(title => {
+      const tokens = new Set(title.match(/[\p{L}\p{N}]+/gu) || []);
+      let overlap = 0;
+      wantedTokens.forEach(token => { if (tokens.has(token)) overlap++; });
+      return wantedTokens.size ? overlap / wantedTokens.size : 0;
+    }));
+    score += bestOverlap * 45;
+  }
+  if (wanted.length <= 3 && !titles.includes(wanted)) score = Math.min(score, 35);
+  if (Number.isFinite(wantedYear) && Number.isFinite(foundYear)) {
+    const delta = Math.abs(wantedYear - foundYear);
+    if (delta === 0) score += 20;
+    else if (delta === 1) score += 8;
+    else score -= 35;
+  }
+  if (candidate.type && (item.media_type || item.type) === candidate.type) score += candidate.sourceFormat === "letterboxd" ? 12 : 8;
+  score += Math.min(item.vote_average || 0, 10) / 4;
+  return score;
+}
+
+async function resolveHistoryImportCandidate(candidate) {
+  const rec = {
+    title: candidate.title,
+    year: candidate.year,
+    search_query: candidate.title,
+    type: candidate.type || "",
+    source_hint: candidate.sourceFormat === "letterboxd" ? "tmdb movie" : "",
+    append_year_to_query: false
+  };
+  const jobs = [];
+  const shouldTryMovie = !candidate.type || candidate.type === "movie" || candidate.sourceFormat === "letterboxd";
+  const shouldTryTv = !candidate.type || candidate.type === "tv" || candidate.sourceFormat === "letterboxd";
+  if (shouldTryMovie) jobs.push(searchTmdbForRecommendation({ ...rec, type: "movie" }, "movie"));
+  if (shouldTryTv) {
+    jobs.push(searchTmdbForRecommendation({ ...rec, type: "tv" }, "tv"));
+    if (candidate.sourceFormat !== "letterboxd") {
+      jobs.push(searchMdlForRecommendation({ ...rec, type: "tv", source_hint: "mdl" }, "tv"));
+      jobs.push(searchTvmazeForRecommendation({ ...rec, type: "tv" }));
+    }
+  }
+  const results = (await Promise.allSettled(jobs))
+    .filter(result => result.status === "fulfilled" && result.value)
+    .map(result => result.value);
+  const ranked = results
+    .map(item => ({
+      item,
+      type: item.media_type || item.type || candidate.type || "movie",
+      confidence: historyImportConfidence(item, candidate)
+    }))
+    .sort((a, b) => b.confidence - a.confidence);
+  const best = ranked[0];
+  if (!best || best.confidence < 76) return null;
+  return best;
+}
+
+function historyImportPreviewHtml() {
+  if (!historyImportCandidates.length) return "";
+  const matched = historyImportCandidates.filter(candidate => candidate.status === "matched").length;
+  const failed = historyImportCandidates.filter(candidate => candidate.status === "fail").length;
+  const pending = historyImportCandidates.filter(candidate => candidate.status === "pending").length;
+  const rows = historyImportCandidates.slice(0, 40).map(candidate => {
+    const title = candidate.item ? getDisplayTitle(candidate.item) : candidate.rawTitle || candidate.title;
+    const badgeClass = candidate.status === "matched" ? "ok" : candidate.status === "fail" ? "fail" : "";
+    const label = candidate.status === "matched" ? "مطابق" : candidate.status === "fail" ? "غير مطابق" : "جاري";
+    const meta = candidate.status === "matched"
+      ? `${candidate.type === "tv" ? "مسلسل" : "فيلم"} · ${itemSource(candidate.item)} · ${yearOf(candidate.item)}`
+      : candidate.reason;
+    return `
+      <div class="history-import-row">
+        <strong>${escapeHtml(title)}</strong>
+        <span>${escapeHtml(meta || "")}</span>
+        <em class="history-import-badge ${badgeClass}">${label}</em>
+      </div>
+    `;
+  }).join("");
+  const extra = historyImportCandidates.length > 40
+    ? `<div class="history-import-note">تم عرض أول 40 نتيجة فقط من أصل ${historyImportCandidates.length}.</div>`
+    : "";
+  return `
+    <div class="history-import-preview" id="historyImportPreview">
+      <div class="history-import-note">مطابق: ${matched} · غير مطابق: ${failed} · قيد المعالجة: ${pending}</div>
+      ${rows}
+      ${extra}
+    </div>
+  `;
+}
+
+function renderHistoryImportPanel(message = "") {
+  const matched = historyImportCandidates.filter(candidate => candidate.status === "matched").length;
+  return `
+    <section class="history-import-panel">
+      <div class="history-import-head">
+        <div>
+          <div class="history-import-title">استيراد سجل المشاهدة</div>
+          <p class="history-import-copy">ارفع ملف CSV أو JSON من تطبيق آخر. تتم قراءة الملف داخل المتصفح ثم تُحفظ النتائج المطابقة محلياً في سجل سينماتك.</p>
+        </div>
+      </div>
+      <div class="history-import-actions">
+        <input class="history-import-file" id="historyImportFile" type="file" accept=".csv,.json,text/csv,application/json">
+        <button class="history-import-btn primary" id="historyImportPickBtn" type="button">اختيار ملف</button>
+        <button class="history-import-btn" id="historyImportApplyBtn" type="button" ${matched ? "" : "disabled"}>اعتماد النتائج المطابقة (${matched})</button>
+        <button class="history-import-btn" id="historyImportClearBtn" type="button" ${historyImportCandidates.length ? "" : "disabled"}>مسح المعاينة</button>
+      </div>
+      <div class="history-import-note">يدعم Letterboxd و Netflix Viewing Activity CSV، أو CSV عام يحتوي title/name و date و type و year. الحد الحالي 500 عنوان في كل عملية، وتتم المطابقة على دفعات لتقليل البطء.</div>
+      ${message ? `<div class="history-import-note">${escapeHtml(message)}</div>` : ""}
+      ${historyImportPreviewHtml()}
+    </section>
+  `;
+}
+
+function refreshHistoryImportPanel(message = "") {
+  const panel = document.querySelector(".history-import-panel");
+  if (!panel) return;
+  panel.outerHTML = renderHistoryImportPanel(message);
+  bindHistoryImportControls();
+}
+
+async function handleHistoryImportFile(file) {
+  if (!file) return;
+  historyImportCandidates = [];
+  refreshHistoryImportPanel("جاري قراءة الملف...");
+  try {
+    const text = await file.text();
+    historyImportCandidates = parseHistoryImportFile(text, file.name).slice(0, 500);
+    if (!historyImportCandidates.length) {
+      refreshHistoryImportPanel("لم أجد عناوين قابلة للاستيراد داخل الملف.");
+      return;
+    }
+    refreshHistoryImportPanel("جاري مطابقة العناوين مع المصادر...");
+    let processed = 0;
+    const workerCount = Math.min(4, historyImportCandidates.length);
+    let cursor = 0;
+    async function processNextImportCandidate() {
+      const index = cursor++;
+      if (index >= historyImportCandidates.length) return;
+      const candidate = historyImportCandidates[index];
+      try {
+        const resolved = await resolveHistoryImportCandidate(candidate);
+        if (resolved) {
+          candidate.item = resolved.item;
+          candidate.type = resolved.type;
+          candidate.status = "matched";
+          candidate.reason = "";
+        } else {
+          candidate.status = "fail";
+          candidate.reason = "لم أجد نتيجة موثوقة";
+        }
+      } catch(e) {
+        candidate.status = "fail";
+        candidate.reason = "تعذرت المطابقة";
+      }
+      processed++;
+      if (processed % 10 === 0 || processed === historyImportCandidates.length) {
+        refreshHistoryImportPanel(`تمت معالجة ${processed} من ${historyImportCandidates.length}.`);
+      }
+      await processNextImportCandidate();
+    }
+    await Promise.all(Array.from({ length: workerCount }, () => processNextImportCandidate()));
+    refreshHistoryImportPanel("انتهت المطابقة. راجع النتائج ثم اعتمد المطابق منها.");
+  } catch(e) {
+    historyImportCandidates = [];
+    refreshHistoryImportPanel("تعذرت قراءة الملف. تأكد أنه CSV أو JSON صحيح.");
+  }
+}
+
+function bindHistoryImportControls() {
+  const input = document.getElementById("historyImportFile");
+  const pickBtn = document.getElementById("historyImportPickBtn");
+  const applyBtn = document.getElementById("historyImportApplyBtn");
+  const clearBtn = document.getElementById("historyImportClearBtn");
+  if (pickBtn && input) {
+    pickBtn.addEventListener("click", () => input.click());
+    input.addEventListener("change", () => handleHistoryImportFile(input.files?.[0]));
+  }
+  if (applyBtn) {
+    applyBtn.addEventListener("click", async () => {
+      const matched = historyImportCandidates.filter(candidate => candidate.status === "matched" && candidate.item);
+      let added = 0;
+      matched.forEach(candidate => {
+        if (addImportedWatchItem(candidate.item, candidate.type, candidate.watchedAt)) added++;
+      });
+      saveWatchHistory();
+      historyImportCandidates = [];
+      await renderHistory();
+      refreshHistoryImportPanel(`تم استيراد ${added} عنوان جديد. تم تجاهل الموجود سابقاً تلقائياً.`);
+    });
+  }
+  if (clearBtn) {
+    clearBtn.addEventListener("click", () => {
+      historyImportCandidates = [];
+      refreshHistoryImportPanel();
+    });
+  }
+}
+
 async function renderHistory() {
   main.innerHTML = loadingState();
   const visibleHistory = await refreshStoredContent(watchHistory, saveWatchHistory);
+  const importPanel = renderHistoryImportPanel();
   if (visibleHistory.length === 0) {
-    main.innerHTML = `<h2 class="section-title">📜 سجل المشاهدة</h2>` + emptyState("لم تشاهد أي عمل بعد. اضغط على 👁 في أي بطاقة لتسجيلها كمُشاهَدة.");
+    main.innerHTML = importPanel + `<h2 class="section-title">📜 سجل المشاهدة</h2>` + emptyState("لم تشاهد أي عمل بعد. اضغط على 👁 في أي بطاقة لتسجيلها كمُشاهَدة.");
+    bindHistoryImportControls();
     return;
   }
   const historyItems = activeSort === "default"
     ? visibleHistory
     : applySort(visibleHistory);
-  main.innerHTML = `<h2 class="section-title">📜 سجل المشاهدة <span class="count">(${visibleHistory.length})</span></h2>` +
+  main.innerHTML = importPanel + `<h2 class="section-title">📜 سجل المشاهدة <span class="count">(${visibleHistory.length})</span></h2>` +
     `<div class="grid">${historyItems.map(w => cardHtml(w, w.type)).join("")}</div>`;
+  bindHistoryImportControls();
   loadVisibleTvStatuses();
 }
 
