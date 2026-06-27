@@ -1342,6 +1342,7 @@ const BACKDROP_BASE = "https://image.tmdb.org/t/p/w1280";
 const CURRENT_YEAR = new Date().getFullYear();
 const MIN_YEAR = 1950;
 const DEFAULT_MIN_YEAR = 1980;
+const RECOMMENDATION_PAGE_SIZE = 8;
 
 let favorites = [];
 try {
@@ -1531,7 +1532,21 @@ const yearMaxInput = document.getElementById("yearMax");
 const yearRangeLabel = document.getElementById("yearRangeLabel");
 const yearSliderFill = document.getElementById("yearSliderFill");
 const yearApplyBtn = document.getElementById("yearApplyBtn");
-const ASIAN_COUNTRIES = ["KR", "JP", "CN"];
+const ASIAN_COUNTRIES = ["KR", "JP", "CN", "TH", "TW", "HK", "PH", "ID", "IN", "VN", "SG", "MY"];
+const ASIAN_LANGUAGE_COUNTRY = {
+  ko: "KR",
+  ja: "JP",
+  zh: "CN",
+  th: "TH",
+  hi: "IN",
+  ta: "IN",
+  te: "IN",
+  ml: "IN",
+  id: "ID",
+  vi: "VN",
+  ms: "MY",
+  tl: "PH"
+};
 sortSelect.value = activeSort;
 
 // ---------- Theme ----------
@@ -1973,6 +1988,35 @@ function uniqueStrings(values) {
   return [...new Set((values || []).filter(Boolean))];
 }
 
+function recommendationRegionMode(region) {
+  const value = String(region || "").toLowerCase();
+  if (value === "non_asian" || /غير آسيوي|tmdb|non.?asian|western/.test(value)) return "non_asian";
+  if (value === "asian" || /آسيوي|mydramalist|asian/.test(value)) return "asian";
+  return "mixed";
+}
+
+function recommendationRegionLabel(region) {
+  const mode = recommendationRegionMode(region);
+  if (mode === "asian") return "آسيوي من MyDramaList أولاً";
+  if (mode === "non_asian") return "غير آسيوي من TMDB غالباً";
+  return "متنوع متوازن: عالمي غالباً مع نسبة آسيوية محدودة";
+}
+
+function recommendationRegionPromptRules(region) {
+  const mode = recommendationRegionMode(region);
+  if (mode === "asian") {
+    return "- المستخدم اختار آسيوي: اجعل معظم أو كل الاقتراحات من كوريا/اليابان/الصين/تايلند، واجعل source_hint = \"mdl\" لهذه الأعمال.";
+  }
+  if (mode === "non_asian") {
+    return "- المستخدم اختار غير آسيوي: لا تقترح أعمالاً كورية أو يابانية أو صينية أو تايلندية. اجعل الاقتراحات من TMDB غالباً واجعل source_hint = \"tmdb\".";
+  }
+  return [
+    "- المستخدم اختار متنوع: اجعل القائمة متوازنة عالمياً، وليست آسيوية غالباً.",
+    "- في وضع متنوع: من أصل 12 اقتراحاً، اجعل 8 إلى 9 أعمال عالمية/غير آسيوية من TMDB، و3 إلى 4 أعمال آسيوية فقط كحد أقصى.",
+    "- لا تجعل الأعمال الكورية/اليابانية/الصينية/التايلندية أكثر من ثلث القائمة إلا إذا كتب المستخدم طلباً صريحاً لذلك."
+  ].join("\n");
+}
+
 async function geminiRecommend(payload) {
   const key = getGeminiApiKey();
   if (!key) {
@@ -1988,12 +2032,13 @@ async function geminiRecommend(payload) {
 - المزاج الآن: ${payload.mood || "غير محدد"}
 - وصف الشخصية/الذوق: ${payload.personality || "غير محدد"}
 - يريد: ${payload.wantType}
-- يفضّل: ${payload.region}
+- يفضّل: ${recommendationRegionLabel(payload.region)}
 - ملاحظات إضافية: ${payload.extra || "لا يوجد"}
 - سياق محلي اختياري من المفضلة/السجل:
 ${contextText}
 
 قواعد مهمة:
+${recommendationRegionPromptRules(payload.region)}
 - لا تقترح أنمي إلا إذا طلب المستخدم ذلك صراحة.
 - لا تقترح محتوى إباحي أو واضح الجنس.
 - نوّع بين فيلم ومسلسل إذا اختار المستخدم الاثنين.
@@ -2415,12 +2460,51 @@ async function resolveRecommendation(rec, wantedType) {
   return { item, type: item.media_type || item.type || type, why: rec.why || "مناسب لمزاجك الحالي." };
 }
 
-async function resolveAiRecommendations(aiData, wantedType) {
+function isRecommendationAsianItem(item) {
+  const source = itemSource(item);
+  if (source === "mdl" || source === "tvmaze") return true;
+  return matchesAsianCountry(item, ASIAN_COUNTRIES);
+}
+
+function balanceRecommendationResults(items, region) {
+  const mode = recommendationRegionMode(region);
+  if (!items.length) return items;
+
+  const asian = [];
+  const global = [];
+  items.forEach(item => {
+    if (isRecommendationAsianItem(item)) asian.push(item);
+    else global.push(item);
+  });
+
+  if (mode === "asian") {
+    return asian.length ? [...asian, ...global].slice(0, items.length) : items;
+  }
+  if (mode === "non_asian") {
+    return global.length ? global : items.filter(item => itemSource(item) === "tmdb");
+  }
+
+  const maxAsian = Math.min(asian.length, Math.max(1, Math.floor(items.length * 0.32)));
+  const mixed = [];
+  const globalQueue = [...global];
+  const asianQueue = asian.slice(0, maxAsian);
+  while (globalQueue.length || asianQueue.length) {
+    for (let i = 0; i < 3 && globalQueue.length; i++) mixed.push(globalQueue.shift());
+    if (asianQueue.length) mixed.push(asianQueue.shift());
+    if (!globalQueue.length && asianQueue.length) {
+      mixed.push(...asianQueue.splice(0));
+    }
+  }
+  return mixed.slice(0, items.length);
+}
+
+async function resolveAiRecommendations(aiData, wantedType, region = "mixed") {
   const recommendations = Array.isArray(aiData?.recommendations) ? aiData.recommendations.slice(0, 12) : [];
   const settled = await Promise.allSettled(recommendations.map(rec => resolveRecommendation(rec, wantedType)));
-  return uniqueItems([], settled
+  const resolved = uniqueItems([], settled
     .filter(result => result.status === "fulfilled" && result.value?.item)
     .map(result => ({ ...result.value.item, ai_reason: result.value.why, media_type: result.value.type, type: result.value.type })));
+  return balanceRecommendationResults(resolved, region);
 }
 
 function genreIdsForType(genres, type) {
@@ -2476,16 +2560,34 @@ async function fetchRecommendationsByGenres(result, wantedType = "both") {
   return applySort(uniqueItems([], items).slice(0, 24), "rating-desc");
 }
 
-function recommendationResultsHtml(items) {
+function recommendationCardHtml(item) {
+  return `
+    <div class="recommend-result-card">
+      ${cardHtml(item, item.media_type || item.type)}
+      <div class="recommend-reason">${escapeHtml(item.ai_reason || "")}</div>
+    </div>
+  `;
+}
+
+function appendRecommendationCards(containerId, items) {
+  const container = document.getElementById(containerId);
+  if (!container || !items.length) return;
+  container.insertAdjacentHTML("beforeend", items.map(recommendationCardHtml).join(""));
+}
+
+function replaceRecommendationCards(containerId, items) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  container.innerHTML = items.map(recommendationCardHtml).join("");
+}
+
+function recommendationResultsHtml(items, visibleCount = RECOMMENDATION_PAGE_SIZE) {
   if (!items.length) return emptyState("وصلتنا اقتراحات أسماء، لكن ما قدرنا نطابقها مع مصادر سينماتك الحالية. جرّب عنواناً أشهر أو غيّر نوع الاقتراح.");
+  const visibleItems = items.slice(0, visibleCount);
   return `<div class="grid" id="recommendationGrid">
-    ${items.map(item => `
-      <div class="recommend-result-card">
-        ${cardHtml(item, item.media_type || item.type)}
-        <div class="recommend-reason">${escapeHtml(item.ai_reason || "")}</div>
-      </div>
-    `).join("")}
-  </div>`;
+    ${visibleItems.map(recommendationCardHtml).join("")}
+  </div>
+  ${loadMoreHtml("recommendations", items.length > visibleItems.length)}`;
 }
 
 function personalityQuizHtml() {
@@ -2541,6 +2643,16 @@ function personalityResultHtml(result, items) {
   `;
 }
 
+function setRecommendationsPagination(items) {
+  paginationState = {
+    mode: "recommendations",
+    items,
+    containerId: "recommendationGrid",
+    visibleCount: Math.min(RECOMMENDATION_PAGE_SIZE, items.length),
+    pageSize: RECOMMENDATION_PAGE_SIZE
+  };
+}
+
 function savedProfilesHtml() {
   const profiles = loadPersonalityProfiles();
   return `
@@ -2577,7 +2689,7 @@ async function showSavedPersonalityProfile(id) {
   output.innerHTML = loadingState();
   try {
     const items = await fetchRecommendationsByGenres(profile.result, profile.payload?.wantType || "both");
-    paginationState = { mode: "recommendations", items, containerId: "recommendationGrid" };
+    setRecommendationsPagination(items);
     output.innerHTML = `
       <div class="saved-profile-confirm">تم عرض النتيجة المحفوظة باسم: ${escapeHtml(profile.name)}</div>
       ${personalityResultHtml(profile.result, items)}
@@ -2629,9 +2741,9 @@ function renderRecommendationsPage() {
         <div class="recommend-field">
           <label class="recommend-label" for="recommendRegion">المصدر/الطابع</label>
           <select class="recommend-select" id="recommendRegion">
-            <option value="متنوع عالمي وآسيوي">متنوع</option>
-            <option value="غير آسيوي غالباً من TMDB">غير آسيوي</option>
-            <option value="آسيوي من MyDramaList أولاً">آسيوي</option>
+            <option value="mixed">متنوع</option>
+            <option value="non_asian">غير آسيوي</option>
+            <option value="asian">آسيوي</option>
           </select>
         </div>
         <div class="recommend-mode-section" id="manualRecommendSection">
@@ -2788,15 +2900,15 @@ async function handleRecommendationSubmit(event) {
         payload
       });
       refreshSavedProfilesList();
-      paginationState = { mode: "recommendations", items: resolved, containerId: "recommendationGrid" };
+      setRecommendationsPagination(resolved);
       output.innerHTML = `
         <div class="saved-profile-confirm">تم حفظ نتيجة الاختبار باسم: ${escapeHtml(savedProfile.name)}</div>
         ${personalityResultHtml(genreResult, resolved)}
       `;
     } else if (mode === "tastedive") {
       const tasteDiveData = await tasteDiveRecommend(payload);
-      resolved = await resolveAiRecommendations(tasteDiveData, payload.wantType);
-      paginationState = { mode: "recommendations", items: resolved, containerId: "recommendationGrid" };
+      resolved = await resolveAiRecommendations(tasteDiveData, payload.wantType, payload.region);
+      setRecommendationsPagination(resolved);
       output.innerHTML = `
         <div class="ai-profile-card">
           <strong>اقتراحات TasteDive مشابهة لـ:</strong>
@@ -2808,8 +2920,8 @@ async function handleRecommendationSubmit(event) {
       `;
     } else {
       const aiData = await geminiRecommend(payload);
-      resolved = await resolveAiRecommendations(aiData, payload.wantType);
-      paginationState = { mode: "recommendations", items: resolved, containerId: "recommendationGrid" };
+      resolved = await resolveAiRecommendations(aiData, payload.wantType, payload.region);
+      setRecommendationsPagination(resolved);
       output.innerHTML = `
         <div class="ai-profile-card">
           <strong>قراءة Gemini لك:</strong>
@@ -2928,8 +3040,9 @@ function gridContainerHtml(items, type, id) {
 }
 
 function loadMoreHtml(stream, hasMore = true) {
+  const label = stream === "recommendations" ? "عرض المزيد" : "تحميل المزيد";
   return hasMore
-    ? `<div class="load-more-wrap"><button class="load-more-btn" data-load-stream="${stream}">تحميل المزيد</button></div>`
+    ? `<div class="load-more-wrap"><button class="load-more-btn" data-load-stream="${stream}">${label}</button></div>`
     : "";
 }
 
@@ -2978,6 +3091,9 @@ function refreshCurrentSort() {
   } else if (state.mode === "dual" || state.mode === "asian") {
     replaceCards("moviesGrid", state.movieItems, "movie");
     replaceCards("tvGrid", state.tvItems, "tv");
+  } else if (state.mode === "recommendations") {
+    const visibleItems = state.items.slice(0, state.visibleCount || RECOMMENDATION_PAGE_SIZE);
+    replaceRecommendationCards(state.containerId, visibleItems);
   } else {
     replaceCards(state.containerId, state.items, state.type || null);
   }
@@ -3388,8 +3504,7 @@ function isAsianContent(item) {
     ...(item.origin_country || []),
     ...(item.production_countries || []).map(c => c.iso_3166_1).filter(Boolean)
   ];
-  const countryByLanguage = { ko: "KR", ja: "JP", zh: "CN" };
-  const langCountry = countryByLanguage[item.original_language];
+  const langCountry = ASIAN_LANGUAGE_COUNTRY[item.original_language];
   return countries.some(country => ASIAN_COUNTRIES.includes(country)) || ASIAN_COUNTRIES.includes(langCountry);
 }
 
@@ -3470,8 +3585,7 @@ function isAnime(item) {
     ...(item.origin_country || []),
     ...(item.production_countries || []).map(c => c.iso_3166_1).filter(Boolean)
   ];
-  const asianLanguages = ["ja", "ko", "zh"];
-  const isAsian = asianLanguages.includes(item.original_language) ||
+  const isAsian = !!ASIAN_LANGUAGE_COUNTRY[item.original_language] ||
     countries.some(country => ASIAN_COUNTRIES.includes(country));
   return isAnimated && isAsian;
 }
@@ -3534,8 +3648,7 @@ function matchesAsianCountry(item, allowedCountries) {
   if (itemSource(item) === "mdl" && !activeCountryFilter) return true;
   const countries = item.origin_country || [];
   if (countries.some(country => allowedCountries.includes(country))) return true;
-  const countryByLanguage = { ko: "KR", ja: "JP", zh: "CN" };
-  return allowedCountries.includes(countryByLanguage[item.original_language]);
+  return allowedCountries.includes(ASIAN_LANGUAGE_COUNTRY[item.original_language]);
 }
 
 function normalizeTvmazeShow(show) {
@@ -3566,6 +3679,7 @@ function normalizeTvmazeShow(show) {
     in_production: show.status === "Running" || show.status === "To Be Determined",
     episode_run_time: [show.averageRuntime || show.runtime].filter(Boolean),
     number_of_seasons: show._embedded?.episodes?.reduce((max, episode) => Math.max(max, episode.season || 0), 0) || null,
+    number_of_episodes: Array.isArray(show._embedded?.episodes) ? show._embedded.episodes.length : null,
     adult: false,
     external_ids: show.externals || {},
     tvmaze_url: show.url || ""
@@ -4436,6 +4550,17 @@ async function loadMoreResults(stream, button) {
         !isMovies && state.mode === "asian" ? " · TMDB + TVmaze" : ""
       );
       if (state[pageKey] >= state[totalKey]) button.closest(".load-more-wrap")?.remove();
+    } else if (state.mode === "recommendations") {
+      const previousCount = state.visibleCount || RECOMMENDATION_PAGE_SIZE;
+      const nextCount = Math.min(previousCount + (state.pageSize || RECOMMENDATION_PAGE_SIZE), state.items.length);
+      const incoming = state.items.slice(previousCount, nextCount);
+      state.visibleCount = nextCount;
+      if (activeSort === "default") {
+        appendRecommendationCards(state.containerId, incoming);
+      } else {
+        replaceRecommendationCards(state.containerId, state.items.slice(0, state.visibleCount));
+      }
+      if (state.visibleCount >= state.items.length) button.closest(".load-more-wrap")?.remove();
     } else if (state.mode === "search") {
       const nextPage = state.page + 1;
       const searchPageEndpoint = `/search/multi?language=en-US&query=${encodeURIComponent(state.query)}&page=${nextPage}`;
@@ -4478,7 +4603,7 @@ async function loadMoreResults(stream, button) {
     loadVisibleTvStatuses();
     if (button.isConnected) {
       button.disabled = false;
-      button.textContent = "تحميل المزيد";
+      button.textContent = state.mode === "recommendations" ? "عرض المزيد" : "تحميل المزيد";
     }
   } catch(e) {
     button.disabled = false;
@@ -4502,6 +4627,7 @@ const infiniteScrollObserver = "IntersectionObserver" in window
         const button = entry.target;
         if (!button.isConnected || button.disabled) return;
         if (paginationState && paginationState.mode === "home") return;
+        if (paginationState && paginationState.mode === "recommendations") return;
         loadMoreResults(button.dataset.loadStream, button);
       });
     }, { rootMargin: "600px" })
@@ -4686,6 +4812,15 @@ function findTrailerUrl(videos, item, type = null) {
   return `https://www.youtube.com/results?search_query=${encodeURIComponent(`${title} ${year} ${contentType} official trailer`)}`;
 }
 
+function episodeCountText(count) {
+  const value = parseInt(count, 10);
+  if (!Number.isFinite(value) || value <= 0) return "";
+  if (value === 1) return "حلقة واحدة";
+  if (value === 2) return "حلقتان";
+  if (value >= 3 && value <= 10) return `${value} حلقات`;
+  return `${value} حلقة`;
+}
+
 function renderModal(d, credits, type, videos) {
   const similarToken = ++modalSimilarRequestToken;
   const displayTitle = getDisplayTitle(d);
@@ -4704,6 +4839,7 @@ function renderModal(d, credits, type, videos) {
   const overview = d.overview && d.overview.trim() !== "" ? d.overview : "لا يوجد وصف متاح بالعربية لهذا العمل.";
   const tagline = d.tagline ? `<div class="modal-tagline">"${escapeHtml(d.tagline)}"</div>` : "";
   const trailerUrl = findTrailerUrl(videos, d, type);
+  const episodesText = episodeCountText(d.number_of_episodes);
   const watchedDateText = watched && watchedEntry ? `<div class="watched-date">شوهد بتاريخ ${new Date(watchedEntry.watched_at).toLocaleDateString('ar-EG')}</div>` : "";
 
   const backdropUrl = d.backdrop_url || (d.backdrop_path ? `${BACKDROP_BASE}${d.backdrop_path}` : "");
@@ -4726,6 +4862,7 @@ function renderModal(d, credits, type, videos) {
         <span>${year || '—'}</span>
         ${runtime ? `<span>${runtime}</span>` : ''}
         ${type === 'tv' && d.number_of_seasons ? `<span>${d.number_of_seasons} ${d.number_of_seasons === 1 ? 'موسم' : 'مواسم'}</span>` : ''}
+        ${type === 'tv' && episodesText ? `<span>${episodesText}</span>` : ''}
         ${type === 'tv' && d.status ? `<span>${d.status === 'Returning Series' || d.in_production ? '🟢 مستمر' : '⚪ منتهي'}</span>` : ''}
       </div>
       ${tagline}
