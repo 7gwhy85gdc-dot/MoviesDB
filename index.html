@@ -1304,6 +1304,14 @@
     color: var(--text-muted); font-size: 14px; margin-bottom: 18px;
   }
   .modal-meta .gold { color: var(--gold); font-weight: 700; }
+  .modal-meta .imdb-rating-meta {
+    color: #f5c518;
+    font-weight: 800;
+  }
+  .modal-meta .imdb-rating-meta.loading {
+    color: var(--text-muted);
+    font-weight: 700;
+  }
   .modal-tagline { color: var(--text-muted); font-style: italic; margin-bottom: 16px; font-size: 14px; }
 
   .trailer-btn {
@@ -1543,6 +1551,8 @@
   <a href="https://mydramalist.com" target="_blank" rel="noopener" style="color: var(--gold); text-decoration: underline;">MyDramaList</a>
   وتوصيات مشابهة من
   <a href="https://tastedive.com" target="_blank" rel="noopener" style="color: var(--gold); text-decoration: underline;">TasteDive</a>
+  وتقييمات من
+  <a href="https://datasets.imdbws.com" target="_blank" rel="noopener" style="color: var(--gold); text-decoration: underline;">IMDb datasets</a>
   · مشروع شخصي
 </footer>
 
@@ -1562,6 +1572,7 @@ const GEMINI_API_BASE = "https://generativelanguage.googleapis.com/v1beta";
 const GEMINI_MODEL = "gemini-2.5-flash";
 const TASTEDIVE_API_BASE = "https://tastedive.com/api/similar";
 const TASTEDIVE_PROXY_BASE = window.CINEMATEK_TASTEDIVE_PROXY_BASE || `${MDL_API_BASE}/api/tastedive/similar`;
+const IMDB_RATINGS_PROXY_BASE = window.CINEMATEK_IMDB_RATINGS_PROXY_BASE || `${MDL_API_BASE}/api/imdb/rating`;
 const IMG_BASE = "https://image.tmdb.org/t/p/w500";
 const BACKDROP_BASE = "https://image.tmdb.org/t/p/w1280";
 const CURRENT_YEAR = new Date().getFullYear();
@@ -1776,6 +1787,34 @@ async function mdlFetch(path, { signal } = {}) {
     { signal },
     cacheTtlForPath(path)
   );
+}
+
+async function imdbRatingsFetch(imdbId, { signal } = {}) {
+  const cleanId = String(imdbId || "").trim();
+  if (!/^tt\d{7,12}$/.test(cleanId)) return null;
+  return fetchJsonCached(
+    `${IMDB_RATINGS_PROXY_BASE}/${encodeURIComponent(cleanId)}`,
+    { signal },
+    24 * 60 * 60 * 1000
+  );
+}
+
+function getImdbTitleId(item) {
+  const candidates = [
+    item?.imdb_id,
+    item?.external_ids?.imdb_id,
+    item?.external_ids?.imdb,
+    item?.externals?.imdb
+  ];
+  return candidates.map(value => String(value || "").trim()).find(value => /^tt\d{7,12}$/.test(value)) || "";
+}
+
+function formatVoteCount(value) {
+  const number = parseInt(value, 10);
+  if (!Number.isFinite(number) || number <= 0) return "";
+  if (number >= 1000000) return `${(number / 1000000).toFixed(number >= 10000000 ? 0 : 1)}م`;
+  if (number >= 1000) return `${(number / 1000).toFixed(number >= 100000 ? 0 : 1)}ألف`;
+  return String(number);
 }
 
 const main = document.getElementById("mainContent");
@@ -5434,7 +5473,7 @@ async function openModal(id, type, source = "tmdb") {
     }
     const endpoint = type === "movie" ? "movie" : "tv";
     const [details, arabicDetails, credits, videosDefault, videosEnglish] = await Promise.all([
-      tmdbFetch(`/${endpoint}/${id}?language=en-US&append_to_response=release_dates,content_ratings`),
+      tmdbFetch(`/${endpoint}/${id}?language=en-US&append_to_response=release_dates,content_ratings,external_ids`),
       tmdbFetch(`/${endpoint}/${id}?language=ar`),
       tmdbFetch(`/${endpoint}/${id}/credits?language=en-US`),
       tmdbFetch(`/${endpoint}/${id}/videos`),
@@ -5520,6 +5559,25 @@ function episodeCountText(count) {
   return `${value} حلقة`;
 }
 
+async function loadModalImdbRating(item) {
+  const el = document.getElementById("modalImdbRating");
+  const imdbId = getImdbTitleId(item);
+  if (!el || !imdbId || el.dataset.imdbId !== imdbId) return;
+  try {
+    const rating = await imdbRatingsFetch(imdbId);
+    if (!rating?.found) {
+      el.remove();
+      return;
+    }
+    const votes = formatVoteCount(rating.numVotes);
+    el.classList.remove("loading");
+    el.textContent = `IMDb ★ ${Number(rating.averageRating).toFixed(1)}${votes ? ` (${votes})` : ""}`;
+    el.title = "التقييم من IMDb public datasets";
+  } catch(e) {
+    el.remove();
+  }
+}
+
 function renderModal(d, credits, type, videos) {
   const similarToken = ++modalSimilarRequestToken;
   const displayTitle = getDisplayTitle(d);
@@ -5541,6 +5599,10 @@ function renderModal(d, credits, type, videos) {
   const trailerUrl = findTrailerUrl(videos, d, type);
   const episodesText = episodeCountText(d.number_of_episodes);
   const watchedDateText = watched && watchedEntry ? `<div class="watched-date">شوهد بتاريخ ${new Date(watchedEntry.watched_at).toLocaleDateString('ar-EG')}</div>` : "";
+  const imdbId = getImdbTitleId(d);
+  const imdbRatingMeta = imdbId
+    ? `<span class="imdb-rating-meta loading" id="modalImdbRating" data-imdb-id="${escapeHtml(imdbId)}">IMDb: جاري التحميل…</span>`
+    : "";
 
   const backdropUrl = d.backdrop_url || (d.backdrop_path ? `${BACKDROP_BASE}${d.backdrop_path}` : "");
   const posterUrl = d.poster_url || (d.poster_path ? `${IMG_BASE}${d.poster_path}` : "");
@@ -5560,6 +5622,7 @@ function renderModal(d, credits, type, videos) {
       ${showSecondaryTitle ? `<div style="color: var(--gold); font-weight: 600; font-size: 16px; margin-bottom: 10px;">${escapeHtml(secondaryTitle)}</div>` : ""}
       <div class="modal-meta">
         <span class="gold">★ ${d.vote_average ? d.vote_average.toFixed(1) : '—'}</span>
+        ${imdbRatingMeta}
         <span>${year || '—'}</span>
         ${runtime ? `<span>${runtime}</span>` : ''}
         ${type === 'tv' && d.number_of_seasons ? `<span>${d.number_of_seasons} ${d.number_of_seasons === 1 ? 'موسم' : 'مواسم'}</span>` : ''}
@@ -5640,6 +5703,7 @@ function renderModal(d, credits, type, videos) {
       cardBtn.textContent = cardBtn.classList.contains("active") ? "✔" : "👁";
     }
   });
+  loadModalImdbRating(d);
   loadModalSimilarRecommendations(d, type, similarToken);
 }
 
