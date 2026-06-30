@@ -5847,40 +5847,22 @@ async function resolveTmdbTvDetailsForEpisodeGrid(item) {
   return tmdbFetch(`/tv/${candidates[0].id}?language=en-US`).catch(() => null);
 }
 
-async function fetchTmdbEpisodeGrid(item) {
-  const details = await resolveTmdbTvDetailsForEpisodeGrid(item);
-  const seasonRefs = (details?.seasons || [])
-    .filter(season => Number(season.season_number) > 0 && Number(season.episode_count) > 0)
-    .sort((a, b) => Number(a.season_number) - Number(b.season_number));
-  if (!details?.id || !seasonRefs.length) return null;
+async function resolveEpisodeGridImdbTitleId(item, type) {
+  const directId = await resolveImdbTitleId(item, type);
+  if (directId) return directId;
+  if (type !== "tv") return "";
 
-  const cacheKey = `cinematek_episode_grid_tmdb_${details.id}`;
-  const cached = readEpisodeGridCache(cacheKey);
-  if (cached) return cached;
+  const tmdbDetails = await resolveTmdbTvDetailsForEpisodeGrid(item);
+  if (!tmdbDetails?.id) return "";
+  const embeddedId = getImdbTitleId(tmdbDetails);
+  if (embeddedId) return embeddedId;
 
-  const settled = await Promise.allSettled(seasonRefs.map(async season => {
-    const seasonNumber = Number(season.season_number);
-    const data = await tmdbFetch(`/tv/${details.id}/season/${seasonNumber}?language=en-US`);
-    const episodes = (data.episodes || []).map(episode => ({
-      episode: episode.episode_number,
-      rating: Number(episode.vote_average) > 0 ? Number(episode.vote_average) : null,
-      votes: episode.vote_count || null
-    }));
-    const rated = episodes.filter(episode => episode.rating);
-    return {
-      season: seasonNumber,
-      episodes,
-      average: rated.length ? Number((rated.reduce((sum, episode) => sum + episode.rating, 0) / rated.length).toFixed(1)) : null
-    };
-  }));
-
-  const grid = normalizeEpisodeGrid({
-    seasons: settled
-      .filter(result => result.status === "fulfilled")
-      .map(result => result.value)
-  }, "TMDB Episode Votes");
-  if (grid) writeEpisodeGridCache(cacheKey, grid);
-  return grid;
+  try {
+    const externalIds = await tmdbFetch(`/tv/${tmdbDetails.id}/external_ids?language=en-US`);
+    return getImdbTitleId({ external_ids: externalIds }) || "";
+  } catch(e) {
+    return "";
+  }
 }
 
 function renderEpisodeRatingsGrid(container, grid) {
@@ -5956,23 +5938,21 @@ async function loadModalEpisodeRatingsGrid(item, type) {
   const container = document.getElementById("modalEpisodeRatingsGrid");
   if (!container || type !== "tv") return;
   try {
-    let grid = await fetchTmdbEpisodeGrid(item);
-    if (!grid) {
-      const imdbId = await resolveImdbTitleId(item, type);
-      if (imdbId) {
-        const imdbGrid = await imdbEpisodeGridFetch(imdbId);
-        grid = normalizeEpisodeGrid(imdbGrid, "IMDb public datasets");
-      }
+    const imdbId = await resolveEpisodeGridImdbTitleId(item, type);
+    let grid = null;
+    if (imdbId) {
+      const imdbGrid = await imdbEpisodeGridFetch(imdbId);
+      grid = normalizeEpisodeGrid(imdbGrid, "IMDb public datasets");
     }
     if (!document.getElementById("modalEpisodeRatingsGrid")) return;
     if (!grid) {
-      container.innerHTML = `<div class="episode-grid-state">لا توجد تقييمات حلقات كافية لهذا المسلسل.</div>`;
+      container.innerHTML = `<div class="episode-grid-state">لا توجد تقييمات حلقات من IMDb لهذا المسلسل.</div>`;
       return;
     }
     renderEpisodeRatingsGrid(container, grid);
   } catch(e) {
     if (document.getElementById("modalEpisodeRatingsGrid")) {
-      container.innerHTML = `<div class="episode-grid-state">تعذر تحميل شبكة تقييمات الحلقات الآن.</div>`;
+      container.innerHTML = `<div class="episode-grid-state">تعذر تحميل تقييمات الحلقات من IMDb الآن.</div>`;
     }
   }
 }
@@ -6039,7 +6019,7 @@ function renderModal(d, credits, type, videos) {
       <p class="modal-overview">${escapeHtml(overview)}</p>
       ${type === 'tv' ? `
         <section class="episode-grid-section" id="modalEpisodeRatingsGrid">
-          <div class="episode-grid-state">جاري تحميل شبكة تقييمات الحلقات...</div>
+          <div class="episode-grid-state">جاري تحميل شبكة تقييمات الحلقات من IMDb...</div>
         </section>
       ` : ''}
       ${cast.length ? `
