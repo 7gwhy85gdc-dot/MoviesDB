@@ -1341,6 +1341,113 @@
     font-size: 13px; color: var(--text-muted);
   }
 
+  .episode-grid-section {
+    margin: 24px 0;
+    padding: 18px;
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    background:
+      radial-gradient(circle at top right, rgba(232,197,71,0.08), transparent 34%),
+      rgba(255,255,255,0.025);
+  }
+  .episode-grid-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .episode-grid-title {
+    font-size: 17px;
+    font-weight: 900;
+    font-family: 'Cairo', sans-serif;
+  }
+  .episode-grid-source {
+    color: var(--text-muted);
+    font-size: 12px;
+    margin-top: 4px;
+  }
+  .episode-grid-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    color: var(--text-muted);
+    font-size: 11px;
+    margin-bottom: 14px;
+  }
+  .episode-grid-legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .episode-grid-legend i {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+    display: inline-block;
+  }
+  .episode-grid-scroll {
+    overflow-x: auto;
+    direction: ltr;
+    padding-bottom: 6px;
+  }
+  .episode-grid-table {
+    display: grid;
+    gap: 7px;
+    min-width: max-content;
+    direction: ltr;
+    align-items: stretch;
+  }
+  .episode-grid-label,
+  .episode-grid-cell {
+    min-width: 72px;
+    height: 42px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    line-height: 1;
+  }
+  .episode-grid-label {
+    min-width: 44px;
+    color: var(--text-muted);
+    background: transparent;
+    font-size: 13px;
+  }
+  .episode-grid-cell {
+    color: #05070a;
+    font-size: 17px;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .episode-grid-cell.empty {
+    color: var(--text-muted);
+    background: rgba(255,255,255,0.035);
+    border-style: dashed;
+  }
+  .episode-grid-cell.rating-absolute { background: #38bdf8; }
+  .episode-grid-cell.rating-awesome { background: #4ade80; }
+  .episode-grid-cell.rating-great { background: #a3e635; }
+  .episode-grid-cell.rating-good { background: #f2bd12; }
+  .episode-grid-cell.rating-regular { background: #fb7a20; }
+  .episode-grid-cell.rating-bad { background: #ef4444; color: #fff; }
+  .episode-grid-cell.rating-garbage { background: #7f1d1d; color: #fff; }
+  .episode-grid-cell.rating-unrated { background: rgba(148,163,184,0.2); color: var(--text-muted); }
+  .episode-grid-average .episode-grid-cell,
+  .episode-grid-average.episode-grid-cell {
+    box-shadow: inset 0 0 0 2px rgba(255,255,255,0.2);
+  }
+  .episode-grid-state {
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: rgba(255,255,255,0.035);
+    color: var(--text-muted);
+    font-size: 13px;
+    line-height: 1.8;
+    padding: 14px;
+    text-align: center;
+  }
+
   .cast-row { display: flex; gap: 14px; overflow-x: auto; padding-bottom: 8px; }
   .cast-item { flex: 0 0 90px; text-align: center; }
   .cast-photo {
@@ -1573,6 +1680,7 @@ const GEMINI_MODEL = "gemini-2.5-flash";
 const TASTEDIVE_API_BASE = "https://tastedive.com/api/similar";
 const TASTEDIVE_PROXY_BASE = window.CINEMATEK_TASTEDIVE_PROXY_BASE || `${MDL_API_BASE}/api/tastedive/similar`;
 const IMDB_RATINGS_PROXY_BASE = window.CINEMATEK_IMDB_RATINGS_PROXY_BASE || `${MDL_API_BASE}/api/imdb/rating`;
+const IMDB_EPISODE_GRID_PROXY_BASE = window.CINEMATEK_IMDB_EPISODE_GRID_PROXY_BASE || `${MDL_API_BASE}/api/imdb/episode-grid`;
 const IMG_BASE = "https://image.tmdb.org/t/p/w500";
 const BACKDROP_BASE = "https://image.tmdb.org/t/p/w1280";
 const CURRENT_YEAR = new Date().getFullYear();
@@ -1797,6 +1905,47 @@ async function imdbRatingsFetch(imdbId, { signal } = {}) {
     { signal },
     24 * 60 * 60 * 1000
   );
+}
+
+function readEpisodeGridCache(cacheKey) {
+  try {
+    const raw = localStorage.getItem(cacheKey);
+    if (!raw) return null;
+    const cached = JSON.parse(raw);
+    if (!cached || cached.expiresAt < Date.now() || !cached.data) {
+      localStorage.removeItem(cacheKey);
+      return null;
+    }
+    return cached.data;
+  } catch(e) {
+    return null;
+  }
+}
+
+function writeEpisodeGridCache(cacheKey, data) {
+  try {
+    localStorage.setItem(cacheKey, JSON.stringify({
+      data,
+      expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000
+    }));
+  } catch(e) {
+    // localStorage can be full; the app still works without persistent cache.
+  }
+}
+
+async function imdbEpisodeGridFetch(imdbId, { signal } = {}) {
+  const cleanId = String(imdbId || "").trim();
+  if (!/^tt\d{7,12}$/.test(cleanId)) return null;
+  const cacheKey = `cinematek_episode_grid_imdb_${cleanId}`;
+  const cached = readEpisodeGridCache(cacheKey);
+  if (cached) return cached;
+  const data = await fetchJsonCached(
+    `${IMDB_EPISODE_GRID_PROXY_BASE}/${encodeURIComponent(cleanId)}`,
+    { signal },
+    24 * 60 * 60 * 1000
+  );
+  if (data?.found) writeEpisodeGridCache(cacheKey, data);
+  return data;
 }
 
 function getImdbTitleId(item) {
@@ -3290,7 +3439,7 @@ function cardHtml(item, type) {
   const knownSourceStatus = item.in_production === true || item.in_production === false;
   const sourceBadge = source === "tvmaze" || source === "mdl"
     ? `<div class="status-badge ${knownSourceStatus ? (item.in_production ? 'ongoing' : 'ended') : ''} show"
-        ${source === "mdl" && type === "tv" ? `data-mdl-status-for="${escapeHtml(String(item.id))}"` : ""}>
+        ${source === "mdl" && type === "tv" && !knownSourceStatus ? `data-mdl-status-for="${escapeHtml(String(item.id))}"` : ""}>
         <span>${knownSourceStatus ? (item.in_production ? 'مستمر' : 'منتهي') : 'جاري التحقق'}</span>
         <span style="display:flex;align-items:center;">${source === "mdl" ? "MDL" : "TVmaze"}<span class="status-dot"></span></span>
       </div>`
@@ -3474,10 +3623,39 @@ function statusLabel(info) {
 function renderTvStatus(badge, info) {
   if (!badge.isConnected || !info) return;
   const { statusText, seasonsText, cls } = statusLabel(info);
+  badge.classList.remove("ongoing", "ended");
   badge.classList.add(cls, "show");
   badge.innerHTML = `<span>${statusText}</span><span style="display:flex;align-items:center;">${seasonsText}<span class="status-dot"></span></span>`;
   delete badge.dataset.statusFor;
   delete badge.dataset.mdlStatusFor;
+}
+
+function parseMdlDate(text) {
+  const clean = String(text || "").replace(/\s+/g, " ").trim();
+  if (!clean) return null;
+  const direct = new Date(clean);
+  if (!Number.isNaN(direct.getTime())) return direct;
+  const match = clean.match(/^([A-Za-z]{3,9})\.?\s+(\d{1,2}),?\s+(\d{4})$/);
+  if (!match) return null;
+  const months = {
+    jan: 0, january: 0,
+    feb: 1, february: 1,
+    mar: 2, march: 2,
+    apr: 3, april: 3,
+    may: 4,
+    jun: 5, june: 5,
+    jul: 6, july: 6,
+    aug: 7, august: 7,
+    sep: 8, sept: 8, september: 8,
+    oct: 9, october: 9,
+    nov: 10, november: 10,
+    dec: 11, december: 11
+  };
+  const month = months[match[1].toLowerCase()];
+  const day = parseInt(match[2], 10);
+  const year = parseInt(match[3], 10);
+  if (!Number.isFinite(month) || !Number.isFinite(day) || !Number.isFinite(year)) return null;
+  return new Date(year, month, day);
 }
 
 function inferMdlProductionStatus(details) {
@@ -3488,18 +3666,18 @@ function inferMdlProductionStatus(details) {
   const aired = String(details.aired || "").trim();
   if (!aired) return null;
   const rangeParts = aired.split(/\s+-\s+/);
-  const startDate = new Date(rangeParts[0].trim());
+  const startDate = parseMdlDate(rangeParts[0]);
   if (rangeParts.length < 2) {
-    if (Number.isNaN(startDate.getTime())) return null;
+    if (!startDate) return null;
     return startDate.getTime() <= Date.now() ? false : null;
   }
   const endText = rangeParts[1].trim();
   if (!endText || /\?|present|ongoing|tba/i.test(endText)) {
-    return !Number.isNaN(startDate.getTime()) && startDate.getTime() <= Date.now() ? true : null;
+    return startDate && startDate.getTime() <= Date.now() ? true : null;
   }
-  const endDate = new Date(endText);
-  if (Number.isNaN(endDate.getTime())) return null;
-  if (!Number.isNaN(startDate.getTime()) && startDate.getTime() > Date.now()) return null;
+  const endDate = parseMdlDate(endText);
+  if (!endDate) return null;
+  if (startDate && startDate.getTime() > Date.now()) return null;
   return endDate.getTime() > Date.now();
 }
 
@@ -4090,6 +4268,9 @@ function normalizeMdlSummary(item) {
   const year = String(item.year || "").match(/\d{4}/)?.[0] || "";
   const mediaType = item.media_type === "movie" ? "movie" : "tv";
   const country = mdlCountryCode(item.country);
+  const inferredProductionStatus = mediaType === "movie"
+    ? false
+    : (year && parseInt(year, 10) < CURRENT_YEAR ? false : null);
   return {
     id: item.slug,
     source: "mdl",
@@ -4108,8 +4289,8 @@ function normalizeMdlSummary(item) {
     genre_ids: [],
     original_language: "",
     origin_country: country ? [country] : [],
-    status: "",
-    in_production: null,
+    status: inferredProductionStatus === false ? "Ended" : "",
+    in_production: inferredProductionStatus,
     adult: false,
     mdl_url: item.url || (item.slug ? `https://mydramalist.com/${item.slug}` : "")
   };
@@ -5559,10 +5740,28 @@ function episodeCountText(count) {
   return `${value} حلقة`;
 }
 
-async function loadModalImdbRating(item) {
+async function resolveImdbTitleId(item, type) {
+  let imdbId = getImdbTitleId(item);
+  if (imdbId) return imdbId;
+  if (itemSource(item) !== "tmdb" || !item?.id) return "";
+  try {
+    const endpointType = type === "tv" ? "tv" : "movie";
+    const externalIds = await tmdbFetch(`/${endpointType}/${item.id}/external_ids?language=en-US`);
+    return getImdbTitleId({ external_ids: externalIds }) || "";
+  } catch(e) {
+    return "";
+  }
+}
+
+async function loadModalImdbRating(item, type) {
   const el = document.getElementById("modalImdbRating");
-  const imdbId = getImdbTitleId(item);
-  if (!el || !imdbId || el.dataset.imdbId !== imdbId) return;
+  if (!el) return;
+  const imdbId = await resolveImdbTitleId(item, type);
+  if (!imdbId) {
+    el.remove();
+    return;
+  }
+  el.dataset.imdbId = imdbId;
   try {
     const rating = await imdbRatingsFetch(imdbId);
     if (!rating?.found) {
@@ -5575,6 +5774,206 @@ async function loadModalImdbRating(item) {
     el.title = "التقييم من IMDb public datasets";
   } catch(e) {
     el.remove();
+  }
+}
+
+function episodeGridRatingClass(rating) {
+  const value = Number(rating);
+  if (!Number.isFinite(value) || value <= 0) return "rating-unrated";
+  if (value >= 9.6) return "rating-absolute";
+  if (value >= 9.0) return "rating-awesome";
+  if (value >= 8.0) return "rating-great";
+  if (value >= 7.0) return "rating-good";
+  if (value >= 6.0) return "rating-regular";
+  if (value >= 4.0) return "rating-bad";
+  return "rating-garbage";
+}
+
+function normalizeEpisodeGrid(grid, sourceLabel) {
+  const seasons = (grid?.seasons || [])
+    .map(season => ({
+      season: parseInt(season.season, 10),
+      average: Number.isFinite(Number(season.average)) ? Number(season.average) : null,
+      episodes: (season.episodes || [])
+        .map(episode => ({
+          episode: parseInt(episode.episode, 10),
+          rating: Number.isFinite(Number(episode.rating)) && Number(episode.rating) > 0 ? Number(episode.rating) : null,
+          votes: episode.votes || episode.vote_count || episode.numVotes || null
+        }))
+        .filter(episode => Number.isFinite(episode.episode) && episode.episode > 0)
+        .sort((a, b) => a.episode - b.episode)
+    }))
+    .filter(season => Number.isFinite(season.season) && season.season > 0 && season.episodes.length)
+    .sort((a, b) => a.season - b.season);
+
+  const totalEpisodes = seasons.reduce((sum, season) => sum + season.episodes.length, 0);
+  const ratedEpisodes = seasons.reduce((sum, season) => sum + season.episodes.filter(episode => episode.rating).length, 0);
+  if (!seasons.length || !ratedEpisodes) return null;
+  return {
+    found: true,
+    sourceLabel,
+    seasons,
+    totalEpisodes,
+    ratedEpisodes
+  };
+}
+
+async function resolveTmdbTvDetailsForEpisodeGrid(item) {
+  if (itemSource(item) === "tmdb" && item?.id) {
+    if (Array.isArray(item.seasons) && item.seasons.length) return item;
+    return tmdbFetch(`/tv/${item.id}?language=en-US`);
+  }
+
+  const query = cleanTrailerSearchTitle(item) || getDisplayTitle(item);
+  if (!query) return null;
+  const year = String(yearOf(item) || "").match(/\d{4}/)?.[0] || "";
+  const baseEndpoint = `/search/tv?language=en-US&query=${encodeURIComponent(query)}`;
+  const endpoint = year ? `${baseEndpoint}&first_air_date_year=${year}` : baseEndpoint;
+  const search = await tmdbFetch(endpoint).catch(() => null);
+  let candidates = (search?.results || []).filter(isAllowedContent);
+  if (!candidates.length && year) {
+    const relaxed = await tmdbFetch(baseEndpoint).catch(() => null);
+    candidates = (relaxed?.results || []).filter(isAllowedContent);
+  }
+  if (!candidates.length) return null;
+  const itemTitle = simpleTitleKey(getDisplayTitle(item) || item.original_name || item.name || item.title);
+  candidates.sort((a, b) => {
+    const aTitle = simpleTitleKey(a.name || a.original_name || "");
+    const bTitle = simpleTitleKey(b.name || b.original_name || "");
+    const aScore = (aTitle === itemTitle ? 50 : 0) + (year && yearOf(a) === year ? 20 : 0) + (a.popularity || 0);
+    const bScore = (bTitle === itemTitle ? 50 : 0) + (year && yearOf(b) === year ? 20 : 0) + (b.popularity || 0);
+    return bScore - aScore;
+  });
+  return tmdbFetch(`/tv/${candidates[0].id}?language=en-US`).catch(() => null);
+}
+
+async function fetchTmdbEpisodeGrid(item) {
+  const details = await resolveTmdbTvDetailsForEpisodeGrid(item);
+  const seasonRefs = (details?.seasons || [])
+    .filter(season => Number(season.season_number) > 0 && Number(season.episode_count) > 0)
+    .sort((a, b) => Number(a.season_number) - Number(b.season_number));
+  if (!details?.id || !seasonRefs.length) return null;
+
+  const cacheKey = `cinematek_episode_grid_tmdb_${details.id}`;
+  const cached = readEpisodeGridCache(cacheKey);
+  if (cached) return cached;
+
+  const settled = await Promise.allSettled(seasonRefs.map(async season => {
+    const seasonNumber = Number(season.season_number);
+    const data = await tmdbFetch(`/tv/${details.id}/season/${seasonNumber}?language=en-US`);
+    const episodes = (data.episodes || []).map(episode => ({
+      episode: episode.episode_number,
+      rating: Number(episode.vote_average) > 0 ? Number(episode.vote_average) : null,
+      votes: episode.vote_count || null
+    }));
+    const rated = episodes.filter(episode => episode.rating);
+    return {
+      season: seasonNumber,
+      episodes,
+      average: rated.length ? Number((rated.reduce((sum, episode) => sum + episode.rating, 0) / rated.length).toFixed(1)) : null
+    };
+  }));
+
+  const grid = normalizeEpisodeGrid({
+    seasons: settled
+      .filter(result => result.status === "fulfilled")
+      .map(result => result.value)
+  }, "TMDB Episode Votes");
+  if (grid) writeEpisodeGridCache(cacheKey, grid);
+  return grid;
+}
+
+function renderEpisodeRatingsGrid(container, grid) {
+  const seasons = grid.seasons || [];
+  const maxEpisode = Math.max(...seasons.flatMap(season => season.episodes.map(episode => episode.episode)));
+  const bySeason = new Map(seasons.map(season => [
+    season.season,
+    new Map(season.episodes.map(episode => [episode.episode, episode]))
+  ]));
+  const rated = grid.ratedEpisodes || seasons.reduce((sum, season) => sum + season.episodes.filter(episode => episode.rating).length, 0);
+  const total = grid.totalEpisodes || seasons.reduce((sum, season) => sum + season.episodes.length, 0);
+  const sourceName = grid.sourceLabel || grid.source || "IMDb / TMDB";
+
+  const headerCells = [
+    `<div class="episode-grid-label"></div>`,
+    ...seasons.map(season => `<div class="episode-grid-label">S${season.season}</div>`)
+  ];
+  const bodyCells = [];
+  for (let episodeNumber = 1; episodeNumber <= maxEpisode; episodeNumber++) {
+    bodyCells.push(`<div class="episode-grid-label">E${episodeNumber}</div>`);
+    for (const season of seasons) {
+      const episode = bySeason.get(season.season)?.get(episodeNumber);
+      if (!episode) {
+        bodyCells.push(`<div class="episode-grid-cell empty" aria-label="لا توجد حلقة">—</div>`);
+        continue;
+      }
+      const rating = episode.rating;
+      const votes = formatVoteCount(episode.votes);
+      bodyCells.push(`
+        <div class="episode-grid-cell ${episodeGridRatingClass(rating)}"
+             title="S${season.season} E${episodeNumber}${votes ? ` · ${votes} صوت` : ""}">
+          ${rating ? rating.toFixed(1) : "—"}
+        </div>
+      `);
+    }
+  }
+  const avgCells = [
+    `<div class="episode-grid-label">AVG</div>`,
+    ...seasons.map(season => `
+      <div class="episode-grid-cell episode-grid-average ${episodeGridRatingClass(season.average)}"
+           title="متوسط الموسم ${season.season}">
+        ${season.average ? Number(season.average).toFixed(1) : "—"}
+      </div>
+    `)
+  ];
+
+  container.innerHTML = `
+    <div class="episode-grid-head">
+      <div>
+        <div class="episode-grid-title">📊 شبكة تقييمات الحلقات</div>
+        <div class="episode-grid-source">${escapeHtml(sourceName)} · ${rated} من ${total} حلقة لديها تقييم</div>
+      </div>
+    </div>
+    <div class="episode-grid-legend" aria-label="مفتاح ألوان التقييم">
+      <span><i style="background:#38bdf8"></i>9.6+</span>
+      <span><i style="background:#4ade80"></i>9.0+</span>
+      <span><i style="background:#a3e635"></i>8.0+</span>
+      <span><i style="background:#f2bd12"></i>7.0+</span>
+      <span><i style="background:#fb7a20"></i>6.0+</span>
+      <span><i style="background:#ef4444"></i>أقل</span>
+    </div>
+    <div class="episode-grid-scroll">
+      <div class="episode-grid-table" style="grid-template-columns: 44px repeat(${seasons.length}, minmax(72px, 1fr));">
+        ${headerCells.join("")}
+        ${bodyCells.join("")}
+        ${avgCells.join("")}
+      </div>
+    </div>
+  `;
+}
+
+async function loadModalEpisodeRatingsGrid(item, type) {
+  const container = document.getElementById("modalEpisodeRatingsGrid");
+  if (!container || type !== "tv") return;
+  try {
+    let grid = await fetchTmdbEpisodeGrid(item);
+    if (!grid) {
+      const imdbId = await resolveImdbTitleId(item, type);
+      if (imdbId) {
+        const imdbGrid = await imdbEpisodeGridFetch(imdbId);
+        grid = normalizeEpisodeGrid(imdbGrid, "IMDb public datasets");
+      }
+    }
+    if (!document.getElementById("modalEpisodeRatingsGrid")) return;
+    if (!grid) {
+      container.innerHTML = `<div class="episode-grid-state">لا توجد تقييمات حلقات كافية لهذا المسلسل.</div>`;
+      return;
+    }
+    renderEpisodeRatingsGrid(container, grid);
+  } catch(e) {
+    if (document.getElementById("modalEpisodeRatingsGrid")) {
+      container.innerHTML = `<div class="episode-grid-state">تعذر تحميل شبكة تقييمات الحلقات الآن.</div>`;
+    }
   }
 }
 
@@ -5600,7 +5999,8 @@ function renderModal(d, credits, type, videos) {
   const episodesText = episodeCountText(d.number_of_episodes);
   const watchedDateText = watched && watchedEntry ? `<div class="watched-date">شوهد بتاريخ ${new Date(watchedEntry.watched_at).toLocaleDateString('ar-EG')}</div>` : "";
   const imdbId = getImdbTitleId(d);
-  const imdbRatingMeta = imdbId
+  const canLoadImdbRating = imdbId || source === "tmdb" || (source === "tvmaze" && d.external_ids);
+  const imdbRatingMeta = canLoadImdbRating
     ? `<span class="imdb-rating-meta loading" id="modalImdbRating" data-imdb-id="${escapeHtml(imdbId)}">IMDb: جاري التحميل…</span>`
     : "";
 
@@ -5637,6 +6037,11 @@ function renderModal(d, credits, type, videos) {
       ${watchedDateText}
       <div class="genre-pills">${genres}</div>
       <p class="modal-overview">${escapeHtml(overview)}</p>
+      ${type === 'tv' ? `
+        <section class="episode-grid-section" id="modalEpisodeRatingsGrid">
+          <div class="episode-grid-state">جاري تحميل شبكة تقييمات الحلقات...</div>
+        </section>
+      ` : ''}
       ${cast.length ? `
         <h3 style="font-size:16px; margin-bottom:12px; font-weight:700;">طاقم العمل</h3>
         <div class="cast-row">
@@ -5703,7 +6108,8 @@ function renderModal(d, credits, type, videos) {
       cardBtn.textContent = cardBtn.classList.contains("active") ? "✔" : "👁";
     }
   });
-  loadModalImdbRating(d);
+  loadModalImdbRating(d, type);
+  loadModalEpisodeRatingsGrid(d, type);
   loadModalSimilarRecommendations(d, type, similarToken);
 }
 
