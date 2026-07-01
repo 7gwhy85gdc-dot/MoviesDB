@@ -10,6 +10,15 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="سينماتك">
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://api.themoviedb.org">
+<link rel="preconnect" href="https://image.tmdb.org">
+<link rel="preconnect" href="https://api.tvmaze.com">
+<link rel="preconnect" href="https://mydramalistunofficialapi.vercel.app">
+<link rel="dns-prefetch" href="//api.themoviedb.org">
+<link rel="dns-prefetch" href="//image.tmdb.org">
+<link rel="dns-prefetch" href="//api.tvmaze.com">
+<link rel="dns-prefetch" href="//mydramalistunofficialapi.vercel.app">
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -310,6 +319,9 @@
     border: 1px solid var(--border);
     cursor: pointer;
     transition: transform 0.3s cubic-bezier(.2,.8,.2,1), box-shadow 0.3s;
+    contain: layout paint style;
+    content-visibility: auto;
+    contain-intrinsic-block-size: 430px;
   }
   .grid .card { flex: initial; width: 100%; }
 
@@ -1680,6 +1692,7 @@ const GEMINI_MODEL = "gemini-2.5-flash";
 const TASTEDIVE_API_BASE = "https://tastedive.com/api/similar";
 const TASTEDIVE_PROXY_BASE = window.CINEMATEK_TASTEDIVE_PROXY_BASE || `${MDL_API_BASE}/api/tastedive/similar`;
 const IMDB_RATINGS_PROXY_BASE = window.CINEMATEK_IMDB_RATINGS_PROXY_BASE || `${MDL_API_BASE}/api/imdb/rating`;
+const IMDB_RATINGS_BATCH_PROXY_BASE = window.CINEMATEK_IMDB_RATINGS_BATCH_PROXY_BASE || `${MDL_API_BASE}/api/imdb/ratings`;
 const IMDB_EPISODE_GRID_PROXY_BASE = window.CINEMATEK_IMDB_EPISODE_GRID_PROXY_BASE || `${MDL_API_BASE}/api/imdb/episode-grid`;
 const IMG_BASE = "https://image.tmdb.org/t/p/w500";
 const BACKDROP_BASE = "https://image.tmdb.org/t/p/w1280";
@@ -1836,6 +1849,53 @@ function addImportedWatchItem(item, type, watchedAt) {
 
 const apiResponseCache = new Map();
 const apiPendingRequests = new Map();
+const PERSISTENT_CACHE_PREFIX = "cinematek_api_cache_v2:";
+const PERSISTENT_CACHE_INDEX_KEY = "cinematek_api_cache_v2_index";
+const PERSISTENT_CACHE_MAX_ITEMS = 140;
+const PERSISTENT_CACHE_MAX_CHARS = 240000;
+
+function cacheKeyForUrl(url) {
+  let hash = 0;
+  const input = String(url || "");
+  for (let i = 0; i < input.length; i++) {
+    hash = ((hash << 5) - hash + input.charCodeAt(i)) | 0;
+  }
+  return `${PERSISTENT_CACHE_PREFIX}${Math.abs(hash)}:${input.length}`;
+}
+
+function readPersistentCache(url) {
+  try {
+    const raw = localStorage.getItem(cacheKeyForUrl(url));
+    if (!raw) return null;
+    const cached = JSON.parse(raw);
+    if (!cached || cached.expiresAt <= Date.now()) {
+      localStorage.removeItem(cacheKeyForUrl(url));
+      return null;
+    }
+    return cached.data;
+  } catch(e) {
+    return null;
+  }
+}
+
+function writePersistentCache(url, data, ttl) {
+  try {
+    const key = cacheKeyForUrl(url);
+    const payload = JSON.stringify({ data, expiresAt: Date.now() + ttl });
+    if (payload.length > PERSISTENT_CACHE_MAX_CHARS) return;
+    localStorage.setItem(key, payload);
+    const index = JSON.parse(localStorage.getItem(PERSISTENT_CACHE_INDEX_KEY) || "[]")
+      .filter(item => item !== key);
+    index.unshift(key);
+    while (index.length > PERSISTENT_CACHE_MAX_ITEMS) {
+      const oldKey = index.pop();
+      if (oldKey) localStorage.removeItem(oldKey);
+    }
+    localStorage.setItem(PERSISTENT_CACHE_INDEX_KEY, JSON.stringify(index));
+  } catch(e) {
+    // Cache is an optimization only. Ignore quota/private-mode failures.
+  }
+}
 
 function cacheTtlForPath(path) {
   if (/\/(movie|tv|shows|id)\/[^/?]+/.test(path)) return 15 * 60 * 1000;
@@ -1844,12 +1904,19 @@ function cacheTtlForPath(path) {
 }
 
 async function fetchJsonCached(url, options = {}, ttl = 2 * 60 * 1000) {
+  const canSharePending = !options.signal;
   const cached = apiResponseCache.get(url);
   if (cached && cached.expiresAt > Date.now()) return cached.data;
+  if (canSharePending) {
+    const persistent = readPersistentCache(url);
+    if (persistent) {
+      apiResponseCache.set(url, { data: persistent, expiresAt: Date.now() + ttl });
+      return persistent;
+    }
+  }
 
   // Abortable search requests must remain independent so cancelling an old
   // search never cancels a newer consumer of the same URL.
-  const canSharePending = !options.signal;
   if (canSharePending && apiPendingRequests.has(url)) {
     return apiPendingRequests.get(url);
   }
@@ -1858,6 +1925,7 @@ async function fetchJsonCached(url, options = {}, ttl = 2 * 60 * 1000) {
     if (!response.ok) throw new Error(`API error ${response.status}`);
     const data = await response.json();
     apiResponseCache.set(url, { data, expiresAt: Date.now() + ttl });
+    if (canSharePending) writePersistentCache(url, data, ttl);
     return data;
   }).finally(() => {
     if (canSharePending) apiPendingRequests.delete(url);
@@ -1905,6 +1973,69 @@ async function imdbRatingsFetch(imdbId, { signal } = {}) {
     { signal },
     24 * 60 * 60 * 1000
   );
+}
+
+async function imdbRatingsBatchFetch(imdbIds, { signal } = {}) {
+  const ids = uniqueStrings(imdbIds || [])
+    .map(id => String(id || "").trim())
+    .filter(id => /^tt\d{7,12}$/.test(id))
+    .slice(0, 50);
+  if (!ids.length) return new Map();
+  const data = await fetchJsonCached(
+    `${IMDB_RATINGS_BATCH_PROXY_BASE}?ids=${encodeURIComponent(ids.join(","))}`,
+    { signal },
+    24 * 60 * 60 * 1000
+  );
+  const map = new Map();
+  (data?.results || []).forEach(rating => {
+    if (rating?.found && rating.imdb_id) map.set(rating.imdb_id, rating);
+  });
+  return map;
+}
+
+async function resolveListItemImdbId(item, type) {
+  const direct = getImdbTitleId(item);
+  if (direct) return direct;
+  if (itemSource(item) !== "tmdb" || !item?.id) return "";
+  const mediaType = item.media_type || item.type || type;
+  if (mediaType !== "movie" && mediaType !== "tv") return "";
+  const cacheKey = `cinematek_external_imdb_${mediaType}_${item.id}`;
+  try {
+    const cached = localStorage.getItem(cacheKey);
+    if (cached && /^tt\d{7,12}$/.test(cached)) return cached;
+  } catch(e) {}
+  try {
+    const externalIds = await tmdbFetch(`/${mediaType}/${item.id}/external_ids?language=en-US`);
+    const imdbId = getImdbTitleId({ external_ids: externalIds });
+    if (imdbId) {
+      try { localStorage.setItem(cacheKey, imdbId); } catch(e) {}
+    }
+    return imdbId || "";
+  } catch(e) {
+    return "";
+  }
+}
+
+async function enrichItemsWithImdbRatings(items, type = null) {
+  if (activeSort !== "rating-desc" || !Array.isArray(items) || !items.length) return items || [];
+  const candidates = items.slice(0, 30);
+  const pairs = await Promise.all(candidates.map(async item => ({
+    item,
+    imdbId: await resolveListItemImdbId(item, item.media_type || item.type || type)
+  })));
+  const ratingMap = await imdbRatingsBatchFetch(pairs.map(pair => pair.imdbId));
+  const byKey = new Map();
+  pairs.forEach(pair => {
+    const rating = ratingMap.get(pair.imdbId);
+    if (!rating) return;
+    byKey.set(pair.item, {
+      ...pair.item,
+      imdb_id: pair.imdbId,
+      imdb_average_rating: rating.averageRating,
+      imdb_num_votes: rating.numVotes
+    });
+  });
+  return items.map(item => byKey.get(item) || item);
 }
 
 function readEpisodeGridCache(cacheKey) {
@@ -2018,6 +2149,51 @@ const ASIAN_LANGUAGE_COUNTRY = {
 };
 sortSelect.value = activeSort;
 
+const TV_SPECIAL_CATEGORIES = [
+  {
+    id: "special:tv_short",
+    label: "مسلسلات قصيرة",
+    params: ["with_runtime.lte=35", "with_type=4"],
+    title: "مسلسلات قصيرة"
+  },
+  {
+    id: "special:tv_miniseries",
+    label: "ميني سيريز",
+    params: ["with_type=2"],
+    title: "ميني سيريز"
+  },
+  {
+    id: "special:tv_documentary",
+    label: "وثائقيات",
+    params: ["with_genres=99"],
+    title: "مسلسلات وثائقية"
+  },
+  {
+    id: "special:tv_crime",
+    label: "جريمة وتحقيق",
+    params: ["with_genres=80"],
+    title: "مسلسلات جريمة وتحقيق"
+  },
+  {
+    id: "special:tv_mystery",
+    label: "غموض",
+    params: ["with_genres=9648"],
+    title: "مسلسلات غموض"
+  },
+  {
+    id: "special:tv_sci_fi",
+    label: "خيال علمي وفانتازيا",
+    params: ["with_genres=10765"],
+    title: "مسلسلات خيال علمي وفانتازيا"
+  },
+  {
+    id: "special:tv_family",
+    label: "عائلية",
+    params: ["with_genres=10751"],
+    title: "مسلسلات عائلية"
+  }
+];
+
 // ---------- Theme ----------
 function initTheme() {
   const saved = localStorage.getItem("cinematek_theme") || "dark";
@@ -2047,7 +2223,7 @@ function emptyState(msg) {
 function posterImg(path, title) {
   if (path) {
     const src = /^https?:\/\//.test(path) ? path : `${IMG_BASE}${path}`;
-    return `<img src="${src}" alt="${escapeHtml(title)}" loading="lazy" decoding="async">`;
+    return `<img src="${src}" alt="${escapeHtml(title)}" loading="lazy" decoding="async" fetchpriority="low" referrerpolicy="no-referrer">`;
   }
   return `<div class="poster-placeholder">${escapeHtml(title)}</div>`;
 }
@@ -2079,11 +2255,49 @@ function compareTitles(a, b) {
   });
 }
 
-function applySort(items, sort = activeSort) {
+function imdbRatingValue(item) {
+  const value = Number(item?.imdb_average_rating ?? item?.imdb_rating ?? item?.averageRating);
+  return Number.isFinite(value) && value > 0 ? value : null;
+}
+
+function imdbVoteCountValue(item) {
+  const value = Number(item?.imdb_num_votes ?? item?.imdb_votes ?? item?.numVotes);
+  return Number.isFinite(value) && value > 0 ? value : null;
+}
+
+function ratingSortProfile(item, fallbackType = null) {
+  const type = item?.media_type || item?.type || fallbackType;
+  return type === "movie"
+    ? { minimumVotes: 1200, priorVotes: 3500, priorRating: 6.8 }
+    : { minimumVotes: 300, priorVotes: 900, priorRating: 6.8 };
+}
+
+function minimumRatingVotes(type) {
+  return type === "movie" ? 1200 : 300;
+}
+
+function ratingSortScore(item, fallbackType = null) {
+  const imdbRating = imdbRatingValue(item);
+  const imdbVotes = imdbVoteCountValue(item);
+  const rating = imdbRating ?? Number(item?.vote_average || 0);
+  const votes = imdbVotes ?? Number(item?.vote_count || 0);
+  if (!Number.isFinite(rating) || rating <= 0) return 0;
+
+  const profile = ratingSortProfile(item, fallbackType);
+  const weighted = ((votes * rating) + (profile.priorVotes * profile.priorRating)) / (votes + profile.priorVotes);
+  const lowVotePenalty = votes < profile.minimumVotes
+    ? ((profile.minimumVotes - votes) / profile.minimumVotes) * 1.15
+    : 0;
+  return weighted - lowVotePenalty;
+}
+
+function applySort(items, sort = activeSort, fallbackType = null) {
   if (!Array.isArray(items) || sort === "default") return [...(items || [])];
   return [...items].sort((a, b) => {
     if (sort === "rating-desc") {
-      return (b.vote_average || 0) - (a.vote_average || 0) ||
+      return ratingSortScore(b, fallbackType) - ratingSortScore(a, fallbackType) ||
+        (imdbVoteCountValue(b) || b.vote_count || 0) - (imdbVoteCountValue(a) || a.vote_count || 0) ||
+        (b.vote_average || 0) - (a.vote_average || 0) ||
         itemTimestamp(b) - itemTimestamp(a) ||
         compareTitles(a, b);
     }
@@ -3416,9 +3630,23 @@ async function handleRecommendationSubmit(event) {
 }
 
 const renderedItemCache = new Map();
+const RENDERED_ITEM_CACHE_LIMIT = 1600;
 
 function renderedItemKey(id, type, source = "tmdb") {
   return `${source}:${type}:${id}`;
+}
+
+function rememberRenderedItem(item, type, source) {
+  renderedItemCache.set(renderedItemKey(item.id, type, source), item);
+  if (renderedItemCache.size > RENDERED_ITEM_CACHE_LIMIT) {
+    const overflow = renderedItemCache.size - RENDERED_ITEM_CACHE_LIMIT;
+    let removed = 0;
+    for (const key of renderedItemCache.keys()) {
+      renderedItemCache.delete(key);
+      removed++;
+      if (removed >= overflow) break;
+    }
+  }
 }
 
 function cardHtml(item, type) {
@@ -3428,14 +3656,17 @@ function cardHtml(item, type) {
   const showSecondaryTitle = !!secondaryTitle;
   const originalTitle = item.original_title || item.original_name || displayTitle;
   const arabicTitle = getArabicTitle(item);
-  const rating = item.vote_average ? item.vote_average.toFixed(1) : "—";
+  const displayRating = imdbRatingValue(item) ?? Number(item.vote_average || 0);
+  const rating = displayRating ? displayRating.toFixed(1) : "—";
   const source = itemSource(item);
-  renderedItemCache.set(renderedItemKey(item.id, type, source), item);
+  rememberRenderedItem(item, type, source);
   const fav = isFavorite(item.id, type, source);
   const queued = isInWatchlist(item.id, type, source);
   const watched = isWatched(item.id, type, source);
   const posterPath = item.poster_url || item.poster_path || "";
   const dateVal = item.release_date || item.first_air_date || "";
+  const genreIds = contentGenreIds(item).join(",");
+  const countries = (item.origin_country || []).join(",");
   const knownSourceStatus = item.in_production === true || item.in_production === false;
   const sourceBadge = source === "tvmaze" || source === "mdl"
     ? `<div class="status-badge ${knownSourceStatus ? (item.in_production ? 'ongoing' : 'ended') : ''} show"
@@ -3457,9 +3688,9 @@ function cardHtml(item, type) {
           data-fav-poster="${posterPath}"
           data-fav-rating="${item.vote_average || 0}"
           data-fav-date="${dateVal}"
-          data-fav-genres="${contentGenreIds(item).join(',')}"
+          data-fav-genres="${genreIds}"
           data-fav-language="${escapeHtml(item.original_language || '')}"
-          data-fav-countries="${escapeHtml((item.origin_country || []).join(','))}"
+          data-fav-countries="${escapeHtml(countries)}"
           aria-label="إضافة للمفضلة">${fav ? '♥' : '♡'}</button>
         <button class="watchlist-btn ${queued ? 'active' : ''}"
           data-watchlist-id="${item.id}" data-watchlist-type="${type}" data-watchlist-source="${source}"
@@ -3469,9 +3700,9 @@ function cardHtml(item, type) {
           data-watchlist-poster="${posterPath}"
           data-watchlist-rating="${item.vote_average || 0}"
           data-watchlist-date="${dateVal}"
-          data-watchlist-genres="${contentGenreIds(item).join(',')}"
+          data-watchlist-genres="${genreIds}"
           data-watchlist-language="${escapeHtml(item.original_language || '')}"
-          data-watchlist-countries="${escapeHtml((item.origin_country || []).join(','))}"
+          data-watchlist-countries="${escapeHtml(countries)}"
           aria-label="إضافة لقائمة المشاهدة" title="قائمة المشاهدة">${queued ? '✓' : '＋'}</button>
         ${type === 'tv' ? sourceBadge : ''}
         <button class="watched-btn ${watched ? 'active' : ''}"
@@ -3482,9 +3713,9 @@ function cardHtml(item, type) {
           data-watched-poster="${posterPath}"
           data-watched-rating="${item.vote_average || 0}"
           data-watched-date="${dateVal}"
-          data-watched-genres="${contentGenreIds(item).join(',')}"
+          data-watched-genres="${genreIds}"
           data-watched-language="${escapeHtml(item.original_language || '')}"
-          data-watched-countries="${escapeHtml((item.origin_country || []).join(','))}"
+          data-watched-countries="${escapeHtml(countries)}"
           aria-label="تمت المشاهدة" title="تمت المشاهدة">${watched ? '✔' : '👁'}</button>
       </div>
       <div class="card-info">
@@ -3502,7 +3733,7 @@ function filterAllowedContent(items) {
 }
 
 function rowHtml(titleText, items, type, id = "") {
-  items = applySort(filterAllowedContent(items));
+  items = applySort(filterAllowedContent(items), activeSort, type);
   if (!items || items.length === 0) return "";
   return `
     <h2 class="section-title">${titleText}</h2>
@@ -3513,13 +3744,13 @@ function rowHtml(titleText, items, type, id = "") {
 }
 
 function gridHtml(items, type) {
-  items = applySort(filterAllowedContent(items));
+  items = applySort(filterAllowedContent(items), activeSort, type);
   if (!items || items.length === 0) return emptyState("لا توجد نتائج");
   return `<div class="grid">${items.map(i => cardHtml(i, type)).join("")}</div>`;
 }
 
 function gridContainerHtml(items, type, id) {
-  items = applySort(filterAllowedContent(items));
+  items = applySort(filterAllowedContent(items), activeSort, type);
   if (!items || items.length === 0) return `<div class="grid" id="${id}"></div>`;
   return `<div class="grid" id="${id}">${items.map(i => cardHtml(i, type)).join("")}</div>`;
 }
@@ -3557,7 +3788,7 @@ function appendCards(containerId, items, type) {
 function replaceCards(containerId, items, type = null) {
   const container = document.getElementById(containerId);
   if (!container) return;
-  const sortedItems = applySort(filterAllowedContent(items));
+  const sortedItems = applySort(filterAllowedContent(items), activeSort, type);
   container.innerHTML = sortedItems.map(item =>
     cardHtml(item, type || item.media_type || item.type)
   ).join("");
@@ -3793,7 +4024,20 @@ const mdlStatusObserver = "IntersectionObserver" in window
     }, { rootMargin: "250px" })
   : null;
 
+function scheduleIdleWork(callback, timeout = 600) {
+  if ("requestIdleCallback" in window) {
+    window.requestIdleCallback(callback, { timeout });
+  } else {
+    requestAnimationFrame(callback);
+  }
+}
+
+let tvStatusScanScheduled = false;
 function loadVisibleTvStatuses() {
+  if (tvStatusScanScheduled) return;
+  tvStatusScanScheduled = true;
+  scheduleIdleWork(() => {
+    tvStatusScanScheduled = false;
   document.querySelectorAll(".status-badge[data-status-for]").forEach(badge => {
     if (tvStatusObserver) tvStatusObserver.observe(badge);
     else queueTvStatus(badge);
@@ -3801,6 +4045,7 @@ function loadVisibleTvStatuses() {
   document.querySelectorAll(".status-badge[data-mdl-status-for]").forEach(badge => {
     if (mdlStatusObserver) mdlStatusObserver.observe(badge);
     else queueMdlStatus(badge);
+  });
   });
 }
 
@@ -3926,10 +4171,32 @@ async function loadGenres() {
     movieGenreSelect.innerHTML = `<option value="">تصنيف الأفلام...</option>` +
       movieG.genres.map(g => `<option value="${g.id}">${escapeHtml(g.name)}</option>`).join("");
     tvGenreSelect.innerHTML = `<option value="">تصنيف المسلسلات...</option>` +
-      tvG.genres.map(g => `<option value="${g.id}">${escapeHtml(g.name)}</option>`).join("");
+      `<optgroup label="تصنيفات خاصة">` +
+      TV_SPECIAL_CATEGORIES.map(g => `<option value="${g.id}">${escapeHtml(g.label)}</option>`).join("") +
+      `</optgroup>` +
+      `<optgroup label="تصنيفات TMDB">` +
+      tvG.genres.map(g => `<option value="${g.id}">${escapeHtml(g.name)}</option>`).join("") +
+      `</optgroup>`;
   } catch(e) {
     console.error("فشل تحميل التصنيفات", e);
   }
+}
+
+function tvSpecialCategory(id) {
+  return TV_SPECIAL_CATEGORIES.find(category => category.id === id) || null;
+}
+
+function activeTvSpecialCategory() {
+  if (!activeGenreFilter || activeGenreFilter.type !== "tv") return null;
+  return tvSpecialCategory(activeGenreFilter.id);
+}
+
+function activeGenreLabel(type, id) {
+  if (type === "tv") {
+    const special = tvSpecialCategory(id);
+    if (special) return special.title || special.label;
+  }
+  return type === "movie" ? movieGenres[id] : tvGenres[id];
 }
 
 // ---------- Year range slider ----------
@@ -4028,7 +4295,7 @@ sortSelect.addEventListener("change", () => {
   if (query) {
     doSearch(query);
   } else {
-    renderTab(currentTab);
+    applyCurrentFilters();
   }
 });
 
@@ -4069,11 +4336,14 @@ function filterForCurrentTab(items, type = null, tab = currentTab) {
 
 function buildDiscoverQuery(type) {
   const params = [`language=en-US`, `sort_by=${tmdbSortValue(type)}`];
-  if (activeSort === "rating-desc") params.push("vote_count.gte=20");
+  if (activeSort === "rating-desc") params.push(`vote_count.gte=${minimumRatingVotes(type)}`);
   // TMDB already receives include_adult=false in tmdbFetch(). Do not cap movies
   // at PG-13 here; many normal non-adult films are R/18+ because of violence,
   // horror, language, or mature themes.
-  if (activeGenreFilter && activeGenreFilter.type === type) {
+  const specialTvCategory = type === "tv" ? activeTvSpecialCategory() : null;
+  if (specialTvCategory) {
+    params.push(...specialTvCategory.params);
+  } else if (activeGenreFilter && activeGenreFilter.type === type) {
     params.push(`with_genres=${activeGenreFilter.id}`);
   }
   if (activeYearFilter) {
@@ -4090,7 +4360,7 @@ function buildDiscoverQuery(type) {
     params.push(`with_origin_country=${countries}`);
     // Extra safety net: TMDB's adult flag is unreliable for some regional content,
     // so also require a minimum vote count — low-effort/explicit listings rarely clear this bar.
-    params.push(`vote_count.gte=20`);
+    if (activeSort !== "rating-desc") params.push(`vote_count.gte=20`);
   }
   return params.join("&");
 }
@@ -4524,7 +4794,7 @@ async function renderByGenre() {
   if (!activeGenreFilter) return;
   main.innerHTML = loadingState();
   const { id, type } = activeGenreFilter;
-  const genreName = type === "movie" ? movieGenres[id] : tvGenres[id];
+  const genreName = activeGenreLabel(type, id);
   const yearSuffix = activeYearFilter ? ` (${activeYearFilter.min}–${activeYearFilter.max})` : "";
   try {
     const endpoint = `/discover/${type}?${buildDiscoverQuery(type)}`;
@@ -4532,7 +4802,8 @@ async function renderByGenre() {
       tmdbFetch(endpoint),
       fetchArabicList(endpoint)
     ]);
-    const items = filterForCurrentTab(mergeArabicTitles(data.results, arabicResults), type);
+    let items = filterForCurrentTab(mergeArabicTitles(data.results, arabicResults), type);
+    items = await enrichItemsWithImdbRatings(items, type);
     paginationState = {
       mode: "single", page: 1, totalPages: data.total_pages || 1,
       endpoint, type, items, containerId: "pagedGrid"
@@ -4558,8 +4829,12 @@ async function renderByYearOnly() {
       fetchArabicList(movieEndpoint),
       fetchArabicList(tvEndpoint)
     ]);
-    const movieItems = currentTab === "movies" ? filterForCurrentTab(mergeArabicTitles(movies.results, arabicMovies), "movie", "movies") : filterAllowedContent(mergeArabicTitles(movies.results, arabicMovies));
-    const tvItems = currentTab === "tv" ? filterForCurrentTab(mergeArabicTitles(tv.results, arabicTv), "tv", "tv") : filterAllowedContent(mergeArabicTitles(tv.results, arabicTv));
+    let movieItems = currentTab === "movies" ? filterForCurrentTab(mergeArabicTitles(movies.results, arabicMovies), "movie", "movies") : filterAllowedContent(mergeArabicTitles(movies.results, arabicMovies));
+    let tvItems = currentTab === "tv" ? filterForCurrentTab(mergeArabicTitles(tv.results, arabicTv), "tv", "tv") : filterAllowedContent(mergeArabicTitles(tv.results, arabicTv));
+    [movieItems, tvItems] = await Promise.all([
+      enrichItemsWithImdbRatings(movieItems, "movie"),
+      enrichItemsWithImdbRatings(tvItems, "tv")
+    ]);
     paginationState = {
       mode: "dual", moviePage: 1, tvPage: 1,
       movieEndpoint,
@@ -4627,11 +4902,12 @@ async function renderAsianTab(type = tabContentType()) {
       tmdbFetch(endpoint),
       fetchArabicList(endpoint)
     ]);
-    const items = filterForCurrentTab(
+    let items = filterForCurrentTab(
       mergeArabicTitles(data.results, arabicResults),
       type,
       isMovies ? "asianMovies" : "asianTv"
     );
+    items = await enrichItemsWithImdbRatings(items, type);
     paginationState = {
       mode: "single", page: 1, totalPages: data.total_pages || 1,
       endpoint, type, items, containerId: "pagedGrid"
@@ -4701,7 +4977,8 @@ async function renderTab(tab) {
         tmdbFetch(endpoint),
         fetchArabicList(endpoint)
       ]);
-      const items = filterForCurrentTab(mergeArabicTitles(data.results, arabicResults), "movie", "movies");
+      let items = filterForCurrentTab(mergeArabicTitles(data.results, arabicResults), "movie", "movies");
+      items = await enrichItemsWithImdbRatings(items, "movie");
       paginationState = {
         mode: "single", page: 1, totalPages: data.total_pages || 1,
         endpoint, type: "movie", items, containerId: "pagedGrid"
@@ -4721,7 +4998,8 @@ async function renderTab(tab) {
         tmdbFetch(endpoint),
         fetchArabicList(endpoint)
       ]);
-      const items = filterForCurrentTab(mergeArabicTitles(data.results, arabicResults), "tv", "tv");
+      let items = filterForCurrentTab(mergeArabicTitles(data.results, arabicResults), "tv", "tv");
+      items = await enrichItemsWithImdbRatings(items, "tv");
       paginationState = {
         mode: "single", page: 1, totalPages: data.total_pages || 1,
         endpoint, type: "tv", items, containerId: "pagedGrid"
@@ -5278,9 +5556,10 @@ async function doSearch(query) {
       }
 
       if (preferredResults.length) {
+        preferredResults = await enrichItemsWithImdbRatings(preferredResults, wantedType);
         preferredResults = activeSort === "default"
           ? rankSearchResults(uniqueItems([], preferredResults), query)
-          : applySort(uniqueItems([], preferredResults));
+          : applySort(uniqueItems([], preferredResults), activeSort, wantedType);
         paginationState = null;
         main.innerHTML =
           `<h2 class="section-title">نتائج البحث عن "${escapeHtml(query)}" <span class="count">(${preferredResults.length}) · ${sourceLabel}</span></h2>` +
@@ -5331,9 +5610,10 @@ async function doSearch(query) {
     });
 
     results = filterForCurrentTab(results, wantedType);
+    results = await enrichItemsWithImdbRatings(results, wantedType);
     results = activeSort === "default"
       ? rankSearchResults(uniqueItems([], results), query)
-      : applySort(uniqueItems([], results));
+      : applySort(uniqueItems([], results), activeSort, wantedType);
 
     let yearSuffix = "";
     if (activeYearFilter) {
@@ -5399,7 +5679,8 @@ async function loadMoreResults(stream, button) {
         tmdbFetch(pageEndpoint),
         fetchArabicList(pageEndpoint)
       ]);
-      const incoming = uniqueItems(state[config.itemsKey], filterAllowedContent(mergeArabicTitles(data.results, arabicResults)));
+      let incoming = uniqueItems(state[config.itemsKey], filterAllowedContent(mergeArabicTitles(data.results, arabicResults)));
+      incoming = await enrichItemsWithImdbRatings(incoming, config.type);
       state[config.itemsKey].push(...incoming);
       state[config.pageKey] = nextPage;
       state[config.totalKey] = data.total_pages || state[config.totalKey];
@@ -5429,7 +5710,8 @@ async function loadMoreResults(stream, button) {
         tmdbFetch(pageEndpoint),
         fetchArabicList(pageEndpoint)
       ]);
-      const incoming = uniqueItems(state.items, filterForCurrentTab(mergeArabicTitles(data.results, arabicResults), state.type));
+      let incoming = uniqueItems(state.items, filterForCurrentTab(mergeArabicTitles(data.results, arabicResults), state.type));
+      incoming = await enrichItemsWithImdbRatings(incoming, state.type);
       state.items.push(...incoming);
       state.page = nextPage;
       state.totalPages = data.total_pages || state.totalPages;
@@ -5446,18 +5728,19 @@ async function loadMoreResults(stream, button) {
       const totalKey = isMovies ? "movieTotalPages" : "tvTotalPages";
       const endpoint = isMovies ? state.movieEndpoint : state.tvEndpoint;
       const items = isMovies ? state.movieItems : state.tvItems;
+      const targetContainer = isMovies ? "moviesGrid" : "tvGrid";
+      const targetType = isMovies ? "movie" : "tv";
       const nextPage = state[pageKey] + 1;
       const pageEndpoint = addPageParam(endpoint, nextPage);
       const [data, arabicResults] = await Promise.all([
         tmdbFetch(pageEndpoint),
         fetchArabicList(pageEndpoint)
       ]);
-      const incoming = uniqueItems(items, filterAllowedContent(mergeArabicTitles(data.results, arabicResults)));
+      let incoming = uniqueItems(items, filterAllowedContent(mergeArabicTitles(data.results, arabicResults)));
+      incoming = await enrichItemsWithImdbRatings(incoming, targetType);
       items.push(...incoming);
       state[pageKey] = nextPage;
       state[totalKey] = data.total_pages || state[totalKey];
-      const targetContainer = isMovies ? "moviesGrid" : "tvGrid";
-      const targetType = isMovies ? "movie" : "tv";
       if (activeSort === "default") {
         appendCards(targetContainer, incoming, targetType);
       } else {
@@ -5501,6 +5784,7 @@ async function loadMoreResults(stream, button) {
         });
       }
       incoming = uniqueItems(state.items, incoming);
+      incoming = await enrichItemsWithImdbRatings(incoming, state.wantedType);
       state.items.push(...incoming);
       state.page = nextPage;
       state.totalPages = data.total_pages || state.totalPages;
