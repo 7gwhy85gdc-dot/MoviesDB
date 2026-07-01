@@ -131,6 +131,29 @@
   }
   .icon-btn:hover { background: var(--card-hover); transform: scale(1.06); }
   .icon-btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+  .icon-btn.cache-reset-btn { font-size: 16px; }
+  .cache-toast {
+    position: fixed;
+    top: 18px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-12px);
+    z-index: 300;
+    background: rgba(20, 25, 37, 0.96);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: 0 16px 38px var(--shadow);
+    padding: 12px 16px;
+    font-size: 13px;
+    font-weight: 700;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+  .cache-toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
 
   .nav-tabs {
     display: flex;
@@ -1590,6 +1613,7 @@
   <div class="header-row">
     <div class="logo">🎬 سينما<span class="accent">تك</span></div>
     <div class="header-actions">
+      <button class="icon-btn cache-reset-btn" id="cacheResetBtn" aria-label="مسح كاش البيانات" title="مسح كاش البيانات فقط بدون حذف المحفوظات">🧹</button>
       <button class="icon-btn" id="themeToggle" aria-label="تبديل المظهر" title="تبديل المظهر الفاتح/الغامق">🌙</button>
     </div>
   </div>
@@ -1656,6 +1680,7 @@
     <button class="year-filter-apply" id="yearApplyBtn">تطبيق نطاق السنوات</button>
   </div>
 </header>
+<div class="cache-toast" id="cacheToast" role="status" aria-live="polite"></div>
 
 <main id="mainContent">
   <!-- content injected by JS -->
@@ -2102,6 +2127,8 @@ const header = document.querySelector("header");
 const navTabs = document.getElementById("navTabs");
 const searchInput = document.getElementById("searchInput");
 const themeToggle = document.getElementById("themeToggle");
+const cacheResetBtn = document.getElementById("cacheResetBtn");
+const cacheToast = document.getElementById("cacheToast");
 const modalOverlay = document.getElementById("modalOverlay");
 const modalContent = document.getElementById("modalContent");
 
@@ -2208,6 +2235,58 @@ themeToggle.addEventListener("click", () => {
   themeToggle.textContent = next === "dark" ? "🌙" : "☀️";
 });
 initTheme();
+
+// ---------- Cache reset ----------
+let cacheToastTimer = null;
+
+function showCacheToast(message) {
+  if (!cacheToast) return;
+  cacheToast.textContent = message;
+  cacheToast.classList.add("show");
+  clearTimeout(cacheToastTimer);
+  cacheToastTimer = setTimeout(() => {
+    cacheToast.classList.remove("show");
+  }, 2600);
+}
+
+function clearDataCacheOnly() {
+  const cachePrefixes = [
+    PERSISTENT_CACHE_PREFIX,
+    "cinematek_episode_grid_imdb_",
+    "cinematek_episode_grid_tmdb_",
+    "cinematek_external_imdb_"
+  ];
+  const cacheExactKeys = new Set([
+    PERSISTENT_CACHE_INDEX_KEY,
+    "cinematek_arabic_descriptions"
+  ]);
+  let removed = 0;
+
+  try {
+    const keys = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key) keys.push(key);
+    }
+    keys.forEach(key => {
+      if (cacheExactKeys.has(key) || cachePrefixes.some(prefix => key.startsWith(prefix))) {
+        localStorage.removeItem(key);
+        removed++;
+      }
+    });
+  } catch(e) {}
+
+  apiResponseCache.clear();
+  apiPendingRequests.clear();
+  Object.keys(arabicDescriptionCache).forEach(key => delete arabicDescriptionCache[key]);
+  Object.keys(tvStatusCache || {}).forEach(key => delete tvStatusCache[key]);
+  Object.keys(mdlStatusCache || {}).forEach(key => delete mdlStatusCache[key]);
+  renderedItemCache.clear();
+
+  showCacheToast(`تم مسح كاش البيانات فقط${removed ? ` (${removed})` : ""} — المحفوظات لم تتأثر`);
+}
+
+cacheResetBtn?.addEventListener("click", clearDataCacheOnly);
 
 // ---------- Helpers ----------
 function loadingState() {
