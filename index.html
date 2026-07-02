@@ -132,6 +132,102 @@
   .icon-btn:hover { background: var(--card-hover); transform: scale(1.06); }
   .icon-btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
   .icon-btn.cache-reset-btn { font-size: 16px; }
+  .account-chip {
+    min-height: 42px;
+    border-radius: 999px;
+    padding: 0 14px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 900;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.2s, transform 0.15s, border-color 0.2s;
+  }
+  .account-chip:hover { background: var(--card-hover); border-color: var(--gold); transform: translateY(-1px); }
+  .account-chip .sync-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #94a3b8;
+    box-shadow: 0 0 0 3px rgba(148,163,184,0.14);
+  }
+  .account-chip.signed .sync-dot { background: #4ade80; box-shadow: 0 0 0 3px rgba(74,222,128,0.16); }
+  .account-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 260;
+    background: rgba(0,0,0,0.62);
+    backdrop-filter: blur(10px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+  }
+  .account-modal.show { display: flex; }
+  .account-card {
+    width: min(520px, 100%);
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    box-shadow: 0 28px 80px var(--shadow);
+    padding: 22px;
+  }
+  .account-card h3 {
+    margin: 0 0 8px;
+    font-size: 24px;
+  }
+  .account-card p {
+    margin: 0 0 16px;
+    color: var(--text-muted);
+    line-height: 1.8;
+    font-size: 14px;
+  }
+  .account-field {
+    width: 100%;
+    margin-bottom: 10px;
+    padding: 14px 15px;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    font: inherit;
+    font-weight: 800;
+    outline: none;
+  }
+  .account-field:focus { border-color: var(--gold); }
+  .account-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+  }
+  .account-action {
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 12px 16px;
+    background: var(--card-hover);
+    color: var(--text);
+    font: inherit;
+    font-weight: 900;
+    cursor: pointer;
+  }
+  .account-action.primary {
+    background: var(--gold-grad);
+    color: #111827;
+    border-color: transparent;
+  }
+  .account-action.danger { color: #fecaca; }
+  .account-status {
+    min-height: 22px;
+    margin-top: 12px;
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 800;
+  }
   .cache-toast {
     position: fixed;
     top: 18px;
@@ -1965,6 +2061,9 @@
   <div class="header-row">
     <div class="logo">🎬 سينما<span class="accent">تك</span></div>
     <div class="header-actions">
+      <button class="account-chip" id="accountBtn" type="button" title="حساب سينماتك والمزامنة">
+        <span class="sync-dot"></span><span id="accountLabel">دخول</span>
+      </button>
       <button class="icon-btn cache-reset-btn" id="cacheResetBtn" aria-label="مسح كاش البيانات" title="مسح كاش البيانات فقط بدون حذف المحفوظات">🧹</button>
       <button class="icon-btn" id="themeToggle" aria-label="تبديل المظهر" title="تبديل المظهر الفاتح/الغامق">🌙</button>
     </div>
@@ -2034,6 +2133,23 @@
   </div>
 </header>
 <div class="cache-toast" id="cacheToast" role="status" aria-live="polite"></div>
+<div class="account-modal" id="accountModal" role="dialog" aria-modal="true" aria-label="حساب سينماتك">
+  <div class="account-card">
+    <h3>حساب سينماتك</h3>
+    <p id="accountIntro">سجّل دخولك لحفظ المفضلة، قائمة المشاهدة، سجل المشاهدة، متابعة الحلقات، ونتائج اختبار الشخصية في الباكند بدل المتصفح فقط.</p>
+    <input class="account-field" id="accountNameInput" autocomplete="name" placeholder="الاسم - مطلوب عند إنشاء حساب جديد">
+    <input class="account-field" id="accountEmailInput" type="email" autocomplete="email" placeholder="البريد الإلكتروني">
+    <input class="account-field" id="accountPasswordInput" type="password" autocomplete="current-password" placeholder="كلمة المرور">
+    <div class="account-actions">
+      <button class="account-action primary" id="accountLoginBtn" type="button">دخول</button>
+      <button class="account-action" id="accountSignupBtn" type="button">إنشاء حساب</button>
+      <button class="account-action" id="accountSyncBtn" type="button">مزامنة الآن</button>
+      <button class="account-action danger" id="accountLogoutBtn" type="button">خروج</button>
+      <button class="account-action" id="accountCloseBtn" type="button">إغلاق</button>
+    </div>
+    <div class="account-status" id="accountStatus"></div>
+  </div>
+</div>
 
 <main id="mainContent">
   <!-- content injected by JS -->
@@ -2087,6 +2203,7 @@ try {
 
 function saveFavorites() {
   localStorage.setItem("cinematek_favorites", JSON.stringify(favorites));
+  cloudScheduleSync();
 }
 
 function itemSource(item) {
@@ -2136,6 +2253,7 @@ try {
 
 function saveWatchlist() {
   localStorage.setItem("cinematek_watchlist", JSON.stringify(watchlist));
+  cloudScheduleSync();
 }
 
 function isInWatchlist(id, type, source = "tmdb") {
@@ -2197,6 +2315,7 @@ let trackerHydrationContinue = false;
 
 function saveWatchHistory() {
   localStorage.setItem("cinematek_history", JSON.stringify(watchHistory));
+  cloudScheduleSync();
 }
 
 function loadEpisodeTracking() {
@@ -2217,8 +2336,225 @@ function loadEpisodeTracking() {
 function saveEpisodeTracking() {
   try {
     localStorage.setItem(EPISODE_TRACKING_STORAGE_KEY, JSON.stringify(episodeTracking));
+    cloudScheduleSync();
   } catch(e) {
     showCacheToast("تعذر حفظ بيانات تتبع الحلقات؛ مساحة المتصفح قد تكون ممتلئة.");
+  }
+}
+
+// ---------- Cloud account sync ----------
+const AUTH_TOKEN_KEY = "cinematek_auth_token";
+const AUTH_USER_KEY = "cinematek_auth_user";
+const CLOUD_SYNC_AT_KEY = "cinematek_cloud_sync_at";
+let authToken = localStorage.getItem(AUTH_TOKEN_KEY) || "";
+let authUser = null;
+try { authUser = JSON.parse(localStorage.getItem(AUTH_USER_KEY) || "null"); } catch(e) { authUser = null; }
+let cloudSyncTimer = null;
+let cloudSyncInFlight = false;
+let cloudApplyingRemote = false;
+
+function updateAccountUi(message = "") {
+  if (!accountBtn || !accountLabel) return;
+  accountBtn.classList.toggle("signed", !!authToken && !!authUser);
+  accountLabel.textContent = authUser?.name ? authUser.name : "دخول";
+  if (accountStatus && message) accountStatus.textContent = message;
+  if (accountLogoutBtn) accountLogoutBtn.style.display = authToken ? "" : "none";
+  if (accountSyncBtn) accountSyncBtn.style.display = authToken ? "" : "none";
+}
+
+function setAuthSession(payload = {}) {
+  authToken = payload.token || "";
+  authUser = payload.user || null;
+  if (authToken) localStorage.setItem(AUTH_TOKEN_KEY, authToken);
+  else localStorage.removeItem(AUTH_TOKEN_KEY);
+  if (authUser) localStorage.setItem(AUTH_USER_KEY, JSON.stringify(authUser));
+  else localStorage.removeItem(AUTH_USER_KEY);
+  updateAccountUi();
+}
+
+async function accountApi(path, options = {}) {
+  const headers = {
+    "Content-Type": "application/json",
+    ...(options.headers || {})
+  };
+  if (authToken) headers.Authorization = `Bearer ${authToken}`;
+  const res = await fetch(`${CINEMATEK_BACKEND}${path}`, {
+    ...options,
+    headers
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || data.message || "تعذر الاتصال بالباكند");
+  return data;
+}
+
+function uniqueContentItems(items = []) {
+  const map = new Map();
+  items.filter(Boolean).forEach(item => {
+    const key = `${itemSource(item)}:${item.type}:${item.id}`;
+    map.set(key, { ...(map.get(key) || {}), ...item });
+  });
+  return [...map.values()];
+}
+
+function mergePersonalityProfiles(localProfiles = [], remoteProfiles = []) {
+  const map = new Map();
+  [...remoteProfiles, ...localProfiles].filter(Boolean).forEach(profile => {
+    const key = normalizeProfileName(profile.name || profile.id || "").toLowerCase() || profile.id || `profile_${Date.now()}_${map.size}`;
+    const old = map.get(key);
+    if (!old || Date.parse(profile.updated_at || 0) >= Date.parse(old.updated_at || 0)) map.set(key, profile);
+  });
+  return [...map.values()].slice(0, 20);
+}
+
+function mergeEpisodeTracking(localData, remoteData) {
+  const result = {
+    shows: mergeTrackerShows(remoteData?.shows || [], localData?.shows || []),
+    movies: uniqueContentItems([...(remoteData?.movies || []), ...(localData?.movies || [])]),
+    lists: [...(remoteData?.lists || []), ...(localData?.lists || [])].slice(0, 1000),
+    imported_at: localData?.imported_at || remoteData?.imported_at || "",
+    source: localData?.source || remoteData?.source || remoteData?.imported_from || ""
+  };
+  return result;
+}
+
+function collectCloudState() {
+  return {
+    version: 1,
+    saved_at: new Date().toISOString(),
+    favorites,
+    watchlist,
+    watchHistory,
+    episodeTracking,
+    personalityProfiles: loadPersonalityProfiles(),
+    preferences: {
+      theme: document.body.getAttribute("data-theme") || localStorage.getItem("cinematek_theme") || "dark",
+      sort: activeSort
+    }
+  };
+}
+
+function applyCloudState(remoteData = {}) {
+  if (!remoteData || typeof remoteData !== "object") return;
+  cloudApplyingRemote = true;
+  try {
+    favorites = uniqueContentItems([...(remoteData.favorites || []), ...favorites]);
+    watchlist = uniqueContentItems([...(remoteData.watchlist || []), ...watchlist]);
+    watchHistory = uniqueContentItems([...(remoteData.watchHistory || []), ...watchHistory])
+      .sort((a, b) => (Date.parse(b.watched_at || 0) || 0) - (Date.parse(a.watched_at || 0) || 0));
+    episodeTracking = mergeEpisodeTracking(episodeTracking, remoteData.episodeTracking || {});
+    const profiles = mergePersonalityProfiles(loadPersonalityProfiles(), remoteData.personalityProfiles || []);
+
+    localStorage.setItem("cinematek_favorites", JSON.stringify(favorites));
+    localStorage.setItem("cinematek_watchlist", JSON.stringify(watchlist));
+    localStorage.setItem("cinematek_history", JSON.stringify(watchHistory));
+    localStorage.setItem(EPISODE_TRACKING_STORAGE_KEY, JSON.stringify(episodeTracking));
+    localStorage.setItem("cinematek_personality_profiles", JSON.stringify(profiles));
+
+    if (remoteData.preferences?.theme && !localStorage.getItem("cinematek_theme")) {
+      localStorage.setItem("cinematek_theme", remoteData.preferences.theme);
+      document.body.setAttribute("data-theme", remoteData.preferences.theme);
+    }
+    if (remoteData.preferences?.sort && SORT_OPTIONS.has(remoteData.preferences.sort)) {
+      activeSort = remoteData.preferences.sort;
+      localStorage.setItem("cinematek_sort", activeSort);
+      if (sortSelect) sortSelect.value = activeSort;
+    }
+  } finally {
+    cloudApplyingRemote = false;
+  }
+}
+
+function cloudScheduleSync(delay = 900) {
+  if (cloudApplyingRemote || !authToken || !CINEMATEK_BACKEND) return;
+  clearTimeout(cloudSyncTimer);
+  cloudSyncTimer = setTimeout(() => cloudSyncNow(false), delay);
+}
+
+async function cloudSyncNow(showMessage = true) {
+  if (!authToken || !CINEMATEK_BACKEND || cloudSyncInFlight) return;
+  cloudSyncInFlight = true;
+  try {
+    const data = collectCloudState();
+    const result = await accountApi("/api/user-data", {
+      method: "PUT",
+      body: JSON.stringify({ data })
+    });
+    localStorage.setItem(CLOUD_SYNC_AT_KEY, result.updated_at || new Date().toISOString());
+    updateAccountUi(showMessage ? "تمت المزامنة مع الباكند." : "");
+    if (showMessage) showCacheToast("تم حفظ بياناتك في الحساب.");
+  } catch(e) {
+    updateAccountUi(e.message || "فشلت المزامنة.");
+    if (showMessage) showCacheToast(e.message || "فشلت مزامنة الحساب.");
+  } finally {
+    cloudSyncInFlight = false;
+  }
+}
+
+async function cloudLoadAndMerge() {
+  const result = await accountApi("/api/user-data");
+  if (result.data) applyCloudState(result.data);
+  await cloudSyncNow(false);
+  updateAccountUi("تم تحميل بيانات الحساب ودمجها مع بيانات هذا المتصفح.");
+  renderTab(currentTab);
+}
+
+async function handleAccountLogin(signup = false) {
+  const email = accountEmailInput?.value.trim();
+  const password = accountPasswordInput?.value || "";
+  const name = accountNameInput?.value.trim();
+  if (!email || !password) {
+    updateAccountUi("اكتب البريد وكلمة المرور.");
+    return;
+  }
+  try {
+    updateAccountUi(signup ? "جاري إنشاء الحساب..." : "جاري تسجيل الدخول...");
+    const payload = await accountApi(signup ? "/api/auth/signup" : "/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ email, password, name })
+    });
+    setAuthSession(payload);
+    await cloudLoadAndMerge();
+    showCacheToast(signup ? "تم إنشاء الحساب ومزامنة بياناتك." : "تم تسجيل الدخول ومزامنة بياناتك.");
+  } catch(e) {
+    updateAccountUi(e.message || "فشلت العملية.");
+  }
+}
+
+async function handleAccountLogout() {
+  try {
+    if (authToken) await accountApi("/api/auth/logout", { method: "POST", body: "{}" });
+  } catch(e) {
+    // Local logout still matters even if the network call fails.
+  }
+  setAuthSession({});
+  updateAccountUi("تم تسجيل الخروج. البيانات المحلية بقيت في هذا المتصفح.");
+  showCacheToast("تم تسجيل الخروج.");
+}
+
+function initAccountControls() {
+  updateAccountUi();
+  accountBtn?.addEventListener("click", () => {
+    accountModal?.classList.add("show");
+    updateAccountUi(authUser ? `مسجل دخول: ${authUser.email}` : "أدخل بيانات الحساب.");
+  });
+  accountCloseBtn?.addEventListener("click", () => accountModal?.classList.remove("show"));
+  accountModal?.addEventListener("click", event => {
+    if (event.target === accountModal) accountModal.classList.remove("show");
+  });
+  accountLoginBtn?.addEventListener("click", () => handleAccountLogin(false));
+  accountSignupBtn?.addEventListener("click", () => handleAccountLogin(true));
+  accountSyncBtn?.addEventListener("click", () => cloudSyncNow(true));
+  accountLogoutBtn?.addEventListener("click", () => handleAccountLogout());
+  if (authToken) {
+    accountApi("/api/auth/me")
+      .then(result => {
+        if (result.user) {
+          setAuthSession({ token: authToken, user: result.user });
+          return cloudLoadAndMerge();
+        }
+        setAuthSession({});
+      })
+      .catch(() => updateAccountUi("تعذر التحقق من الحساب حالياً."));
   }
 }
 
@@ -2576,6 +2912,18 @@ const searchInput = document.getElementById("searchInput");
 const themeToggle = document.getElementById("themeToggle");
 const cacheResetBtn = document.getElementById("cacheResetBtn");
 const cacheToast = document.getElementById("cacheToast");
+const accountBtn = document.getElementById("accountBtn");
+const accountLabel = document.getElementById("accountLabel");
+const accountModal = document.getElementById("accountModal");
+const accountNameInput = document.getElementById("accountNameInput");
+const accountEmailInput = document.getElementById("accountEmailInput");
+const accountPasswordInput = document.getElementById("accountPasswordInput");
+const accountLoginBtn = document.getElementById("accountLoginBtn");
+const accountSignupBtn = document.getElementById("accountSignupBtn");
+const accountSyncBtn = document.getElementById("accountSyncBtn");
+const accountLogoutBtn = document.getElementById("accountLogoutBtn");
+const accountCloseBtn = document.getElementById("accountCloseBtn");
+const accountStatus = document.getElementById("accountStatus");
 const modalOverlay = document.getElementById("modalOverlay");
 const modalContent = document.getElementById("modalContent");
 
@@ -3021,6 +3369,7 @@ function loadPersonalityProfiles() {
 
 function savePersonalityProfiles(profiles) {
   localStorage.setItem("cinematek_personality_profiles", JSON.stringify(profiles.slice(0, 20)));
+  cloudScheduleSync();
 }
 
 function normalizeProfileName(name) {
@@ -7768,6 +8117,7 @@ document.addEventListener("keydown", (e) => {
 
 // ---------- Init ----------
 async function initializeApp() {
+  initAccountControls();
   yearMinInput.min = MIN_YEAR;
   yearMinInput.max = CURRENT_YEAR;
   yearMaxInput.min = MIN_YEAR;
