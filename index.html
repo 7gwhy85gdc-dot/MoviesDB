@@ -805,6 +805,358 @@
     color: #F87171;
   }
 
+  /* ---------- Episode tracker / TV Time import ---------- */
+  .tracker-panel {
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    background:
+      radial-gradient(circle at 10% 0%, rgba(232,197,71,0.20), transparent 30%),
+      linear-gradient(135deg, rgba(255,255,255,0.055), rgba(255,255,255,0.015)),
+      var(--card);
+    padding: 18px;
+    margin-bottom: 24px;
+  }
+  .tracker-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+  .tracker-title {
+    font-family: 'Cairo', sans-serif;
+    font-weight: 900;
+    font-size: clamp(20px, 3vw, 30px);
+    margin-bottom: 6px;
+  }
+  .tracker-copy {
+    color: var(--text-muted);
+    line-height: 1.8;
+    font-size: 13px;
+    max-width: 740px;
+  }
+  .tracker-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+  }
+  .tracker-file {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .tracker-btn {
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: rgba(255,255,255,0.04);
+    color: var(--text);
+    font-family: 'Cairo', sans-serif;
+    font-weight: 900;
+    font-size: 13px;
+    padding: 10px 15px;
+    cursor: pointer;
+    transition: transform 0.18s, border-color 0.18s, background 0.18s;
+  }
+  .tracker-btn:hover { transform: translateY(-1px); border-color: var(--gold); }
+  .tracker-btn.primary {
+    background: var(--gold);
+    color: #0B0E14;
+    border-color: var(--gold);
+  }
+  .tracker-btn.danger {
+    color: #FCA5A5;
+    border-color: rgba(239,68,68,0.35);
+  }
+  .tracker-btn:disabled {
+    opacity: 0.55;
+    cursor: wait;
+    transform: none;
+  }
+  .tracker-stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(120px, 1fr));
+    gap: 10px;
+    margin-top: 16px;
+  }
+  .tracker-stat {
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    background: rgba(0,0,0,0.10);
+    padding: 12px;
+  }
+  .tracker-stat strong {
+    display: block;
+    font-family: 'Cairo', sans-serif;
+    font-size: 22px;
+    line-height: 1;
+    color: var(--gold);
+  }
+  .tracker-stat span {
+    color: var(--text-muted);
+    font-size: 12px;
+  }
+  .tracker-view-tabs {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 10px;
+    margin: 8px 0 18px;
+  }
+  .tracker-view-tab {
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: rgba(255,255,255,0.03);
+    color: var(--text-muted);
+    font-family: 'Cairo', sans-serif;
+    font-weight: 900;
+    padding: 9px 14px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .tracker-view-tab.active {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: #0B0E14;
+  }
+  .tracker-board {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 12px;
+  }
+  .tracker-tile {
+    min-height: 255px;
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    overflow: hidden;
+    background: #05070B;
+    cursor: pointer;
+    position: relative;
+    isolation: isolate;
+    transition: transform 0.22s, box-shadow 0.22s, border-color 0.22s;
+  }
+  .tracker-tile:hover,
+  .tracker-tile:focus-visible {
+    transform: translateY(-4px);
+    border-color: rgba(232,197,71,0.55);
+    box-shadow: 0 18px 34px rgba(0,0,0,0.26);
+    outline: none;
+  }
+  .tracker-poster {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(160deg, rgba(232,197,71,0.28), transparent 42%),
+      linear-gradient(20deg, rgba(17,24,39,0.2), rgba(0,0,0,0.85)),
+      var(--card-hover);
+  }
+  .tracker-poster img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    opacity: 0.86;
+  }
+  .tracker-poster::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(0,0,0,0.08), rgba(0,0,0,0.85));
+  }
+  .tracker-progress-line {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 8px;
+    background: rgba(255,255,255,0.16);
+    z-index: 2;
+  }
+  .tracker-progress-line i {
+    display: block;
+    height: 100%;
+    width: var(--progress, 0%);
+    background: var(--gold);
+  }
+  .tracker-tile-body {
+    position: absolute;
+    inset: auto 0 8px;
+    z-index: 3;
+    padding: 44px 12px 14px;
+    background: linear-gradient(180deg, transparent, rgba(0,0,0,0.88));
+  }
+  .tracker-tile-title {
+    font-family: 'Cairo', sans-serif;
+    font-size: 16px;
+    font-weight: 900;
+    line-height: 1.3;
+    color: #fff;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.85);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .tracker-tile-meta {
+    color: rgba(255,255,255,0.86);
+    text-shadow: 0 2px 10px rgba(0,0,0,0.85);
+    font-size: 12px;
+    margin-top: 4px;
+  }
+  .tracker-chip {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 4;
+    border-radius: 999px;
+    background: rgba(0,0,0,0.72);
+    color: #fff;
+    font-family: 'Cairo', sans-serif;
+    font-size: 11px;
+    font-weight: 900;
+    padding: 5px 8px;
+  }
+  .tracker-stale {
+    left: 8px;
+    right: auto;
+    background: rgba(139,146,165,0.78);
+  }
+  .tracker-detail {
+    max-width: 960px;
+    margin: 0 auto;
+  }
+  .tracker-detail-hero {
+    min-height: 280px;
+    border-radius: 26px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    background: #05070B;
+    position: relative;
+    margin-bottom: 18px;
+  }
+  .tracker-detail-hero img {
+    width: 100%;
+    height: 100%;
+    min-height: 280px;
+    object-fit: cover;
+    opacity: 0.58;
+    display: block;
+  }
+  .tracker-detail-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(0,0,0,0.05), rgba(0,0,0,0.90));
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 20px;
+  }
+  .tracker-back {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    z-index: 4;
+  }
+  .tracker-detail-title {
+    font-family: 'Cairo', sans-serif;
+    font-size: clamp(26px, 5vw, 44px);
+    font-weight: 900;
+    line-height: 1.15;
+  }
+  .tracker-detail-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    color: rgba(255,255,255,0.78);
+    margin-top: 8px;
+    font-weight: 700;
+  }
+  .tracker-big-progress {
+    height: 10px;
+    border-radius: 999px;
+    overflow: hidden;
+    background: rgba(255,255,255,0.18);
+    margin-top: 14px;
+  }
+  .tracker-big-progress i {
+    display: block;
+    height: 100%;
+    width: var(--progress, 0%);
+    background: var(--gold);
+  }
+  .tracker-episode-list {
+    display: grid;
+    gap: 10px;
+  }
+  .tracker-season-title {
+    font-family: 'Cairo', sans-serif;
+    font-size: 20px;
+    font-weight: 900;
+    margin: 24px 0 4px;
+  }
+  .tracker-episode-row {
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    background: rgba(0,0,0,0.18);
+    padding: 12px;
+    display: grid;
+    grid-template-columns: 72px 1fr auto;
+    gap: 14px;
+    align-items: center;
+  }
+  .tracker-episode-thumb {
+    width: 72px;
+    height: 54px;
+    border-radius: 10px;
+    background:
+      linear-gradient(135deg, rgba(59,130,246,0.85), rgba(96,165,250,0.55)),
+      var(--card-hover);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255,255,255,0.82);
+    font-size: 24px;
+    overflow: hidden;
+  }
+  .tracker-episode-name strong {
+    display: block;
+    font-family: 'Cairo', sans-serif;
+    font-size: 18px;
+  }
+  .tracker-episode-name span {
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+  .tracker-check {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    border: 0;
+    background: rgba(255,255,255,0.96);
+    color: #6B7280;
+    font-size: 22px;
+    cursor: pointer;
+    font-weight: 900;
+  }
+  .tracker-check.active {
+    background: #64D400;
+    color: #fff;
+  }
+  @media (max-width: 720px) {
+    .tracker-stats { grid-template-columns: repeat(2, 1fr); }
+    .tracker-board { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .tracker-tile { min-height: 235px; }
+    .tracker-episode-row {
+      grid-template-columns: 58px 1fr auto;
+      gap: 10px;
+      padding: 10px;
+    }
+    .tracker-episode-thumb { width: 58px; height: 48px; }
+    .tracker-episode-name strong { font-size: 16px; }
+  }
+
   /* ---------- AI recommendations ---------- */
   .recommend-panel {
     max-width: 980px;
@@ -1631,6 +1983,7 @@
     <button class="nav-tab" data-tab="asianTv" role="tab"><span class="tab-icon">🌏</span><span class="tab-label">مسلسلات آسيوية</span></button>
     <button class="nav-tab" data-tab="recommendations" role="tab"><span class="tab-icon">🧠</span><span class="tab-label">اقتراحات ذكية</span></button>
     <button class="nav-tab" data-tab="watchlist" role="tab"><span class="tab-icon">🎯</span><span class="tab-label">قائمة المشاهدة</span></button>
+    <button class="nav-tab" data-tab="episodeTracker" role="tab"><span class="tab-icon">✅</span><span class="tab-label">متابعة الحلقات</span></button>
     <button class="nav-tab" data-tab="favorites" role="tab"><span class="tab-icon">⭐</span><span class="tab-label">المفضلة</span></button>
     <button class="nav-tab" data-tab="history" role="tab"><span class="tab-icon">📜</span><span class="tab-label">السجل</span></button>
   </div>
@@ -1710,15 +2063,16 @@
 <script>
 const TMDB_TOKEN = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJiNDIzNTIzNzA3NmIzMjYxZTNhMWJlY2NjNjBlOWE5OCIsIm5iZiI6MTc4MTg2ODUzNS4zNjksInN1YiI6IjZhMzUyN2Y3OGZlZjY4YTJmNGY1YzY0NSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.UKo-xpAPugwSb3oj6KT3bMQxDtLQ6k_RdVrZc5Cuvvg";
 const API_BASE = "https://api.themoviedb.org/3";
+const CINEMATEK_BACKEND = String(window.CINEMATEK_BACKEND || localStorage.getItem("cinematek_backend_url") || "https://cinematek-api.cinematek-api.workers.dev").replace(/\/+$/, "");
 const TVMAZE_API_BASE = "https://api.tvmaze.com";
 const MDL_API_BASE = window.CINEMATEK_MDL_API_BASE || "https://mydramalistunofficialapi.vercel.app";
 const GEMINI_API_BASE = "https://generativelanguage.googleapis.com/v1beta";
 const GEMINI_MODEL = "gemini-2.5-flash";
 const TASTEDIVE_API_BASE = "https://tastedive.com/api/similar";
-const TASTEDIVE_PROXY_BASE = window.CINEMATEK_TASTEDIVE_PROXY_BASE || `${MDL_API_BASE}/api/tastedive/similar`;
-const IMDB_RATINGS_PROXY_BASE = window.CINEMATEK_IMDB_RATINGS_PROXY_BASE || `${MDL_API_BASE}/api/imdb/rating`;
-const IMDB_RATINGS_BATCH_PROXY_BASE = window.CINEMATEK_IMDB_RATINGS_BATCH_PROXY_BASE || `${MDL_API_BASE}/api/imdb/ratings`;
-const IMDB_EPISODE_GRID_PROXY_BASE = window.CINEMATEK_IMDB_EPISODE_GRID_PROXY_BASE || `${MDL_API_BASE}/api/imdb/episode-grid`;
+const TASTEDIVE_PROXY_BASE = window.CINEMATEK_TASTEDIVE_PROXY_BASE || (CINEMATEK_BACKEND ? `${CINEMATEK_BACKEND}/api/tastedive/similar` : `${MDL_API_BASE}/api/tastedive/similar`);
+const IMDB_RATINGS_PROXY_BASE = window.CINEMATEK_IMDB_RATINGS_PROXY_BASE || (CINEMATEK_BACKEND ? `${CINEMATEK_BACKEND}/api/imdb/rating` : `${MDL_API_BASE}/api/imdb/rating`);
+const IMDB_RATINGS_BATCH_PROXY_BASE = window.CINEMATEK_IMDB_RATINGS_BATCH_PROXY_BASE || (CINEMATEK_BACKEND ? `${CINEMATEK_BACKEND}/api/imdb/ratings` : `${MDL_API_BASE}/api/imdb/ratings`);
+const IMDB_EPISODE_GRID_PROXY_BASE = window.CINEMATEK_IMDB_EPISODE_GRID_PROXY_BASE || (CINEMATEK_BACKEND ? `${CINEMATEK_BACKEND}/api/imdb/episode-grid` : `${MDL_API_BASE}/api/imdb/episode-grid`);
 const IMG_BASE = "https://image.tmdb.org/t/p/w500";
 const BACKDROP_BASE = "https://image.tmdb.org/t/p/w1280";
 const CURRENT_YEAR = new Date().getFullYear();
@@ -1833,8 +2187,39 @@ try {
 } catch(e) { watchHistory = []; }
 let historyImportCandidates = [];
 
+// ---------- Episode tracking / TV Time ----------
+const EPISODE_TRACKING_STORAGE_KEY = "cinematek_episode_tracking_v1";
+let episodeTracking = loadEpisodeTracking();
+let activeTrackerView = "all";
+let trackerImportMessage = "";
+let trackerHydrationInProgress = false;
+let trackerHydrationContinue = false;
+
 function saveWatchHistory() {
   localStorage.setItem("cinematek_history", JSON.stringify(watchHistory));
+}
+
+function loadEpisodeTracking() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(EPISODE_TRACKING_STORAGE_KEY) || "{}");
+    return {
+      shows: Array.isArray(parsed.shows) ? parsed.shows : [],
+      movies: Array.isArray(parsed.movies) ? parsed.movies : [],
+      lists: Array.isArray(parsed.lists) ? parsed.lists : [],
+      imported_at: parsed.imported_at || "",
+      source: parsed.source || ""
+    };
+  } catch(e) {
+    return { shows: [], movies: [], lists: [], imported_at: "", source: "" };
+  }
+}
+
+function saveEpisodeTracking() {
+  try {
+    localStorage.setItem(EPISODE_TRACKING_STORAGE_KEY, JSON.stringify(episodeTracking));
+  } catch(e) {
+    showCacheToast("تعذر حفظ بيانات تتبع الحلقات؛ مساحة المتصفح قد تكون ممتلئة.");
+  }
 }
 
 function isWatched(id, type, source = "tmdb") {
@@ -1963,6 +2348,17 @@ async function fetchJsonCached(url, options = {}, ttl = 2 * 60 * 1000) {
 async function tmdbFetch(path, { signal } = {}) {
   // Strict personal safe mode: force TMDB adult filtering on every request.
   // URLSearchParams.set() prevents a caller from accidentally keeping include_adult=true.
+  if (CINEMATEK_BACKEND) {
+    try {
+      return await fetchJsonCached(
+        `${CINEMATEK_BACKEND}/api/tmdb?path=${encodeURIComponent(path)}`,
+        { signal },
+        cacheTtlForPath(path)
+      );
+    } catch(e) {
+      // Keep the standalone app usable if the personal backend is offline.
+    }
+  }
   const url = new URL(`${API_BASE}${path}`);
   url.searchParams.set("include_adult", "false");
   return fetchJsonCached(url.toString(), {
@@ -1975,6 +2371,15 @@ async function tmdbFetch(path, { signal } = {}) {
 }
 
 async function tvmazeFetch(path, { signal } = {}) {
+  if (CINEMATEK_BACKEND) {
+    try {
+      return await fetchJsonCached(
+        `${CINEMATEK_BACKEND}/api/tvmaze?path=${encodeURIComponent(path)}`,
+        { signal },
+        cacheTtlForPath(path)
+      );
+    } catch(e) {}
+  }
   return fetchJsonCached(
     `${TVMAZE_API_BASE}${path}`,
     { signal },
@@ -1983,6 +2388,15 @@ async function tvmazeFetch(path, { signal } = {}) {
 }
 
 async function mdlFetch(path, { signal } = {}) {
+  if (CINEMATEK_BACKEND) {
+    try {
+      return await fetchJsonCached(
+        `${CINEMATEK_BACKEND}/api/mydramalist?path=${encodeURIComponent(path)}`,
+        { signal },
+        cacheTtlForPath(path)
+      );
+    } catch(e) {}
+  }
   return fetchJsonCached(
     `${MDL_API_BASE}${path}`,
     { signal },
@@ -1993,6 +2407,15 @@ async function mdlFetch(path, { signal } = {}) {
 async function imdbRatingsFetch(imdbId, { signal } = {}) {
   const cleanId = String(imdbId || "").trim();
   if (!/^tt\d{7,12}$/.test(cleanId)) return null;
+  if (CINEMATEK_BACKEND) {
+    try {
+      return await fetchJsonCached(
+        `${CINEMATEK_BACKEND}/api/imdb/rating?id=${encodeURIComponent(cleanId)}`,
+        { signal },
+        24 * 60 * 60 * 1000
+      );
+    } catch(e) {}
+  }
   return fetchJsonCached(
     `${IMDB_RATINGS_PROXY_BASE}/${encodeURIComponent(cleanId)}`,
     { signal },
@@ -2006,11 +2429,23 @@ async function imdbRatingsBatchFetch(imdbIds, { signal } = {}) {
     .filter(id => /^tt\d{7,12}$/.test(id))
     .slice(0, 50);
   if (!ids.length) return new Map();
-  const data = await fetchJsonCached(
-    `${IMDB_RATINGS_BATCH_PROXY_BASE}?ids=${encodeURIComponent(ids.join(","))}`,
-    { signal },
-    24 * 60 * 60 * 1000
-  );
+  let data = null;
+  if (CINEMATEK_BACKEND) {
+    try {
+      data = await fetchJsonCached(
+        `${CINEMATEK_BACKEND}/api/imdb/ratings?ids=${encodeURIComponent(ids.join(","))}`,
+        { signal },
+        24 * 60 * 60 * 1000
+      );
+    } catch(e) {}
+  }
+  if (!data) {
+    data = await fetchJsonCached(
+      `${IMDB_RATINGS_BATCH_PROXY_BASE}?ids=${encodeURIComponent(ids.join(","))}`,
+      { signal },
+      24 * 60 * 60 * 1000
+    );
+  }
   const map = new Map();
   (data?.results || []).forEach(rating => {
     if (rating?.found && rating.imdb_id) map.set(rating.imdb_id, rating);
@@ -2095,11 +2530,23 @@ async function imdbEpisodeGridFetch(imdbId, { signal } = {}) {
   const cacheKey = `cinematek_episode_grid_imdb_${cleanId}`;
   const cached = readEpisodeGridCache(cacheKey);
   if (cached) return cached;
-  const data = await fetchJsonCached(
-    `${IMDB_EPISODE_GRID_PROXY_BASE}/${encodeURIComponent(cleanId)}`,
-    { signal },
-    24 * 60 * 60 * 1000
-  );
+  let data = null;
+  if (CINEMATEK_BACKEND) {
+    try {
+      data = await fetchJsonCached(
+        `${CINEMATEK_BACKEND}/api/imdb/episode-grid?id=${encodeURIComponent(cleanId)}`,
+        { signal },
+        24 * 60 * 60 * 1000
+      );
+    } catch(e) {}
+  }
+  if (!data) {
+    data = await fetchJsonCached(
+      `${IMDB_EPISODE_GRID_PROXY_BASE}/${encodeURIComponent(cleanId)}`,
+      { signal },
+      24 * 60 * 60 * 1000
+    );
+  }
   if (data?.found) writeEpisodeGridCache(cacheKey, data);
   return data;
 }
@@ -2781,7 +3228,7 @@ function recommendationRegionPromptRules(region) {
 
 async function geminiRecommend(payload) {
   const key = getGeminiApiKey();
-  if (!key) {
+  if (!key && !CINEMATEK_BACKEND) {
     throw new Error("ضع مفتاح Gemini API أولاً. يتم حفظه محلياً في هذا المتصفح فقط.");
   }
 
@@ -2829,16 +3276,19 @@ ${recommendationRegionPromptRules(payload.region)}
 اقترح 12 عملاً فقط.
 `;
 
-  const response = await fetch(`${GEMINI_API_BASE}/models/${GEMINI_MODEL}:generateContent?key=${encodeURIComponent(key)}`, {
+  const geminiBody = {
+    contents: [{ role: "user", parts: [{ text: prompt }] }],
+    generationConfig: {
+      temperature: 0.85,
+      responseMimeType: "application/json"
+    }
+  };
+  const response = await fetch(CINEMATEK_BACKEND
+    ? `${CINEMATEK_BACKEND}/api/gemini/generate`
+    : `${GEMINI_API_BASE}/models/${GEMINI_MODEL}:generateContent?key=${encodeURIComponent(key)}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      contents: [{ role: "user", parts: [{ text: prompt }] }],
-      generationConfig: {
-        temperature: 0.85,
-        responseMimeType: "application/json"
-      }
-    })
+    body: JSON.stringify(geminiBody)
   });
 
   if (!response.ok) {
@@ -2860,7 +3310,7 @@ ${recommendationRegionPromptRules(payload.region)}
 
 async function geminiPersonalityGenres(assessment, payload) {
   const key = getGeminiApiKey();
-  if (!key) return localPersonalityGenreResult(assessment);
+  if (!key && !CINEMATEK_BACKEND) return localPersonalityGenreResult(assessment);
 
   const prompt = `
 أنت محرك توصية أفلام ومسلسلات مبني على تقييم شخصية علمي مختصر Big Five ونموذج أبعاد التفضيلات الترفيهية الخماسي:
@@ -2904,16 +3354,19 @@ JSON فقط:
   "explanation_ar": "٣-٤ جمل بالعربي السعودي"
 }`;
 
-  const response = await fetch(`${GEMINI_API_BASE}/models/${GEMINI_MODEL}:generateContent?key=${encodeURIComponent(key)}`, {
+  const geminiBody = {
+    contents: [{ role: "user", parts: [{ text: prompt }] }],
+    generationConfig: {
+      temperature: 0.35,
+      responseMimeType: "application/json"
+    }
+  };
+  const response = await fetch(CINEMATEK_BACKEND
+    ? `${CINEMATEK_BACKEND}/api/gemini/generate`
+    : `${GEMINI_API_BASE}/models/${GEMINI_MODEL}:generateContent?key=${encodeURIComponent(key)}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      contents: [{ role: "user", parts: [{ text: prompt }] }],
-      generationConfig: {
-        temperature: 0.35,
-        responseMimeType: "application/json"
-      }
-    })
+    body: JSON.stringify(geminiBody)
   });
 
   if (!response.ok) return localPersonalityGenreResult(assessment);
@@ -4228,6 +4681,12 @@ main.addEventListener("click", (e) => {
 });
 main.addEventListener("keydown", (e) => {
   if (e.key === "Enter" || e.key === " ") {
+    const trackerTile = e.target.closest("[data-tracker-show]");
+    if (trackerTile && document.activeElement === trackerTile) {
+      e.preventDefault();
+      renderEpisodeTrackerDetails(trackerTile.dataset.trackerShow);
+      return;
+    }
     const card = e.target.closest(".card");
     if (card && document.activeElement === card) {
       e.preventDefault();
@@ -4843,14 +5302,15 @@ function hasActiveFilters() {
 }
 
 function updateGenreFilterVisibility() {
-  movieGenreWrap.hidden = !(currentTab === "movies" || currentTab === "asianMovies");
-  tvGenreWrap.hidden = !(currentTab === "tv" || currentTab === "asianTv");
-  yearFilter.style.display = currentTab === "recommendations" ? "none" : "";
-  sortSelect.closest(".sort-select-wrap").style.display = currentTab === "recommendations" ? "none" : "";
+  const hidesGlobalFilters = currentTab === "recommendations" || currentTab === "episodeTracker";
+  movieGenreWrap.hidden = hidesGlobalFilters || !(currentTab === "movies" || currentTab === "asianMovies");
+  tvGenreWrap.hidden = hidesGlobalFilters || !(currentTab === "tv" || currentTab === "asianTv");
+  yearFilter.style.display = hidesGlobalFilters ? "none" : "";
+  sortSelect.closest(".sort-select-wrap").style.display = hidesGlobalFilters ? "none" : "";
 }
 
 async function applyCurrentFilters() {
-  if (currentTab === "favorites" || currentTab === "watchlist" || currentTab === "history" || currentTab === "recommendations") {
+  if (currentTab === "favorites" || currentTab === "watchlist" || currentTab === "history" || currentTab === "recommendations" || currentTab === "episodeTracker") {
     renderTab(currentTab);
     return;
   }
@@ -5038,6 +5498,10 @@ async function renderTab(tab) {
   }
   if (tab === "watchlist") {
     renderWatchlist();
+    return;
+  }
+  if (tab === "episodeTracker") {
+    renderEpisodeTracker();
     return;
   }
   if (tab === "history") {
@@ -5561,6 +6025,641 @@ async function renderHistory() {
   loadVisibleTvStatuses();
 }
 
+function trackerShowKey(show) {
+  const imdb = String(show?.id?.imdb || show?.imdb_id || "").trim();
+  const tvdb = String(show?.id?.tvdb || show?.tvdb_id || "").trim();
+  const uuid = String(show?.uuid || show?.series_uuid || "").trim();
+  const title = simpleTitleKey(show?.title || show?.name || "");
+  if (imdb) return `imdb:${imdb}`;
+  if (tvdb) return `tvdb:${tvdb}`;
+  if (uuid) return `uuid:${uuid}`;
+  return `title:${title}`;
+}
+
+function cleanTvTimeTitle(title) {
+  return String(title || "").replace(/\s+/g, " ").trim();
+}
+
+function tvTimeYear(title) {
+  return String(title || "").match(/\((19|20)\d{2}\)/)?.[0]?.replace(/[()]/g, "") || "";
+}
+
+function tvTimeBaseTitle(title) {
+  return cleanTvTimeTitle(title).replace(/\s+\((19|20)\d{2}\)\s*$/, "").trim();
+}
+
+function normalizeTvTimeEpisode(episode, seasonNumber, seasonIsSpecials = false) {
+  const watchedAt = episode.watched_at || episode.watchedAt || "";
+  const isWatched = episode.is_watched === true || String(episode.is_watched).toLowerCase() === "true" || !!watchedAt;
+  return {
+    season: parseInt(episode.season ?? seasonNumber, 10) || 0,
+    episode: parseInt(episode.episode ?? episode.number, 10) || 0,
+    name: cleanTvTimeTitle(episode.name || episode.title || ""),
+    tvdb_id: String(episode.tvdb_id || episode.id?.tvdb || "").trim(),
+    imdb_id: String(episode.imdb_id || episode.id?.imdb || "").trim(),
+    special: episode.special === true || seasonIsSpecials === true || String(episode.special).toLowerCase() === "true",
+    is_watched: isWatched,
+    watched_at: watchedAt || "",
+    rewatch_count: parseInt(episode.rewatch_count ?? episode.rewatchCount ?? 0, 10) || 0,
+    watched_count: parseInt(episode.watched_count ?? episode.watchedCount ?? (isWatched ? 1 : 0), 10) || 0
+  };
+}
+
+function normalizeTvTimeSeriesRecord(raw) {
+  const title = cleanTvTimeTitle(raw.title || raw.name || "");
+  const episodes = [];
+  (raw.seasons || []).forEach(season => {
+    const seasonNumber = parseInt(season.number ?? season.season, 10) || 0;
+    const seasonIsSpecials = season.is_specials === true || String(season.is_specials).toLowerCase() === "true";
+    (season.episodes || []).forEach(episode => {
+      const normalized = normalizeTvTimeEpisode(episode, seasonNumber, seasonIsSpecials);
+      if (normalized.season > 0 && normalized.episode > 0) episodes.push(normalized);
+    });
+  });
+  episodes.sort((a, b) => a.season - b.season || a.episode - b.episode);
+  const show = {
+    key: trackerShowKey(raw),
+    uuid: raw.uuid || "",
+    tvdb_id: String(raw.id?.tvdb || raw.tvdb_id || "").trim(),
+    imdb_id: String(raw.id?.imdb || raw.imdb_id || "").trim(),
+    tmdb_id: raw.tmdb_id || null,
+    title,
+    display_title: tvTimeBaseTitle(title),
+    year: raw.year || tvTimeYear(title),
+    status: raw.status || "",
+    is_favorite: raw.is_favorite === true,
+    poster_url: raw.poster_url || raw.poster || "",
+    backdrop_url: raw.backdrop_url || "",
+    created_at: raw.created_at || "",
+    imported_from: "TV Time",
+    episodes
+  };
+  return recalcTrackerShow(show);
+}
+
+function normalizeTvTimeMovieRecord(raw) {
+  return {
+    uuid: raw.uuid || "",
+    tvdb_id: String(raw.id?.tvdb || raw.tvdb_id || "").trim(),
+    imdb_id: String(raw.id?.imdb || raw.imdb_id || "").trim(),
+    title: cleanTvTimeTitle(raw.title || raw.name || ""),
+    year: raw.year || "",
+    is_watched: raw.is_watched === true || String(raw.is_watched).toLowerCase() === "true",
+    watched_at: raw.watched_at || "",
+    rewatch_count: parseInt(raw.rewatch_count ?? 0, 10) || 0
+  };
+}
+
+function recalcTrackerShow(show) {
+  if (!show) return null;
+  const episodes = (show.episodes || [])
+    .filter(ep => Number.isFinite(Number(ep.season)) && Number.isFinite(Number(ep.episode)))
+    .sort((a, b) => a.season - b.season || a.episode - b.episode);
+  const total = episodes.length;
+  const watched = episodes.filter(ep => ep.is_watched).length;
+  const percent = total ? Math.round((watched / total) * 100) : 0;
+  const watchedDates = episodes
+    .filter(ep => ep.is_watched && ep.watched_at)
+    .map(ep => Date.parse(ep.watched_at))
+    .filter(Number.isFinite)
+    .sort((a, b) => b - a);
+  return {
+    ...show,
+    episodes,
+    progress: { total, watched, remaining: Math.max(0, total - watched), percent },
+    last_watched_at: watchedDates.length ? new Date(watchedDates[0]).toISOString() : "",
+    next_episode: episodes.find(ep => !ep.is_watched) || null
+  };
+}
+
+function trackerStats() {
+  const shows = episodeTracking.shows || [];
+  const totalEpisodes = shows.reduce((sum, show) => sum + (show.progress?.total || 0), 0);
+  const watchedEpisodes = shows.reduce((sum, show) => sum + (show.progress?.watched || 0), 0);
+  const activeShows = shows.filter(show => (show.progress?.watched || 0) > 0 && (show.progress?.remaining || 0) > 0).length;
+  const completedShows = shows.filter(show => (show.progress?.total || 0) > 0 && (show.progress?.remaining || 0) === 0).length;
+  const missingArtwork = shows.filter(show => !show.poster_url && !show.backdrop_url).length;
+  return { shows: shows.length, totalEpisodes, watchedEpisodes, activeShows, completedShows, missingArtwork };
+}
+
+function trackerIsStale(show) {
+  if (!show.last_watched_at || !(show.progress?.remaining > 0)) return false;
+  const days = (Date.now() - Date.parse(show.last_watched_at)) / 86400000;
+  return Number.isFinite(days) && days >= 45;
+}
+
+function trackerFilteredShows(view = activeTrackerView) {
+  const shows = (episodeTracking.shows || []).map(recalcTrackerShow);
+  const filtered = shows.filter(show => {
+    const watched = show.progress?.watched || 0;
+    const remaining = show.progress?.remaining || 0;
+    if (view === "completed") return watched > 0 && remaining === 0;
+    if (view === "notStarted") return watched === 0;
+    if (view === "stale") return trackerIsStale(show);
+    if (view === "upcoming") return remaining > 0;
+    if (view === "all") return true;
+    return watched > 0 && remaining > 0;
+  });
+  return filtered.sort((a, b) => {
+    if (view === "notStarted") return (Date.parse(b.created_at) || 0) - (Date.parse(a.created_at) || 0) || a.display_title.localeCompare(b.display_title);
+    if (view === "completed") return (Date.parse(b.last_watched_at) || 0) - (Date.parse(a.last_watched_at) || 0) || a.display_title.localeCompare(b.display_title);
+    return (Date.parse(b.last_watched_at) || 0) - (Date.parse(a.last_watched_at) || 0) ||
+      (b.progress?.remaining || 0) - (a.progress?.remaining || 0) ||
+      a.display_title.localeCompare(b.display_title);
+  });
+}
+
+function trackerImportPanelHtml() {
+  const stats = trackerStats();
+  return `
+    <section class="tracker-panel">
+      <div class="tracker-head">
+        <div>
+          <div class="tracker-title">✅ متابعة الحلقات</div>
+          <p class="tracker-copy">استورد تصدير TV Time كاملاً، ثم تابع تقدمك لكل مسلسل وحلقة من داخل سينماتك. القراءة تتم محلياً داخل المتصفح، والبيانات تُحفظ على جهازك فقط.</p>
+        </div>
+        <div class="tracker-actions">
+          <input class="tracker-file" id="tvTimeImportInput" type="file" accept=".json,.csv,text/csv,application/json" multiple webkitdirectory>
+          <button class="tracker-btn primary" id="tvTimeImportPickBtn" type="button">استيراد TV Time</button>
+          <button class="tracker-btn" id="tvTimeFilesPickBtn" type="button">اختيار ملفات فقط</button>
+          <button class="tracker-btn" id="tvTimeHydrateBtn" type="button" ${stats.missingArtwork ? "" : "disabled"}>تحميل صور ومعلومات الناقص (${stats.missingArtwork})</button>
+          <button class="tracker-btn danger" id="tvTimeClearBtn" type="button" ${stats.shows ? "" : "disabled"}>مسح تتبع الحلقات</button>
+        </div>
+      </div>
+      <div class="tracker-stats">
+        <div class="tracker-stat"><strong>${stats.shows}</strong><span>مسلسل مستورد</span></div>
+        <div class="tracker-stat"><strong>${stats.activeShows}</strong><span>قيد المتابعة</span></div>
+        <div class="tracker-stat"><strong>${stats.watchedEpisodes}</strong><span>حلقة مشاهدة</span></div>
+        <div class="tracker-stat"><strong>${stats.missingArtwork}</strong><span>صور ناقصة</span></div>
+      </div>
+      ${trackerImportMessage ? `<div class="history-import-note" style="margin-top:12px;">${escapeHtml(trackerImportMessage)}</div>` : ""}
+    </section>
+  `;
+}
+
+function trackerViewTabsHtml() {
+  const tabs = [
+    ["all", "الكل"],
+    ["watching", "أشاهدها الآن"],
+    ["upcoming", "الحلقات المتبقية"],
+    ["stale", "لم أكملها من فترة"],
+    ["notStarted", "لم أبدأها"],
+    ["completed", "مكتملة"]
+  ];
+  return `<div class="tracker-view-tabs" role="tablist">${tabs.map(([id, label]) =>
+    `<button class="tracker-view-tab ${activeTrackerView === id ? "active" : ""}" data-tracker-view="${id}" type="button">${label}</button>`
+  ).join("")}</div>`;
+}
+
+function trackerPosterHtml(show) {
+  const image = show.poster_url || show.backdrop_url || "";
+  return image
+    ? `<img src="${escapeHtml(image)}" alt="${escapeHtml(show.display_title || show.title)}" loading="lazy" decoding="async" referrerpolicy="no-referrer">`
+    : "";
+}
+
+function trackerTileHtml(show) {
+  const progress = show.progress || { watched: 0, total: 0, remaining: 0, percent: 0 };
+  const next = show.next_episode ? `التالي: S${String(show.next_episode.season).padStart(2, "0")} E${String(show.next_episode.episode).padStart(2, "0")}` : "مكتمل";
+  return `
+    <button class="tracker-tile" data-tracker-show="${escapeHtml(show.key)}" type="button" style="--progress:${progress.percent || 0}%">
+      <div class="tracker-poster">${trackerPosterHtml(show)}</div>
+      <span class="tracker-chip">${progress.percent || 0}%</span>
+      ${trackerIsStale(show) ? `<span class="tracker-chip tracker-stale">من فترة</span>` : ""}
+      <div class="tracker-tile-body">
+        <div class="tracker-tile-title">${escapeHtml(show.display_title || show.title)}</div>
+        <div class="tracker-tile-meta">${progress.watched}/${progress.total} حلقة · ${escapeHtml(next)}</div>
+      </div>
+      <div class="tracker-progress-line"><i></i></div>
+    </button>
+  `;
+}
+
+function renderEpisodeTracker() {
+  const shows = trackerFilteredShows(activeTrackerView);
+  main.innerHTML =
+    trackerImportPanelHtml() +
+    (episodeTracking.shows.length ? trackerViewTabsHtml() : "") +
+    (episodeTracking.shows.length
+      ? `<div class="tracker-board">${shows.map(trackerTileHtml).join("")}</div>`
+      : emptyState("لا توجد بيانات حلقات بعد. اضغط استيراد TV Time واختر مجلد التصدير أو ملفات JSON/CSV.")) +
+    (episodeTracking.imported_at ? `<div class="history-import-note" style="margin-top:16px;text-align:center;">آخر استيراد: ${new Date(episodeTracking.imported_at).toLocaleString("ar-SA")} · أفلام محفوظة من TV Time: ${(episodeTracking.movies || []).length} · قوائم: ${(episodeTracking.lists || []).length}</div>` : "");
+  bindTvTimeImportControls();
+  hydrateTrackerPostersSoon();
+}
+
+function bindTvTimeImportControls() {
+  const input = document.getElementById("tvTimeImportInput");
+  const pickFolder = document.getElementById("tvTimeImportPickBtn");
+  const pickFiles = document.getElementById("tvTimeFilesPickBtn");
+  const hydrateBtn = document.getElementById("tvTimeHydrateBtn");
+  const clearBtn = document.getElementById("tvTimeClearBtn");
+  if (input) {
+    input.addEventListener("change", () => handleTvTimeImportFiles(input.files));
+  }
+  if (pickFolder && input) {
+    pickFolder.addEventListener("click", () => {
+      input.setAttribute("webkitdirectory", "");
+      input.setAttribute("directory", "");
+      input.click();
+    });
+  }
+  if (pickFiles && input) {
+    pickFiles.addEventListener("click", () => {
+      input.removeAttribute("webkitdirectory");
+      input.removeAttribute("directory");
+      input.click();
+    });
+  }
+  if (clearBtn) {
+    clearBtn.addEventListener("click", () => {
+      episodeTracking = { shows: [], movies: [], lists: [], imported_at: "", source: "" };
+      trackerImportMessage = "تم مسح تتبع الحلقات فقط.";
+      saveEpisodeTracking();
+      renderEpisodeTracker();
+    });
+  }
+  if (hydrateBtn) {
+    hydrateBtn.addEventListener("click", () => {
+      trackerImportMessage = "جاري تحميل صور ومعلومات المسلسلات الناقصة على دفعات...";
+      renderEpisodeTracker();
+      hydrateTrackerPostersSoon({ limit: 60, continueAll: true, force: true });
+    });
+  }
+}
+
+function csvObjectsFromText(text) {
+  const rows = parseCsvRows(text);
+  if (!rows.length) return [];
+  const headers = rows[0].map(header => String(header || "").trim());
+  return rows.slice(1).map(row => headers.reduce((obj, header, index) => {
+    obj[header || `col${index}`] = row[index] || "";
+    return obj;
+  }, {}));
+}
+
+function showsFromTvTimeEpisodesCsv(text) {
+  const groups = new Map();
+  csvObjectsFromText(text).forEach(row => {
+    const title = importRowValue(row, ["title"]);
+    if (!title) return;
+    const seriesUuid = importRowValue(row, ["series_uuid"]);
+    const tvdb = importRowValue(row, ["series_tvdb_id"]);
+    const imdb = importRowValue(row, ["series_imdb_id"]);
+    const key = imdb ? `imdb:${imdb}` : tvdb ? `tvdb:${tvdb}` : seriesUuid ? `uuid:${seriesUuid}` : `title:${simpleTitleKey(title)}`;
+    if (!groups.has(key)) {
+      groups.set(key, {
+        uuid: seriesUuid,
+        id: { tvdb, imdb },
+        title,
+        seasons: []
+      });
+    }
+    const show = groups.get(key);
+    const seasonNumber = parseInt(importRowValue(row, ["season"]), 10) || 0;
+    let season = show.seasons.find(existing => existing.number === seasonNumber);
+    if (!season) {
+      season = { number: seasonNumber, episodes: [] };
+      show.seasons.push(season);
+    }
+    season.episodes.push({
+      number: parseInt(importRowValue(row, ["episode"]), 10) || 0,
+      tvdb_id: importRowValue(row, ["tvdb_id"]),
+      is_watched: importRowValue(row, ["is_watched"]),
+      watched_at: importRowValue(row, ["watched_at"]),
+      rewatch_count: importRowValue(row, ["rewatch_count"]),
+      special: importRowValue(row, ["special"])
+    });
+  });
+  return [...groups.values()].map(normalizeTvTimeSeriesRecord);
+}
+
+function mergeTrackerShows(existingShows, importedShows) {
+  const byKey = new Map((existingShows || []).map(show => [show.key, show]));
+  importedShows.forEach(show => {
+    const existing = byKey.get(show.key);
+    if (!existing) {
+      byKey.set(show.key, recalcTrackerShow(show));
+      return;
+    }
+    const episodeMap = new Map((existing.episodes || []).map(ep => [`${ep.season}:${ep.episode}`, ep]));
+    (show.episodes || []).forEach(ep => {
+      const key = `${ep.season}:${ep.episode}`;
+      const old = episodeMap.get(key);
+      episodeMap.set(key, old ? { ...old, ...ep, is_watched: old.is_watched || ep.is_watched, watched_at: old.watched_at || ep.watched_at } : ep);
+    });
+    byKey.set(show.key, recalcTrackerShow({
+      ...existing,
+      ...show,
+      poster_url: existing.poster_url || show.poster_url,
+      backdrop_url: existing.backdrop_url || show.backdrop_url,
+      episodes: [...episodeMap.values()]
+    }));
+  });
+  return [...byKey.values()].map(recalcTrackerShow);
+}
+
+async function handleTvTimeImportFiles(fileList) {
+  const files = [...(fileList || [])];
+  if (!files.length) return;
+  trackerImportMessage = "جاري قراءة ملفات TV Time...";
+  renderEpisodeTracker();
+  try {
+    const readFiles = await Promise.all(files.map(async file => ({
+      name: file.name,
+      path: file.webkitRelativePath || file.name,
+      text: await file.text()
+    })));
+    const jsonFiles = [];
+    const csvFiles = [];
+    readFiles.forEach(file => {
+      const trimmed = file.text.trim();
+      if (/\.json$/i.test(file.name) || trimmed.startsWith("[") || trimmed.startsWith("{")) jsonFiles.push(file);
+      else if (/\.csv$/i.test(file.name)) csvFiles.push(file);
+    });
+
+    const importedShows = [];
+    let importedMovies = [];
+    let importedLists = [];
+
+    jsonFiles.forEach(file => {
+      const data = JSON.parse(file.text);
+      const lowerName = file.name.toLowerCase();
+      if (lowerName.includes("series") && !lowerName.includes("episodes") && Array.isArray(data)) {
+        importedShows.push(...data.map(normalizeTvTimeSeriesRecord).filter(show => show.title));
+      } else if (lowerName.includes("movies") && Array.isArray(data)) {
+        importedMovies = data.map(normalizeTvTimeMovieRecord).filter(movie => movie.title);
+      } else if (lowerName.includes("lists") && Array.isArray(data)) {
+        importedLists = data;
+      }
+    });
+
+    if (!importedShows.length) {
+      csvFiles
+        .filter(file => file.name.toLowerCase().includes("series-episodes"))
+        .forEach(file => importedShows.push(...showsFromTvTimeEpisodesCsv(file.text)));
+    }
+
+    if (!importedMovies.length) {
+      const movieCsv = csvFiles.find(file => file.name.toLowerCase().includes("movies"));
+      if (movieCsv) importedMovies = csvObjectsFromText(movieCsv.text).map(row => normalizeTvTimeMovieRecord(row)).filter(movie => movie.title);
+    }
+
+    if (!importedLists.length) {
+      const listsCsv = csvFiles.find(file => file.name.toLowerCase().includes("lists"));
+      if (listsCsv) importedLists = csvObjectsFromText(listsCsv.text);
+    }
+
+    if (!importedShows.length && !importedMovies.length && !importedLists.length) {
+      trackerImportMessage = "لم أجد بيانات TV Time قابلة للاستيراد داخل الملفات المختارة.";
+      renderEpisodeTracker();
+      return;
+    }
+
+    episodeTracking = {
+      shows: mergeTrackerShows(episodeTracking.shows, importedShows),
+      movies: importedMovies.length ? importedMovies : (episodeTracking.movies || []),
+      lists: importedLists.length ? importedLists : (episodeTracking.lists || []),
+      imported_at: new Date().toISOString(),
+      source: "TV Time export"
+    };
+    saveEpisodeTracking();
+    trackerHydrationInProgress = false;
+    trackerHydrationContinue = false;
+    const stats = trackerStats();
+    trackerImportMessage = `تم استيراد ${stats.shows} مسلسل، ${stats.watchedEpisodes} حلقة مشاهدة، ${episodeTracking.movies.length} فيلم، و ${episodeTracking.lists.length} قائمة من TV Time.`;
+    renderEpisodeTracker();
+  } catch(e) {
+    trackerImportMessage = "تعذر استيراد TV Time. تأكد من اختيار مجلد التصدير أو ملفات JSON/CSV الأصلية.";
+    renderEpisodeTracker();
+  }
+}
+
+function trackerShowByKey(key) {
+  return (episodeTracking.shows || []).find(show => show.key === key);
+}
+
+function trackerEpisodeCode(ep) {
+  return `S${String(ep.season).padStart(2, "0")} | E${String(ep.episode).padStart(2, "0")}`;
+}
+
+function renderEpisodeTrackerDetails(showKey) {
+  const show = recalcTrackerShow(trackerShowByKey(showKey));
+  if (!show) {
+    renderEpisodeTracker();
+    return;
+  }
+  const progress = show.progress || { watched: 0, total: 0, remaining: 0, percent: 0 };
+  const seasons = [...new Set(show.episodes.map(ep => ep.season))].sort((a, b) => a - b);
+  const heroImage = show.backdrop_url || show.poster_url || "";
+  main.innerHTML = `
+    <section class="tracker-detail">
+      <div class="tracker-detail-hero" style="--progress:${progress.percent || 0}%">
+        ${heroImage ? `<img src="${escapeHtml(heroImage)}" alt="${escapeHtml(show.display_title || show.title)}" referrerpolicy="no-referrer">` : ""}
+        <button class="tracker-btn tracker-back" data-tracker-back type="button">رجوع</button>
+        <div class="tracker-detail-overlay">
+          <div class="tracker-detail-title">${escapeHtml(show.display_title || show.title)}</div>
+          <div class="tracker-detail-meta">
+            ${show.year ? `<span>${escapeHtml(show.year)}</span>` : ""}
+            <span>${progress.watched}/${progress.total} حلقة</span>
+            <span>${progress.percent}% مكتمل</span>
+            ${show.next_episode ? `<span>التالي ${trackerEpisodeCode(show.next_episode)}</span>` : `<span>مكتمل</span>`}
+          </div>
+          <div class="tracker-big-progress"><i></i></div>
+        </div>
+      </div>
+      <div class="tracker-actions" style="margin-bottom:16px;">
+        <button class="tracker-btn primary" data-tracker-next="${escapeHtml(show.key)}" type="button" ${show.next_episode ? "" : "disabled"}>تحديد الحلقة التالية كمشاهدة</button>
+        <button class="tracker-btn" data-tracker-all="${escapeHtml(show.key)}" type="button">تحديد الكل كمشاهَد</button>
+        <button class="tracker-btn danger" data-tracker-reset-show="${escapeHtml(show.key)}" type="button">إلغاء مشاهدة المسلسل</button>
+      </div>
+      ${show.overview ? `<p class="modal-overview" style="margin-bottom:18px;">${escapeHtml(show.overview)}</p>` : ""}
+      <div class="tracker-episode-list">
+        ${seasons.map(season => `
+          <div class="tracker-season-title">الموسم ${season}</div>
+          ${show.episodes.filter(ep => ep.season === season).map(ep => `
+            <div class="tracker-episode-row">
+              <div class="tracker-episode-thumb">🎞️</div>
+              <div class="tracker-episode-name">
+                <strong>${trackerEpisodeCode(ep)}</strong>
+                <span>${escapeHtml(ep.name || `الحلقة ${ep.episode}`)}${ep.watched_at ? ` · شوهدت ${new Date(ep.watched_at).toLocaleDateString("ar-SA")}` : ""}</span>
+              </div>
+              <button class="tracker-check ${ep.is_watched ? "active" : ""}" data-tracker-episode="${escapeHtml(show.key)}" data-season="${ep.season}" data-episode="${ep.episode}" aria-label="تبديل حالة الحلقة" type="button">${ep.is_watched ? "✓" : "✓"}</button>
+            </div>
+          `).join("")}
+        `).join("")}
+      </div>
+    </section>
+  `;
+}
+
+function updateTrackerShow(show) {
+  const index = episodeTracking.shows.findIndex(item => item.key === show.key);
+  if (index >= 0) episodeTracking.shows[index] = recalcTrackerShow(show);
+  saveEpisodeTracking();
+}
+
+function toggleTrackerEpisode(showKey, season, episode, forceWatched = null) {
+  const show = trackerShowByKey(showKey);
+  if (!show) return;
+  const target = show.episodes.find(ep => ep.season === season && ep.episode === episode);
+  if (!target) return;
+  const nextState = forceWatched === null ? !target.is_watched : !!forceWatched;
+  target.is_watched = nextState;
+  target.watched_at = nextState ? (target.watched_at || new Date().toISOString()) : "";
+  target.watched_count = nextState ? Math.max(1, target.watched_count || 1) : 0;
+  updateTrackerShow(show);
+}
+
+function markTrackerNext(showKey) {
+  const show = recalcTrackerShow(trackerShowByKey(showKey));
+  if (!show?.next_episode) return;
+  toggleTrackerEpisode(showKey, show.next_episode.season, show.next_episode.episode, true);
+}
+
+function setTrackerShowWatched(showKey, watched) {
+  const show = trackerShowByKey(showKey);
+  if (!show) return;
+  const now = new Date().toISOString();
+  show.episodes.forEach(ep => {
+    ep.is_watched = !!watched;
+    ep.watched_at = watched ? (ep.watched_at || now) : "";
+    ep.watched_count = watched ? Math.max(1, ep.watched_count || 1) : 0;
+  });
+  updateTrackerShow(show);
+}
+
+async function hydrateTrackerPostersSoon(options = {}) {
+  if (!(episodeTracking.shows || []).length) return;
+  if (trackerHydrationInProgress && !options.force) return;
+  scheduleIdleWork(() => hydrateTrackerPosters(options), 1000);
+}
+
+function trackerMissingArtworkShows() {
+  return (episodeTracking.shows || [])
+    .filter(show => !show.poster_url && !show.backdrop_url)
+    .sort((a, b) => {
+      const aVisible = trackerFilteredShows(activeTrackerView).some(show => show.key === a.key) ? 1 : 0;
+      const bVisible = trackerFilteredShows(activeTrackerView).some(show => show.key === b.key) ? 1 : 0;
+      return bVisible - aVisible || (b.progress?.watched || 0) - (a.progress?.watched || 0);
+    });
+}
+
+async function findTmdbTrackerMatch(show) {
+  const imdbId = String(show.imdb_id || "").trim();
+  const tvdbId = String(show.tvdb_id || "").trim();
+  const externalLookups = [];
+  if (/^tt\d+$/i.test(imdbId)) externalLookups.push(`/find/${encodeURIComponent(imdbId)}?external_source=imdb_id&language=en-US`);
+  if (/^\d+$/.test(tvdbId)) externalLookups.push(`/find/${encodeURIComponent(tvdbId)}?external_source=tvdb_id&language=en-US`);
+
+  for (const endpoint of externalLookups) {
+    const data = await tmdbFetch(endpoint).catch(() => null);
+    const result = (data?.tv_results || [])[0];
+    if (result) return result;
+  }
+
+  const query = encodeURIComponent(show.display_title || tvTimeBaseTitle(show.title));
+  const baseEndpoint = `/search/tv?language=en-US&query=${query}`;
+  const endpoints = show.year
+    ? [`${baseEndpoint}&first_air_date_year=${encodeURIComponent(show.year)}`, baseEndpoint]
+    : [baseEndpoint];
+
+  for (const endpoint of endpoints) {
+    const data = await tmdbFetch(endpoint).catch(() => null);
+    const results = data?.results || [];
+    if (!results.length) continue;
+    const key = simpleTitleKey(show.display_title || show.title);
+    return results.sort((a, b) => {
+      const aTitle = simpleTitleKey(a.name || a.original_name);
+      const bTitle = simpleTitleKey(b.name || b.original_name);
+      const aScore =
+        (aTitle === key ? 70 : 0) +
+        (aTitle.includes(key) || key.includes(aTitle) ? 18 : 0) +
+        (show.year && yearOf(a) === show.year ? 20 : 0) +
+        (a.popularity || 0);
+      const bScore =
+        (bTitle === key ? 70 : 0) +
+        (bTitle.includes(key) || key.includes(bTitle) ? 18 : 0) +
+        (show.year && yearOf(b) === show.year ? 20 : 0) +
+        (b.popularity || 0);
+      return bScore - aScore;
+    })[0];
+  }
+  return null;
+}
+
+function applyTrackerTmdbMetadata(show, result) {
+  if (!show || !result) return false;
+  let changed = false;
+  if (!show.tmdb_id && result.id) {
+    show.tmdb_id = result.id;
+    changed = true;
+  }
+  if (!show.poster_url && result.poster_path) {
+    show.poster_url = `${IMG_BASE}${result.poster_path}`;
+    changed = true;
+  }
+  if (!show.backdrop_url && result.backdrop_path) {
+    show.backdrop_url = `${BACKDROP_BASE}${result.backdrop_path}`;
+    changed = true;
+  }
+  if (!show.overview && result.overview) {
+    show.overview = String(result.overview).slice(0, 700);
+    changed = true;
+  }
+  if (!show.year && yearOf(result) !== "—") {
+    show.year = yearOf(result);
+    changed = true;
+  }
+  if (!show.tmdb_title && (result.name || result.original_name)) {
+    show.tmdb_title = result.name || result.original_name;
+    changed = true;
+  }
+  return changed;
+}
+
+async function hydrateTrackerPosters(options = {}) {
+  if (trackerHydrationInProgress && !options.force) return;
+  const limit = options.limit || 30;
+  const continueAll = !!options.continueAll;
+  const missing = trackerMissingArtworkShows().slice(0, limit);
+  if (!missing.length) {
+    trackerImportMessage = episodeTracking.shows?.length ? "كل الصور المتاحة تم تحميلها أو لم نجد لها تطابقاً موثوقاً." : "";
+    if (currentTab === "episodeTracker") renderEpisodeTracker();
+    return;
+  }
+
+  trackerHydrationInProgress = true;
+  trackerHydrationContinue = continueAll;
+  let changed = false;
+  let processed = 0;
+  for (const show of missing) {
+    try {
+      const result = await findTmdbTrackerMatch(show);
+      const stored = trackerShowByKey(show.key);
+      if (stored && applyTrackerTmdbMetadata(stored, result)) changed = true;
+    } catch(e) {}
+    processed++;
+  }
+  trackerHydrationInProgress = false;
+  if (changed) saveEpisodeTracking();
+
+  const remaining = trackerStats().missingArtwork;
+  if (remaining > 0 && trackerHydrationContinue && currentTab === "episodeTracker") {
+    trackerImportMessage = `تمت معالجة ${processed} مسلسل. المتبقي بدون صور: ${remaining}. جاري الاستكمال...`;
+    renderEpisodeTracker();
+    setTimeout(() => hydrateTrackerPosters({ limit, continueAll: true }), 900);
+    return;
+  }
+
+  if (currentTab === "episodeTracker") {
+    trackerImportMessage = remaining
+      ? `تم تحديث الصور والمعلومات. المتبقي بدون صور: ${remaining}. اضغط الزر مرة أخرى لاستكمال دفعة إضافية.`
+      : "تم تحميل الصور والمعلومات المتاحة لكل المسلسلات.";
+    renderEpisodeTracker();
+  }
+}
+
 // ---------- Search ----------
 searchInput.addEventListener("input", () => {
   clearTimeout(searchDebounce);
@@ -5896,6 +6995,56 @@ async function loadMoreResults(stream, button) {
 main.addEventListener("click", (event) => {
   const button = event.target.closest("[data-load-stream]");
   if (button) loadMoreResults(button.dataset.loadStream, button);
+});
+
+main.addEventListener("click", (event) => {
+  const viewButton = event.target.closest("[data-tracker-view]");
+  if (viewButton) {
+    activeTrackerView = viewButton.dataset.trackerView || "watching";
+    renderEpisodeTracker();
+    return;
+  }
+  const showButton = event.target.closest("[data-tracker-show]");
+  if (showButton) {
+    renderEpisodeTrackerDetails(showButton.dataset.trackerShow);
+    return;
+  }
+  const backButton = event.target.closest("[data-tracker-back]");
+  if (backButton) {
+    renderEpisodeTracker();
+    return;
+  }
+  const episodeButton = event.target.closest("[data-tracker-episode]");
+  if (episodeButton) {
+    const key = episodeButton.dataset.trackerEpisode;
+    toggleTrackerEpisode(
+      key,
+      parseInt(episodeButton.dataset.season, 10),
+      parseInt(episodeButton.dataset.episode, 10)
+    );
+    renderEpisodeTrackerDetails(key);
+    return;
+  }
+  const nextButton = event.target.closest("[data-tracker-next]");
+  if (nextButton) {
+    const key = nextButton.dataset.trackerNext;
+    markTrackerNext(key);
+    renderEpisodeTrackerDetails(key);
+    return;
+  }
+  const allButton = event.target.closest("[data-tracker-all]");
+  if (allButton) {
+    const key = allButton.dataset.trackerAll;
+    setTrackerShowWatched(key, true);
+    renderEpisodeTrackerDetails(key);
+    return;
+  }
+  const resetButton = event.target.closest("[data-tracker-reset-show]");
+  if (resetButton) {
+    const key = resetButton.dataset.trackerResetShow;
+    setTrackerShowWatched(key, false);
+    renderEpisodeTrackerDetails(key);
+  }
 });
 
 // ---------- Infinite scroll (all tabs except home) ----------
